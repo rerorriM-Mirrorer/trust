@@ -4,7 +4,37 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
-## Current testing batch — 2026-10-08: UX and integration proposals
+## Current testing batch — 2026-10-08: Trust title-only compact placeholder (candidate)
+
+- **Status:** TEST C0 candidate committed on a testing branch; **no live FFXI results reported**. This is a deliberately narrow visual experiment, not the complete Compact mode described later in this record.
+- **Branch:** [`test/compact-trust-title-20261008`](https://github.com/rerorriM-Mirrorer/trust/tree/test/compact-trust-title-20261008), branched from `main`. Do not merge into `main` until live-tested.
+- **Code commit:** [`f7c82c81`](https://github.com/rerorriM-Mirrorer/trust/commit/f7c82c81b556bc07b38bc01cdfc677340c5c9646).
+- **Modified source:** `ui/widgets/TrustStatusWidget.lua` only. No Party, Target, EnemyBar2, combat, follower or settings schema changes.
+- **Change:** Trust widget begins as a 104×14 title-only tab reusing its existing "Trust" title border. The default title-click callback toggles back to the full widget and back again. The body rows and bottom border are suppressed while compact. This is a **placeholder tab**, not yet a true 20×20 icon; the existing four fixed-width title-border pieces make an icon-width shrink unsafe without changing the renderer.
+- **Deferred:** Gray/blue/green state tint, persistent Full/Compact setting, Party hiding, debuff overlays, menu UX and other requests remain pending as documented below. The action queue and its current state tracking are untouched.
+
+### Live installation and test instructions (all PENDING)
+
+0. Make a backup of your existing `Windower/addons/Trust/ui/widgets/TrustStatusWidget.lua` (actual Windower folder may differ). Only copy the **candidate branch's** replacement file if the local Trust version matches the examined fork; do not replace the rest of the addon. Reload Trust with `//lua r trust`. If the layout breaks, restore the backup and reload again.
+1. **C0-1 — Startup:** Verify there is only a narrow `Trust` title tab, no job/level/profile/action rows and no dangling body/bottom border. Record screen resolution and observed dimensions. **Result: PENDING.**
+2. **C0-2 — Toggle:** Click/tap the `Trust` title: full window should return; click again: title-only tab. Repeat several times. Confirm no blank widgets or stuck keyboard focus. **Result: PENDING.**
+3. **C0-3 — Activity:** In compact mode, run `//trust stop` then `//trust start`, and perform a normal action. Confirm automation still runs and the title remains compact. **Result: PENDING.**
+4. **C0-4 — Position and reload:** Drag when full, collapse, change resolution, reload, and observe tab placement and recovery. The current patch has **no new persistence code**, so compact-on-reload is intentional but positions follow existing widget settings. **Result: PENDING.**
+5. **C0-5 — Multi-client:** If single-client passes, inspect the title tab on one small-resolution client and one larger client, then several clients. Do not infer multiclient success from source review. **Result: PENDING.**
+6. **C0-6 — Regression:** Ensure Party and Target windows and menus behave as before. Those widgets are **not** hidden by this particular experiment. **Result: PENDING.**
+
+### Candidate hazards to watch
+
+- Whether shrinking the base widget and reusing its title-border cells causes flicker, misplaced artwork, a ghost bottom border, or an unexpectedly large mouse hitbox.
+- Whether hiding the content view is undone by action-queue updates, and whether restoring Full reveals every original row correctly.
+- Whether clicking the title works in compact mode with controller/mouse and across window focus changes. If not, restore the backup; no independent command toggle was added in this experiment.
+- Because compact is the **default on each load**, Full is currently session-only. State colors are not yet implemented; don't mistake this placeholder for the final icon.
+
+---
+
+## Previous testing batch — 2026-10-08: UX and integration proposals
+
+**Historical heading preserved:** ~~Current testing batch — 2026-10-08: UX and integration proposals~~. It was a documentation-only baseline; it is now superseded as *current*, but its source observations, proposals, and notes are retained below.
 
 - **Package / batch:** Documentation-only baseline. No testing package.
 - **Repository:** `rerorriM-Mirrorer/trust`, default branch `main`; baseline examined at commit `9a7de430c622b8565edcf3667e72b4d5ca317e46`. Source identifies itself as Trust 17.7.3. Verify baseline again before coding.
@@ -160,6 +190,7 @@ Private, cumulative development and testing record. Keep this file at the **repo
 | Date | Batch / artifact | Type | Reference | Outcome |
 | --- | --- | --- | --- | --- |
 | 2026-10-08 | Initial Trust `TESTING.md` | Documentation only | This file; commit available in Git history | Created from user feedback and source inspection; **no behavioral tests or installation package** |
+| 2026-10-08 | Trust title-only compact placeholder | Source change on untested branch | [`f7c82c81`](https://github.com/rerorriM-Mirrorer/trust/commit/f7c82c81b556bc07b38bc01cdfc677340c5c9646) | Only `TrustStatusWidget.lua`; **live results pending**, no packaged release |
 | — | Subsequent Trust patch | Not yet prepared | — | No claims of implementation |
 | — | EnemyBar2 debuff prototype | Not yet prepared | Separate repository | Not started |
 
@@ -168,6 +199,7 @@ Private, cumulative development and testing record. Keep this file at the **repo
 | Date | Item | Origin / reference | Preservation note |
 | --- | --- | --- | --- |
 | 2026-10-08 | Compact icon colors and three simple labels; Party removed in compact; transparent target name/debuff icons | Current project conversation | Desired design; do not expand the icon's state/color scheme without agreement |
+| 2026-10-08 | Urgent small-resolution Trust widget footprint; request to reuse existing top Trust title border as first compact icon | This conversation | Implement separately as reversible candidate C0; later features remain pending |
 | 2026-10-08 | Command browser/menu visual hitch; inaccurate displayed job levels; single-Enter auto-commit, navigation improvements | Current project conversation | User observations requiring controlled tests |
 | 2026-10-08 | EnemyBar2 link by target ID; main vs focus debuff overlays; optional EnemyBar2-only prototype | Current project conversation; [EnemyBar2](https://github.com/rerorriM-Mirrorer/enemybar2) | Cross-repository idea; no integration implemented |
 | 2026-10-08 | Quiet-mode workaround; follower warnings; manual behavior overrides; path-stuck recovery | Current and previous Trust discussion | Some source behaviors confirmed; live behavior remains to be measured |
