@@ -1,17 +1,17 @@
-local CollectionView = require('cylibs/ui/collection_view/collection_view')
 local CollectionViewDataSource = require('cylibs/ui/collection_view/collection_view_data_source')
 local Color = require('cylibs/ui/views/color')
 local ImageItem = require('cylibs/ui/collection_view/items/image_item')
+local ImageView = require('cylibs/ui/image_view')
 local IndexedItem = require('cylibs/ui/collection_view/indexed_item')
 local IndexPath = require('cylibs/ui/collection_view/index_path')
 local MarqueeCollectionViewCell = require('cylibs/ui/collection_view/cells/marquee_collection_view_cell')
-local Mouse = require('cylibs/ui/input/mouse')
 local Padding = require('cylibs/ui/style/padding')
 local TextCollectionViewCell = require('cylibs/ui/collection_view/cells/text_collection_view_cell')
 local TextItem = require('cylibs/ui/collection_view/items/text_item')
 local TextStyle = require('cylibs/ui/style/text_style')
 local VerticalFlowLayout = require('cylibs/ui/collection_view/layouts/vertical_flow_layout')
 local Widget = require('ui/widgets/Widget')
+local CompactWidget = require('ui/widgets/CompactWidget')
 
 local TrustStatusWidget = setmetatable({}, {__index = Widget })
 TrustStatusWidget.__index = TrustStatusWidget
@@ -110,12 +110,20 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
     self.mainJobName = mainJobName
     self.subJobName = subJobName
 
-    -- The title border uses four 20px end pieces; 104px leaves room for "Trust".
-    -- Keep the full widget size so tapping the title can restore the normal view.
+    -- The full view remains available; compact uses a 40px sprite/hitbox.
     self.fullWidth = frame.width
     self.fullHeight = frame.height
-    self.compactWidth = 104
-    self.compactHeight = 14
+    self.compactWidth = 40
+    self.compactHeight = 40
+    self.addonEnabled = addonEnabled
+    self.currentAction = ''
+
+    self.compactIcon = ImageView.new()
+    self.compactIcon:setPosition(0, 0)
+    self.compactIcon:setSize(40, 40)
+    self.compactIcon:setUserInteractionEnabled(false)
+    self:addSubview(self.compactIcon)
+    self:refreshCompactIcon()
 
     self:getDisposeBag():addAny(L{ self.action_queue })
 
@@ -175,6 +183,7 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
         else
             self:setAction('OFF')
         end
+        self:refreshCompactIcon()
     end), addonEnabled:onValueChanged())
 
     self:getDisposeBag():add(player:on_level_change():addAction(function(_, _)
@@ -195,102 +204,52 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
         end
     end)
 
-    -- This experimental view starts title-only. Clicking the title restores Full.
+    -- Compact is the default for this visual test. The widget command restores Full.
     self:setExpanded(false)
 
     return self
 end
 
--- Compact input must bypass Widget:onMouseEvent: that method refuses to start
--- dragging when collapsed, while the title hitbox may be outside the body.
-function TrustStatusWidget:hitTest(x, y)
-    if not self:isExpanded() then
-        if self.compactDrag then
-            return true
-        end
-        local pos = self:getAbsolutePosition()
-        local size = self:getSize()
-        return x >= pos.x and x <= pos.x + size.width
-            and y >= pos.y - 2 and y <= pos.y + size.height
+-- Keep Widget.expanded aligned for the upstream title-click handler.
+function TrustStatusWidget:setExpanded(expanded)
+    return self:setCompactMode(not expanded)
+end
+
+function TrustStatusWidget:setCompactMode(compact)
+    Widget.setExpanded(self, not compact)
+    return CompactWidget.setMode(self, compact)
+end
+
+function TrustStatusWidget:updateCompactVisibility()
+    self.compactIcon:setVisible(self.compactMode)
+    self.compactIcon:layoutIfNeeded()
+end
+
+function TrustStatusWidget:refreshCompactIcon()
+    local stateName
+    if not self.addonEnabled:getValue() then
+        stateName = 'off'
+    elseif self.currentAction ~= '' and self.currentAction ~= 'Idle' and self.currentAction ~= 'OFF' then
+        stateName = 'active'
+    else
+        stateName = 'idle'
     end
-    return Widget.hitTest(self, x, y)
+    -- Rasterized glow keeps visual quality at small FFXI resolutions.
+    self.compactIcon:loadImage(windower.addon_path..'assets/icons/icon_timer_'..stateName..'.png')
+    self.compactIcon:setNeedsLayout()
+    self.compactIcon:layoutIfNeeded()
+end
+
+function TrustStatusWidget:hitTest(x, y)
+    return CompactWidget.hitTest(self, x, y)
 end
 
 function TrustStatusWidget:onMouseEvent(type, x, y, delta)
-    if self:isExpanded() then
-        return Widget.onMouseEvent(self, type, x, y, delta)
-    end
-
-    if type == Mouse.Event.Click then
-        if not self:hitTest(x, y) then
-            return false
-        end
-        local position = self:getPosition()
-        self.compactDrag = {
-            mouseX = x, mouseY = y,
-            x = position.x, y = position.y,
-            moved = false,
-        }
-        return true
-    elseif type == Mouse.Event.Move and self.compactDrag then
-        local drag = self.compactDrag
-        local dx, dy = x - drag.mouseX, y - drag.mouseY
-        if math.abs(dx) > 3 or math.abs(dy) > 3 then
-            drag.moved = true
-        end
-        if drag.moved then
-            self:setPosition(drag.x + dx, drag.y + dy)
-            self:layoutIfNeeded()
-        end
-        return true
-    elseif type == Mouse.Event.ClickRelease and self.compactDrag then
-        local moved = self.compactDrag.moved
-        self.compactDrag = nil
-        if moved then
-            -- Notify WidgetManager to persist the new per-character position.
-            self:onSettingsChanged():trigger(self)
-        else
-            self:setExpanded(true)
-        end
-        return true
-    end
-    return false
-end
-
--- Only this widget uses the title-only layout; Party and Target remain unchanged.
-function TrustStatusWidget:setExpanded(expanded)
-    if not Widget.setExpanded(self, expanded) then
-        return false
-    end
-
-    if expanded then
-        self:setSize(self.fullWidth, self.fullHeight)
-    else
-        self:setSize(self.compactWidth, self.compactHeight)
-    end
-    self:setNeedsLayout()
-    self:layoutIfNeeded()
-    return true
+    return CompactWidget.onMouseEvent(self, type, x, y, delta)
 end
 
 function TrustStatusWidget:layoutIfNeeded()
-    if self.compactWidth and not self:isExpanded() then
-        -- Widget.layoutIfNeeded would grow the frame to the hidden rows' height.
-        -- Lay out the title at its actual small size, then suppress the body.
-        local changed = CollectionView.layoutIfNeeded(self)
-        local contentView = self:getContentView()
-        if contentView then
-            contentView:setVisible(false)
-            contentView:layoutIfNeeded()
-        end
-        local backgroundView = self:getBackgroundImageView()
-        if backgroundView and backgroundView.bottomBorderView then
-            backgroundView.bottomBorderView:setVisible(false)
-            backgroundView.bottomBorderView:layoutIfNeeded()
-        end
-        return changed
-    end
-    return Widget.layoutIfNeeded(self)
+    return CompactWidget.layoutIfNeeded(self)
 end
 
 function TrustStatusWidget:destroy()
@@ -329,6 +288,8 @@ function TrustStatusWidget:setAction(text)
         text = 'Idle'
     end
 
+    self.currentAction = text
+    self:refreshCompactIcon()
     if self:getDataSource():itemAtIndexPath(IndexPath.new(2, 1)):getText() == text then
         return
     end
