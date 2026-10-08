@@ -1,3 +1,4 @@
+local CollectionView = require('cylibs/ui/collection_view/collection_view')
 local CollectionViewDataSource = require('cylibs/ui/collection_view/collection_view_data_source')
 local Color = require('cylibs/ui/views/color')
 local ImageItem = require('cylibs/ui/collection_view/items/image_item')
@@ -108,6 +109,13 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
     self.mainJobName = mainJobName
     self.subJobName = subJobName
 
+    -- The title border uses four 20px end pieces; 104px leaves room for "Trust".
+    -- Keep the full widget size so tapping the title can restore the normal view.
+    self.fullWidth = frame.width
+    self.fullHeight = frame.height
+    self.compactWidth = 104
+    self.compactHeight = 14
+
     self:getDisposeBag():addAny(L{ self.action_queue })
 
     self:setJobs(mainJobName, subJobName)
@@ -186,7 +194,46 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
         end
     end)
 
+    -- This experimental view starts title-only. Clicking the title restores Full.
+    self:setExpanded(false)
+
     return self
+end
+
+-- Only this widget uses the title-only layout; Party and Target remain unchanged.
+function TrustStatusWidget:setExpanded(expanded)
+    if not Widget.setExpanded(self, expanded) then
+        return false
+    end
+
+    if expanded then
+        self:setSize(self.fullWidth, self.fullHeight)
+    else
+        self:setSize(self.compactWidth, self.compactHeight)
+    end
+    self:setNeedsLayout()
+    self:layoutIfNeeded()
+    return true
+end
+
+function TrustStatusWidget:layoutIfNeeded()
+    if self.compactWidth and not self:isExpanded() then
+        -- Widget.layoutIfNeeded would grow the frame to the hidden rows' height.
+        -- Lay out the title at its actual small size, then suppress the body.
+        local changed = CollectionView.layoutIfNeeded(self)
+        local contentView = self:getContentView()
+        if contentView then
+            contentView:setVisible(false)
+            contentView:layoutIfNeeded()
+        end
+        local backgroundView = self:getBackgroundImageView()
+        if backgroundView and backgroundView.bottomBorderView then
+            backgroundView.bottomBorderView:setVisible(false)
+            backgroundView.bottomBorderView:layoutIfNeeded()
+        end
+        return changed
+    end
+    return Widget.layoutIfNeeded(self)
 end
 
 function TrustStatusWidget:destroy()
