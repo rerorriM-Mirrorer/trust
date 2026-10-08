@@ -465,6 +465,15 @@ function TargetWidget:setCompactMode(compact)
     return CompactWidget.setMode(self, compact)
 end
 
+-- Reapply local offsets after View:setPosition shifts every subview.
+function TargetWidget:setPosition(x, y)
+    Widget.setPosition(self, x, y)
+    if self.compactNameCell then
+        self.compactNameCell:setPosition(4, 0)
+        self.compactDebuffsView:setPosition(4, 20)
+    end
+end
+
 function TargetWidget:hitTest(x, y)
     return CompactWidget.hitTest(self, x, y)
 end
