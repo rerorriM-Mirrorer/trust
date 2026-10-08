@@ -60,31 +60,19 @@ end
 -- views for mouse events. Route the initial click straight to the visible
 -- sprite/strip and capture subsequent motion/release until the drag ends.
 -- This avoids unrelated menu/item cells swallowing part of a compact drag.
-function Mouse:getCompactWidgets()
-    local widgets = L{}
-    local trustUi = windower.trust and windower.trust.ui
-    if not trustUi or not trustUi.get_widget then
-        return widgets
-    end
-    for _, name in ipairs({ 'trust', 'party', 'target' }) do
-        local widget = trustUi.get_widget(name)
-        if widget and widget.compactMode and widget:isVisible() then
-            widgets:append(widget)
-        end
-    end
-    return widgets
-end
-
 function Mouse:handleCompactWidgetMouseEvent(type, x, y, delta)
-    local widgets = self:getCompactWidgets()
-
-    -- A captured drag keeps receiving events after the pointer leaves the
-    -- sprite and crosses another widget or menu view.
-    if type == Mouse.Event.Move or type == Mouse.Event.ClickRelease then
-        for widget in widgets:it() do
-            if widget.compactDrag then
-                return widget:onMouseEvent(type, x, y, delta)
+    -- Capture only while the compact press is active; other mouse events keep
+    -- using the upstream router without extra per-frame allocation.
+    local captured = self.compactDragWidget
+    if captured then
+        if not captured.compactMode or not captured:isVisible() then
+            self.compactDragWidget = nil
+        elseif type == Mouse.Event.Move or type == Mouse.Event.ClickRelease then
+            local handled = captured:onMouseEvent(type, x, y, delta)
+            if type == Mouse.Event.ClickRelease then
+                self.compactDragWidget = nil
             end
+            return handled
         end
     end
 
@@ -92,16 +80,24 @@ function Mouse:handleCompactWidgetMouseEvent(type, x, y, delta)
         return false
     end
 
-    -- Don't steal clicks from an open menu or command picker.
+    -- Do not steal clicks while menu or command overlays have focus.
     if (hud and hud.trustMenu and hud.trustMenu:isVisible())
             or (hud and hud.viewStack and hud.viewStack.currentView)
             or (command_widget and command_widget:isVisible()) then
         return false
     end
 
-    for widget in widgets:it() do
-        if widget:hitTest(x, y) then
-            return widget:onMouseEvent(type, x, y, delta)
+    local trustUi = windower.trust and windower.trust.ui
+    if not trustUi or not trustUi.get_widget then
+        return false
+    end
+
+    for _, name in ipairs({ 'trust', 'party', 'target' }) do
+        local widget = trustUi.get_widget(name)
+        if widget and widget.compactMode and widget:isVisible()
+                and widget:hitTest(x, y) and widget:onMouseEvent(type, x, y, delta) then
+            self.compactDragWidget = widget
+            return true
         end
     end
     return false
