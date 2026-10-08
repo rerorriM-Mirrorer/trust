@@ -29,6 +29,8 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **User live observation — 2026-10-08, C1 package:** "LOOKS AMAZING SO FAR." On opening the addon, the widgets/icons initially appeared shifted completely off-screen; using Trust's in-game menu to select **Menu Layout Right** brought the compact icons back into sight, neatly aligned along the right. This is a **successful visual workaround** but an unresolved initial-placement/repositioning defect. The resolution, number of clients, precise prior coordinates, and cause are not yet known. Do not attribute it to an old saved position or the compact renderer without evidence.
 
+**Additional live observation — 2026-10-08 (C1):** User reports that the blue and green fields on the timer/hourglass look good in FFXI. **Visual appearance PASS (user-observed)** for the two colors. Automatic state transitions, correct queue mapping and Off-state appearance still need separate tests.
+
 **Follow-up diagnostic:** If convenient, note whether the icons remain visible and aligned after `//lua r trust` or changing resolution. Check saved widget X/Y, screen bounds, and layout presets only after capturing reproduction details; ensure menu placement does not mask an off-screen hitbox.
 
 
@@ -36,7 +38,7 @@ Private, cumulative development and testing record. Keep this file at the **repo
 | Test ID | Procedure | Expected result | Actual |
 | --- | --- | --- | --- |
 | C1-01 | Load on one low-resolution client. | 40×40 hourglass, 32×32 party item slot, transparent Target strip only when a Trust party target exists. | ~~PENDING~~ **PARTIAL USER OBSERVATION:** Compact icons look excellent and align at right after selecting *Menu Layout Right*, but startup positions were completely off-screen. Exact sizes, resolution and target behavior not verified. |
-| C1-02 | `//trust stop`, `//trust start`, run an actual queued action, then let action end. | Off dimmed/unlit, Idle blue, Active green, back to Idle. Following alone may remain Idle. | **PENDING** |
+| C1-02 | `//trust stop`, `//trust start`, run an actual queued action, then let action end. | Off dimmed/unlit, Idle blue, Active green, back to Idle. Following alone may remain Idle. | **PARTIAL USER OBSERVATION:** Blue and green fields look good. Automatic Idle/Active transitions, Off rendering and mapping remain **PENDING**. |
 | C1-03 | Solo and then party with 2–6 members; add/remove an alter ego or player. | Numeric local party count updates, including player. | **PENDING** |
 | C1-04 | Set a Trust party target with no debuffs, then with one/multiple, then change/clear it. | Correct name and only tracked debuff icons; no stale icon/name or invisible retained hitbox. | **PENDING** |
 | C1-05 | Short-click each compact widget separately. | Only clicked widget expands; `//trust widget compact` restores all three. | **PENDING** |
