@@ -4,7 +4,42 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
-## Current testing batch — 2026-10-08: Trust title-only compact placeholder (candidate)
+## Current testing batch — 2026-10-08: C0 iteration 2, compact click/drag recovery
+
+- **Branch:** [`test/compact-trust-title-20261008`](https://github.com/rerorriM-Mirrorer/trust/tree/test/compact-trust-title-20261008). `main` remains last trusted live-tested code.
+- **Code commits:** [`831b1fc3`](https://github.com/rerorriM-Mirrorer/trust/commit/831b1fc3647d8152c1aee96077a367d6777db939) (compact click/drag), [`122564e9`](https://github.com/rerorriM-Mirrorer/trust/commit/122564e973130432f2b36cb7053a00947ece1151) (commands), [`3da6873c`](https://github.com/rerorriM-Mirrorer/trust/commit/3da6873cb215398f279683aba0210f0e18e156c3) (menu command exception).
+- **Changed files:** `ui/widgets/TrustStatusWidget.lua`, `commands/GeneralCommands.lua`, `Trust.lua`, and this `TESTING.md` (documentation only). No Party/Target/EnemyBar2 or automation-behavior changes.
+- **USER LIVE REPORT on C0 iteration 1:** Compact footprint is noticeably improved and liked; **click did not expand**, **dragging was difficult/nonfunctional**. Resolution, input method and screenshots were not supplied. Preserve as failed tests; do not claim iteration 1 passed interactive tests.
+- **SOURCE-CONFIRMED issue:** Base `Widget:onMouseEvent` starts a drag only when `isExpanded()` is true. Compact mode inherited that restriction; the original title click was not a safe sole recovery method. `//trust menu` opens Trust's menu but **does not expand** the widget.
+- **Current candidate fix:** Custom compact `hitTest` and `onMouseEvent` distinguish click vs movement beyond 3 pixels, allow dragging the title tab, save position on release, and expand on short click. Full mode keeps the upstream mouse code. Add `//trust widget full`, `//trust widget compact`, `//trust widget toggle` (or `//trust widget`), permitted even while the menu is open.
+- **Live status:** **PENDING.** Do not report runtime success until the user tests the revised files. No changes to the originally desired small 104×14 default.
+
+### Install / rollback
+
+1. Back up these **three** installed source files: `Trust.lua`, `commands/GeneralCommands.lua`, and `ui/widgets/TrustStatusWidget.lua`. Check that the installed Trust matches this repository's base before replacing source; this is a candidate fork branch, not a public release.
+2. Replace all three using the files from the **same branch revision**. Reload with `//lua r trust`. If something breaks, restore all backups, then reload again.
+3. The full display can now be requested with `//trust widget full`; return to the small tab with `//trust widget compact`. The regular `//trust menu` still opens the settings menu.
+
+### Test plan (all new results PENDING)
+
+1. **C0-7 command escape:** Run `//trust widget full`, `//trust widget compact`, `//trust widget toggle` and `//trust widget`. Verify reliable size changes, no automation state changes, and a clear usage error on invalid arguments.
+2. **C0-8 compact short click:** Click tab once without moving; verify Full returns without double-click or focus anomalies. To recover if click fails, use `//trust widget full` and capture the result.
+3. **C0-9 compact drag:** Hold on the tab, drag at least 20 pixels, release. Check that it moved rather than expanded; reload to confirm position was saved.
+4. **C0-10 bounds and multi-resolution:** Test moving past the original narrow rectangle during drag; repeat at the laptop's small resolution and a large one. Report any drag loss, offsets or off-screen behavior.
+5. **C0-11 full regression:** Return to Full and verify original row functionality and dragging. Confirm other widgets are unchanged.
+6. **C0-12 menu coexistence:** With settings menu open, run `//trust widget full` and `compact`; verify they are not blocked, and other command restrictions remain as before.
+
+### Candidate hazards
+
+- Interacting with the shared mouse input/focus routing may interfere with compact clicks; source review cannot demonstrate Windower behavior. Test on one client before multiple.
+- With a 3-pixel movement threshold, subtle pointer jitter may sometimes count as drag; measure before modifying threshold.
+- Commands are available only after **all three source files** are updated and Trust is reloaded. An old `Trust.lua` or `GeneralCommands.lua` will not recognize them.
+
+---
+
+## Previous testing batch — 2026-10-08: Trust title-only compact placeholder (candidate)
+
+**Heading correction (2026-10-08):** ~~Current testing batch — 2026-10-08: Trust title-only compact placeholder (candidate)~~. Superseded by C0-iteration 2 below; candidate code and all original test steps retained for history.
 
 - **Status:** TEST C0 candidate committed on a testing branch; **no live FFXI results reported**. This is a deliberately narrow visual experiment, not the complete Compact mode described later in this record.
 - **Branch:** [`test/compact-trust-title-20261008`](https://github.com/rerorriM-Mirrorer/trust/tree/test/compact-trust-title-20261008), branched from `main`. Do not merge into `main` until live-tested.
@@ -192,6 +227,8 @@ Private, cumulative development and testing record. Keep this file at the **repo
 | --- | --- | --- | --- | --- |
 | 2026-10-08 | Initial Trust `TESTING.md` | Documentation only | This file; commit available in Git history | Created from user feedback and source inspection; **no behavioral tests or installation package** |
 | 2026-10-08 | Trust title-only compact placeholder | Source change on untested branch | [`f7c82c81`](https://github.com/rerorriM-Mirrorer/trust/commit/f7c82c81b556bc07b38bc01cdfc677340c5c9646) | Only `TrustStatusWidget.lua`; **live results pending**, no packaged release |
+| 2026-10-08 | C0 iteration 1 user result | Live observation | This conversation | **Footprint improved; expand click FAILED; compact drag FAILED**; original code preserved in Git history |
+| 2026-10-08 | C0 iteration 2 interaction and command candidate | Source changes on testing branch | `831b1fc3`, `122564e9`, `3da6873c` (commits linked above) | Mouse and commands updated; **live test pending** |
 | — | Subsequent Trust patch | Not yet prepared | — | No claims of implementation |
 | — | EnemyBar2 debuff prototype | Not yet prepared | Separate repository | Not started |
 
