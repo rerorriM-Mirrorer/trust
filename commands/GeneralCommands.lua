@@ -33,7 +33,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('toggle', self.handle_toggle, 'Toggle Trust On and Off')
     self:add_command('reload', self.handle_reload, 'Reload job settings files')
     self:add_command('status', self.handle_status, 'View Trust status')
-    self:add_command('widget', self.handle_widget, 'Toggle the Trust widget between full and compact, or use // trust widget full|compact|toggle')
+    self:add_command('widget', self.handle_widget, 'Set widget appearance: // trust widget [full|compact|toggle] [all|trust|party|target]')
 
     -- Modes
     self:add_command('set', self.handle_set_mode, 'Set a mode to a given value, // trust set mode_name mode_value')
@@ -115,26 +115,30 @@ function GeneralTrustCommands:handle_status()
     return success, message
 end
 
--- // trust widget [full|compact|toggle]
--- This is intentionally independent of the Trust automation enabled state.
-function GeneralTrustCommands:handle_widget(_, mode)
+-- // trust widget [full|compact|toggle] [all|trust|party|target]
+-- The visual mode is independent of automation; Target.expanded still controls
+-- debuff rows in Full mode, so use compactMode for all three widgets.
+function GeneralTrustCommands:handle_widget(_, mode, scope)
     mode = mode or 'toggle'
-    if type(mode) ~= 'string' then
-        return false, 'Usage: // trust widget [full|compact|toggle]'
+    scope = scope or 'all'
+    if type(mode) ~= 'string' or type(scope) ~= 'string' then
+        return false, 'Usage: // trust widget [full|compact|toggle] [all|trust|party|target]'
     end
-    mode = mode:lower()
-    if not S{ 'full', 'compact', 'toggle' }:contains(mode) then
-        return false, 'Usage: // trust widget [full|compact|toggle]'
-    end
-
-    local widget = windower.trust.ui.get_widget('trust')
-    if not widget then
-        return false, 'Trust status widget is unavailable'
+    mode, scope = mode:lower(), scope:lower()
+    if not S{ 'full', 'compact', 'toggle' }:contains(mode)
+            or not S{ 'all', 'trust', 'party', 'target' }:contains(scope) then
+        return false, 'Usage: // trust widget [full|compact|toggle] [all|trust|party|target]'
     end
 
-    local expanded = mode == 'full' or (mode == 'toggle' and not widget:isExpanded())
-    widget:setExpanded(expanded)
-    return true, 'Trust widget '..(expanded and 'expanded' or 'compacted')
+    local names = scope == 'all' and L{ 'trust', 'party', 'target' } or L{ scope }
+    for name in names:it() do
+        local widget = windower.trust.ui.get_widget(name)
+        if not widget or not widget.setCompactMode then
+            return false, name..' widget is unavailable'
+        end
+        widget:setCompactMode(mode == 'compact' or (mode == 'toggle' and not widget.compactMode))
+    end
+    return true, 'Widget appearance: '..mode..' ('..scope..')'
 end
 
 -- // trust start
