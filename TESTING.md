@@ -23,9 +23,32 @@ Private, cumulative development and testing record. Keep this file at the **repo
 3. Reload with `//lua r trust`. To restore original-sized widget presentations without reverting files: `//trust widget full`. If addon load or input fails, restore the backed-up files, remove only the newly added `CompactWidget.lua`, then reload. Keep a screenshot/log of any error.
 4. On live success, test again on multiple clients; do not install on all six simultaneously before single-client smoke passes.
 
+### C1 mouse drag recovery — 2026-10-08 (UNTESTED PATCH)
+
+- **USER LIVE OBSERVATION:** "Having trouble dragging icons." This follows the separate live reports that the three compact designs look excellent, the hourglass's blue and green fields look good, and the **Layout Right** preset restores initially off-screen icons. The exact drag failure mode (no movement, jump, drop/collapse, etc.) has not yet been specified. Do not claim pointer fix success without user verification.
+- **SOURCE DIAGNOSIS / HYPOTHESIS:** `cylibs/ui/input/mouse.lua` routes input recursively through other views each event. This can interfere with tiny compact hitboxes and pointer continuation; source review suggests a targeted pointer capture, but does not establish that this is the only cause.
+- **C1-DRAG-01 candidate:** On left click of a visible compact Trust/Party/Target widget, capture that widget as the drag receiver; route mouse movement and release directly to it, including when the cursor leaves its icon. Do not intercept non-compact widget events or clicks while a menu/command overlay is open. Release the capture when the left button is released.
+- **New file to replace:** `cylibs/ui/input/mouse.lua` ONLY. The previous six-file C1 package remains the baseline. Make a backup before replacing. **No changes to artwork, compact sizes, position data schema, automation, or main.**
+- **Preliminary check:** Source reviewed for captured pointer lifecycle, compact-only hit test and menu bypass; **full Windower game test PENDING**.
+
+| ID | Test steps | Expected | Actual |
+| --- | --- | --- | --- |
+| C1-DRAG-01 | Close Trust's menu, press and hold the blue hourglass, move 50px, release. | Smooth drag; hourglass remains compact; "Widget settings saved." appears once on release. | **PENDING** |
+| C1-DRAG-02 | Repeat on the Party count slot. | Slot and numeral move together without expanding. | **PENDING** |
+| C1-DRAG-03 | Repeat on visible Target name/debuff strip, dragging beyond its 148px invisible bounds. | Name and debuff row move together, even after pointer leaves strip. | **PENDING** |
+| C1-DRAG-04 | Short-click each widget without movement, then `//trust widget compact`. | Click expands; command returns to compact; no drag on short click. | **PENDING** |
+| C1-DRAG-05 | Reload Trust after placing the icons and retest on small resolution. | Saved positions restore visibly; no unexpected jumps or off-screen regressions. | **PENDING** |
+| C1-DRAG-06 | Open Trust menu or command picker and interact normally. | Menu/command interactions are not stolen by compact icons. | **PENDING** |
+
+**Rollback:** Restore original `cylibs/ui/input/mouse.lua` from the last good addon backup or from the previous C1 ZIP snapshot, then `//lua r trust`. The original full/compact commands and appearance remain available.
+
+---
+
 ### Live FFXI test record (C1 — PARTIAL USER OBSERVATIONS)
 
 **Status correction (2026-10-08):** ~~C1 — ALL PENDING~~. The user has now tested the drop-in in FFXI and reported a positive compact layout appearance after repositioning. Click/drag, Off/Idle/Active transitions, party-count accuracy, target-debuff accuracy, menu commands, persistence, multiple clients and resolutions have **not yet been explicitly confirmed**.
+
+**User-confirmed color check (2026-10-08):** Both the blue and green hourglass fields look good in actual gameplay. This verifies their appearance, but not every state transition or Off behavior.
 
 **User live observation — 2026-10-08, C1 package:** "LOOKS AMAZING SO FAR." On opening the addon, the widgets/icons initially appeared shifted completely off-screen; using Trust's in-game menu to select **Menu Layout Right** brought the compact icons back into sight, neatly aligned along the right. This is a **successful visual workaround** but an unresolved initial-placement/repositioning defect. The resolution, number of clients, precise prior coordinates, and cause are not yet known. Do not attribute it to an old saved position or the compact renderer without evidence.
 
@@ -284,6 +307,8 @@ Private, cumulative development and testing record. Keep this file at the **repo
 | B-07 | Have a follower become stuck on terrain while safe; capture position/goal over time. | Establish positive and negative cases for detector. | **USER OBSERVATION; controlled trace PENDING** |
 
 ## Delivery and test ledger
+
+**C1 mouse drag follow-up (2026-10-08):** User reported difficulty dragging compact icons; captured-pointer change committed on testing branch in `cylibs/ui/input/mouse.lua`. Previous C1 appearance feedback remains valid. **In-game verification pending.**
 
 **C1 addition (2026-10-08):** Candidate three-widget compact visual branch; six Lua sources including one new shared helper, no modified art assets, **live outcome pending**. Previous delivery rows remain below.
 
