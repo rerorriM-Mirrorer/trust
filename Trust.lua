@@ -612,7 +612,7 @@ end
 local function addon_command(cmd, ...)
     local cmd = cmd or 'help'
 	
-	if hud.trustMenu:isVisible() and not S{ 'assist', 'send', 'sendall'}:contains(cmd) then
+	if hud.trustMenu:isVisible() and not S{ 'assist', 'send', 'sendall', 'widget'}:contains(cmd) then
 		addon_system_error("Unable to execute commands while the menu is open.")
 		return
 	end
