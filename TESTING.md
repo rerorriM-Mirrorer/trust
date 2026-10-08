@@ -4,7 +4,43 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
-## Current testing batch — 2026-10-08: C1 three-widget compact layout (candidate)
+## Current testing batch — 2026-10-08: C1 Target compact outlined row fix (candidate)
+
+- **Branch:** [`test/compact-trust-title-20261008`](https://github.com/rerorriM-Mirrorer/trust/tree/test/compact-trust-title-20261008). Unmerged; `main` remains the last live-tested baseline.
+- **USER LIVE FAILURE:** Compact Target name appears doubled, and unwanted HP/HPP and distance text from the original widget remains visible. The transparent, vertically stacked Target name/debuff design does not meet the requested presentation.
+- **USER REQUEST:** A single **white-outlined rectangular field** with no filled background: exactly one Target name and its debuff icons **to the right on the same row**. Keep the field draggable, preserve Full mode and prior Trust/Party icon successes.
+- **SOURCE DIAGNOSIS:** Original FFXI rows use independent Windower `texts` renderers. The generic compact view hides the content parent *after* reflow, leaving some separately rendered full-view text in place. Target had a second compact name cell, causing apparent duplication. This diagnosis matches the reported symptoms; the proposed fix is not yet verified live.
+- **C1 Target-only patch:** `ui/widgets/TargetWidget.lua` changes the compact hitbox to **264×24**; draws a transparent four-line **1px white outline**; places a 120px-wide name beginning at (8,3) and the existing seven debuff slots starting at (140,5), arranged horizontally. The compact name is truncated to 15 characters if needed; Full mode retains original text and HP/distance info. Explicitly suppresses all four old Full rows (including external text renderers) during compact redraws and restores those rows on Full.
+- **Scope:** One modified Lua file, **no changed assets, no changes to Trust's blue/green hourglass, Party number, mouse dispatcher, combat, or underlying target/debuff tracking.** The 7-icon limitation remains for now.
+- **Static review:** Source assertions for row geometry, four white border edges, Full-mode retention, hidden old cells and drag offset restoration passed; a structural delimiter check passed. **Not a Lua 5.1 parse or in-game render test.**
+- **User-facing overlay:** [`testing-packages/Trust-C1-Target-Row-Fix.zip`](testing-packages/Trust-C1-Target-Row-Fix.zip), containing `ui/widgets/TargetWidget.lua` and a copy of this `TESTING.md`. This ZIP is an **incremental overlay** on the previous C1 installation, not a fresh-install replacement.
+
+### Installation and rollback
+
+1. Back up your current `ui/widgets/TargetWidget.lua`. Leave the five other compact-related Lua files and the C1 mouse drag fix installed.
+2. Extract `Trust-C1-Target-Row-Fix.zip` directly into the Trust addon root, preserving `ui/widgets/`; replace the existing Target widget file.
+3. Run `//lua r trust`. If there is a Lua error or display regression, restore your original `ui/widgets/TargetWidget.lua`, then reload Trust.
+4. For Full/Compact comparison use `//trust widget full target` and `//trust widget compact target`. No changes are intended for `//trust widget full party` or `full trust`.
+
+### Target-specific live checks — ALL PENDING
+
+| Test | Action | Expected | Actual |
+| --- | --- | --- | --- |
+| C1-TARGET-01 | Acquire a Trust party target with no tracked debuffs. | Exactly one visible name within 1px white outlined 264×24 rectangle; no HP/HPP, distance, action text, title, filled background or duplicate name. | **PENDING** |
+| C1-TARGET-02 | Inflict and remove 1–7 tracked debuffs. | Debuffs appear **on same row to the right** of name; no wraps or stale icons. | **PENDING** |
+| C1-TARGET-03 | Change/clear Trust's party target and target again. | Correct name; old icons and text fully vanish on switch/clear, no ghost text. | **PENDING** |
+| C1-TARGET-04 | Click-drag the outlined field across the screen, including past its original bounds. | Outline, one name and debuffs move together without changing compact mode; release saves position. | **PENDING** |
+| C1-TARGET-05 | Switch to Full Target then back to Compact Target. | The old full view retains HP/HPP, distance, action, information and debuffs; Compact hides them again. | **PENDING** |
+| C1-TARGET-06 | Observe while skills/target info update rapidly; reload and change resolution. | No original row reappears, no duplicate or clip; saved position remains visible if in bounds. | **PENDING** |
+| C1-TARGET-07 | Look at Trust and Party icons before and after patch. | Blue/green hourglass and party slot unchanged. | **PENDING** |
+
+**Outstanding:** User-confirmed prior failures must remain recorded as failures of the **previous** C1 build until C1-TARGET tests pass. Drag reliability and initial off-screen placement are separate unresolved C1 issues.
+
+---
+
+## Previous testing batch — 2026-10-08: C1 three-widget compact layout (candidate)
+
+**Heading correction (2026-10-08):** ~~Current testing batch — 2026-10-08: C1 three-widget compact layout (candidate)~~. The underlying artwork and two other widgets remain in the last C1 installation; Target compact presentation is under a focused replacement test below. All original observations, delivery notes, and pending tests remain retained.
 
 - **Branch:** [`test/compact-trust-title-20261008`](https://github.com/rerorriM-Mirrorer/trust/tree/test/compact-trust-title-20261008); **unmerged**, keep `main` as last live-tested.
 - **User-supplied assets (2026-10-08):** exact 32×32 gold hourglass `icon_timer.png` and gray `item_slot_background.png`, byte-for-byte confirmed as the existing repo assets by their Git blob hashes (`50a7568c…` and `9313124d…`). The same assets already exist; no icon image files need copying or replacing. Earlier assistant illustrative search result was **not** the real timer sprite.
@@ -308,6 +344,8 @@ Private, cumulative development and testing record. Keep this file at the **repo
 | B-07 | Have a follower become stuck on terrain while safe; capture position/goal over time. | Establish positive and negative cases for detector. | **USER OBSERVATION; controlled trace PENDING** |
 
 ## Delivery and test ledger
+
+**C1 Target row follow-up (2026-10-08):** User reported doubled target name, HP/HPP leakage in compact mode, and requested a 1px white outlined single row with debuffs after the name. Target-only code patch and cumulative test record prepared. **All new C1-TARGET live checks pending.**
 
 **C1 mouse drag follow-up (2026-10-08):** User reported difficulty dragging compact icons; captured-pointer change committed on testing branch in `cylibs/ui/input/mouse.lua`. Previous C1 appearance feedback remains valid. **In-game verification pending.**
 
