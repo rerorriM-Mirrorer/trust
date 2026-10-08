@@ -7,6 +7,7 @@ local Frame = require('cylibs/ui/views/frame')
 local HorizontalFlowLayout = require('cylibs/ui/collection_view/layouts/horizontal_flow_layout')
 local ImageCollectionViewCell = require('cylibs/ui/collection_view/cells/image_collection_view_cell')
 local ImageItem = require('cylibs/ui/collection_view/items/image_item')
+local ImageView = require('cylibs/ui/image_view')
 local ImageTextCollectionViewCell = require('cylibs/ui/collection_view/cells/image_text_collection_view_cell')
 local ImageTextItem = require('cylibs/ui/collection_view/items/image_text_item')
 local IndexedItem = require('cylibs/ui/collection_view/indexed_item')
@@ -23,6 +24,7 @@ local TextStyle = require('cylibs/ui/style/text_style')
 local ValueRelay = require('cylibs/events/value_relay')
 local VerticalFlowLayout = require('cylibs/ui/collection_view/layouts/vertical_flow_layout')
 local Widget = require('ui/widgets/Widget')
+local CompactWidget = require('ui/widgets/CompactWidget')
 
 local PartyStatusWidget = setmetatable({}, {__index = Widget })
 PartyStatusWidget.__index = PartyStatusWidget
@@ -62,6 +64,26 @@ function PartyStatusWidget.new(frame, alliance, party, trust, mediaPlayer, sound
     local self = setmetatable(Widget.new(frame, "Party", dataSource, VerticalFlowLayout.new(0, Padding.new(6, 4, 0, 0), 4), 20), PartyStatusWidget)
 
     self.alliance = alliance
+
+    self.fullWidth = frame.width
+    self.fullHeight = frame.height
+    self.compactWidth = 32
+    self.compactHeight = 32
+
+    -- An item-slot face with one centered digit replaces the member list.
+    -- Count members of the player's party, not total alliance or remote bots.
+    self.compactBackground = ImageView.new()
+    self.compactBackground:setPosition(0, 0)
+    self.compactBackground:setSize(32, 32)
+    self.compactBackground:loadImage(windower.addon_path..'assets/backgrounds/item_slot_background.png')
+    self:addSubview(self.compactBackground)
+
+    local countItem = TextItem.new('1', PartyStatusWidget.TextSmall)
+    countItem:setOffset(6, 0)
+    self.compactCountCell = TextCollectionViewCell.new(countItem)
+    self.compactCountCell:setPosition(0, 7)
+    self.compactCountCell:setSize(32, 18)
+    self:addSubview(self.compactCountCell)
 
     self.parties = self:get_parties()
     self.num_parties = ValueRelay.new(self:get_num_valid_parties())
@@ -165,6 +187,7 @@ function PartyStatusWidget.new(frame, alliance, party, trust, mediaPlayer, sound
             self:set_party(self.parties[self.party_index:getValue()])
         end
         self.num_parties:setValue(num_parties)
+        self:updateCompactCount()
     end), WindowerEvents.AllianceMemberListUpdate)
 
     self:getDisposeBag():add(self.party_index:onValueChanged():addAction(function(_, party_index)
@@ -182,6 +205,8 @@ function PartyStatusWidget.new(frame, alliance, party, trust, mediaPlayer, sound
     self.party_index:setValue(1)
 
     self:updateButtons()
+    self:updateCompactCount()
+    self:setCompactMode(true)
 
     return self
 end
@@ -254,6 +279,7 @@ function PartyStatusWidget:set_party(party, force_update)
     self:layoutIfNeeded()
 
     self:getDelegate():setCursorIndexPath(IndexPath.new(1, 1))
+    self:updateCompactCount()
 
     --[[local on_position_change = function(p, x, y, z)
         if S(self.party_member_names):contains(p:get_name()) then
@@ -302,6 +328,13 @@ function PartyStatusWidget:is_enabled(party_member_name)
 end
 
 function PartyStatusWidget:updateButtons()
+    if self.compactMode then
+        for button in L{ self.leftArrowButton, self.rightArrowButton }:it() do
+            button:setVisible(false)
+            button:removeFromSuperview()
+        end
+        return
+    end
     local num_valid_parties = self:get_num_valid_parties()
     for button in L{ self.leftArrowButton, self.rightArrowButton }:it() do
         if num_valid_parties > 1 then
@@ -336,6 +369,9 @@ function PartyStatusWidget:getMaxHeight()
 end
 
 function PartyStatusWidget:hitTest(x, y)
+    if self.compactMode then
+        return CompactWidget.hitTest(self, x, y)
+    end
     local success = Widget.hitTest(self, x, y)
     if success then
         return success
@@ -350,6 +386,9 @@ function PartyStatusWidget:hitTest(x, y)
 end
 
 function PartyStatusWidget:onMouseEvent(type, x, y, delta)
+    if self.compactMode then
+        return CompactWidget.onMouseEvent(self, type, x, y, delta)
+    end
     if type == Mouse.Event.Click or type == Mouse.Event.ClickRelease then
         if self.leftArrowButton:hitTest(x, y) then
             if type == Mouse.Event.ClickRelease then
@@ -373,6 +412,35 @@ function PartyStatusWidget:onMouseEvent(type, x, y, delta)
         end
     end
     return Widget.onMouseEvent(self, type, x, y, delta)
+end
+
+-- Party count includes the player and summoned alter egos in p0-p5.
+function PartyStatusWidget:updateCompactCount()
+    if not self.compactCountCell or not self.parties then
+        return
+    end
+    local count = self.parties[1]:length()
+    if self.compactCountCell:getItem():getText() ~= tostring(count) then
+        local textItem = TextItem.new(tostring(count), PartyStatusWidget.TextSmall)
+        textItem:setOffset(6, 0)
+        self.compactCountCell:setItem(textItem)
+    end
+end
+
+function PartyStatusWidget:updateCompactVisibility()
+    self.compactBackground:setVisible(self.compactMode)
+    self.compactCountCell:setVisible(self.compactMode)
+    self.compactBackground:layoutIfNeeded()
+    self.compactCountCell:layoutIfNeeded()
+    self:updateButtons()
+end
+
+function PartyStatusWidget:setCompactMode(compact)
+    return CompactWidget.setMode(self, compact)
+end
+
+function PartyStatusWidget:layoutIfNeeded()
+    return CompactWidget.layoutIfNeeded(self)
 end
 
 function PartyStatusWidget:setHasFocus(hasFocus)
