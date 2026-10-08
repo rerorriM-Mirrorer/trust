@@ -219,6 +219,17 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
 end
 
 -- Keep Widget.expanded aligned for the upstream title-click handler.
+-- Base View:setPosition moves child views to (0,0); re-anchor sprites
+-- after saved-position restore and mouse dragging.
+function TrustStatusWidget:setPosition(x, y)
+    Widget.setPosition(self, x, y)
+    if self.compactGlowOuter then
+        self.compactGlowOuter:setPosition(0, 0)
+        self.compactGlowInner:setPosition(2, 2)
+        self.compactIcon:setPosition(4, 4)
+    end
+end
+
 function TrustStatusWidget:setExpanded(expanded)
     return self:setCompactMode(not expanded)
 end
