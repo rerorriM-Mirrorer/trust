@@ -56,7 +56,61 @@ function Mouse.new()
     return self
 end
 
+-- Compact widgets have tiny hitboxes and do not use their old content
+-- views for mouse events. Route the initial click straight to the visible
+-- sprite/strip and capture subsequent motion/release until the drag ends.
+-- This avoids unrelated menu/item cells swallowing part of a compact drag.
+function Mouse:getCompactWidgets()
+    local widgets = L{}
+    local trustUi = windower.trust and windower.trust.ui
+    if not trustUi or not trustUi.get_widget then
+        return widgets
+    end
+    for _, name in ipairs({ 'trust', 'party', 'target' }) do
+        local widget = trustUi.get_widget(name)
+        if widget and widget.compactMode and widget:isVisible() then
+            widgets:append(widget)
+        end
+    end
+    return widgets
+end
+
+function Mouse:handleCompactWidgetMouseEvent(type, x, y, delta)
+    local widgets = self:getCompactWidgets()
+
+    -- A captured drag keeps receiving events after the pointer leaves the
+    -- sprite and crosses another widget or menu view.
+    if type == Mouse.Event.Move or type == Mouse.Event.ClickRelease then
+        for widget in widgets:it() do
+            if widget.compactDrag then
+                return widget:onMouseEvent(type, x, y, delta)
+            end
+        end
+    end
+
+    if type ~= Mouse.Event.Click then
+        return false
+    end
+
+    -- Don't steal clicks from an open menu or command picker.
+    if (hud and hud.trustMenu and hud.trustMenu:isVisible())
+            or (hud and hud.viewStack and hud.viewStack.currentView)
+            or (command_widget and command_widget:isVisible()) then
+        return false
+    end
+
+    for widget in widgets:it() do
+        if widget:hitTest(x, y) then
+            return widget:onMouseEvent(type, x, y, delta)
+        end
+    end
+    return false
+end
+
 function Mouse:handleMouseEvent(type, x, y, delta)
+    if self:handleCompactWidgetMouseEvent(type, x, y, delta) then
+        return true
+    end
     local handled
     local currentView
     local allViews = Q{ hud }
