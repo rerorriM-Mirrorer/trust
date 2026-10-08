@@ -22,6 +22,7 @@ local Timer = require('cylibs/util/timers/timer')
 local VerticalFlowLayout = require('cylibs/ui/collection_view/layouts/vertical_flow_layout')
 local ViewItem = require('cylibs/ui/collection_view/items/view_item')
 local Widget = require('ui/widgets/Widget')
+local CompactWidget = require('ui/widgets/CompactWidget')
 
 local TargetWidget = setmetatable({}, {__index = Widget })
 TargetWidget.__index = TargetWidget
@@ -125,6 +126,24 @@ function TargetWidget.new(frame, party, trust)
     self.debuffsView = self:createDebuffsView()
     self.maxNumDebuffs = 7
     self.needsResize = true
+
+    self.fullWidth = frame.width
+    self.fullHeight = frame.height
+    self.compactWidth = 148
+    self.compactHeight = 38
+
+    -- Transparent, independent compact presentation. Original rows, skillchain
+    -- state and tracked debuffs remain in the full widget for reversibility.
+    self.compactNameCell = TextCollectionViewCell.new(TextItem.new('', TargetWidget.Text))
+    self.compactNameCell:setPosition(4, 0)
+    self.compactNameCell:setSize(140, 18)
+    self:addSubview(self.compactNameCell)
+
+    self.compactDebuffsView = self:createDebuffsView()
+    self.compactDebuffsView:setPosition(4, 20)
+    self.compactDebuffsView:setSize(128, 14)
+    self.compactDebuffsView:setScrollEnabled(false)
+    self:addSubview(self.compactDebuffsView)
     self.targetDisposeBag = DisposeBag.new()
 
     local itemsToAdd = L{
@@ -177,6 +196,7 @@ function TargetWidget.new(frame, party, trust)
         self:setTarget(nil)
     end
     self:setAction(nil)
+    self:setCompactMode(true)
 
     local skillchainer = trust:role_with_type("skillchainer")
 
@@ -287,10 +307,17 @@ function TargetWidget:setTarget(target_index)
     targetItem:setShouldWordWrap(false)
 
     self:getDataSource():updateItem(targetItem, IndexPath.new(1, 1))
+    self.compactNameCell:setItem(TextItem.new(targetText, TargetWidget.Text))
+    self.compactNameCell:layoutIfNeeded()
 
     self:setVisible(not targetText:empty())
 
     self:setExpanded(self:shouldExpand())
+    if self.alliance:get_target_by_index(self.target_index) then
+        self:updateDebuffs()
+    else
+        self:clearCompactDebuffs()
+    end
 
     self:layoutIfNeeded()
 end
@@ -411,10 +438,43 @@ function TargetWidget:updateDebuffs()
     end
 
     self.debuffsView:getDataSource():updateItems(itemsToUpdate)
+    self.compactDebuffsView:getDataSource():updateItems(itemsToUpdate)
 
     self.needsResize = true
 
     self:setExpanded(allDebuffIds:length() > 0)
+end
+
+-- Clear previous icons when switching to an untracked or missing target.
+function TargetWidget:clearCompactDebuffs()
+    local items = L{}
+    for i = 1, self.maxNumDebuffs do
+        items:append(IndexedItem.new(ImageItem.new('', 14, 14), IndexPath.new(1, i)))
+    end
+    self.compactDebuffsView:getDataSource():updateItems(items)
+end
+
+function TargetWidget:updateCompactVisibility()
+    self.compactNameCell:setVisible(self.compactMode)
+    self.compactDebuffsView:setVisible(self.compactMode)
+    self.compactNameCell:layoutIfNeeded()
+    self.compactDebuffsView:layoutIfNeeded()
+end
+
+function TargetWidget:setCompactMode(compact)
+    return CompactWidget.setMode(self, compact)
+end
+
+function TargetWidget:hitTest(x, y)
+    return CompactWidget.hitTest(self, x, y)
+end
+
+function TargetWidget:onMouseEvent(type, x, y, delta)
+    return CompactWidget.onMouseEvent(self, type, x, y, delta)
+end
+
+function TargetWidget:layoutIfNeeded()
+    return CompactWidget.layoutIfNeeded(self)
 end
 
 return TargetWidget
