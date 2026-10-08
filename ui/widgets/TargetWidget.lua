@@ -4,8 +4,10 @@ local CollectionView = require('cylibs/ui/collection_view/collection_view')
 local CollectionViewDataSource = require('cylibs/ui/collection_view/collection_view_data_source')
 local CollectionViewStyle = require('cylibs/ui/collection_view/collection_view_style')
 local Color = require('cylibs/ui/views/color')
+local ColorView = require('cylibs/ui/views/color_view')
 local ContainerCollectionViewCell = require('cylibs/ui/collection_view/cells/container_collection_view_cell')
 local DisposeBag = require('cylibs/events/dispose_bag')
+local Frame = require('cylibs/ui/views/frame')
 local HorizontalFlowLayout = require('cylibs/ui/collection_view/layouts/horizontal_flow_layout')
 local ImageCollectionViewCell = require('cylibs/ui/collection_view/cells/image_collection_view_cell')
 local ImageItem = require('cylibs/ui/collection_view/items/image_item')
@@ -129,19 +131,32 @@ function TargetWidget.new(frame, party, trust)
 
     self.fullWidth = frame.width
     self.fullHeight = frame.height
-    self.compactWidth = 148
-    self.compactHeight = 38
+    -- Single-line floating target strip: one name followed by seven 14px
+    -- debuff icons with 2px spacing, enclosed by a one-pixel white outline.
+    self.compactWidth = 264
+    self.compactHeight = 24
 
-    -- Transparent, independent compact presentation. Original rows, skillchain
-    -- state and tracked debuffs remain in the full widget for reversibility.
+    -- Four independent lines create a transparent outline, not a filled box.
+    -- Only this compact presentation uses them; full-mode artwork is intact.
+    local outline = Color.new(190, 255, 255, 255)
+    self.compactBorderViews = {
+        ColorView.new(Frame.new(0, 0, self.compactWidth, 1), outline),
+        ColorView.new(Frame.new(0, self.compactHeight - 1, self.compactWidth, 1), outline),
+        ColorView.new(Frame.new(0, 0, 1, self.compactHeight), outline),
+        ColorView.new(Frame.new(self.compactWidth - 1, 0, 1, self.compactHeight), outline),
+    }
+    for _, border in ipairs(self.compactBorderViews) do
+        self:addSubview(border)
+    end
+
     self.compactNameCell = TextCollectionViewCell.new(TextItem.new('', TargetWidget.Text))
-    self.compactNameCell:setPosition(4, 0)
-    self.compactNameCell:setSize(140, 18)
+    self.compactNameCell:setPosition(8, 3)
+    self.compactNameCell:setSize(120, 18)
     self:addSubview(self.compactNameCell)
 
     self.compactDebuffsView = self:createDebuffsView()
-    self.compactDebuffsView:setPosition(4, 20)
-    self.compactDebuffsView:setSize(128, 14)
+    self.compactDebuffsView:setPosition(140, 5)
+    self.compactDebuffsView:setSize(112, 14)
     self.compactDebuffsView:setScrollEnabled(false)
     self:addSubview(self.compactDebuffsView)
     self.targetDisposeBag = DisposeBag.new()
@@ -307,7 +322,7 @@ function TargetWidget:setTarget(target_index)
     targetItem:setShouldWordWrap(false)
 
     self:getDataSource():updateItem(targetItem, IndexPath.new(1, 1))
-    self.compactNameCell:setItem(TextItem.new(targetText, TargetWidget.Text))
+    self.compactNameCell:setItem(TextItem.new(localization_util.truncate(targetText, 15), TargetWidget.Text))
     self.compactNameCell:layoutIfNeeded()
 
     self:setVisible(not targetText:empty())
@@ -454,11 +469,38 @@ function TargetWidget:clearCompactDebuffs()
     self.compactDebuffsView:getDataSource():updateItems(items)
 end
 
+-- The original row cells own independent Windower text surfaces. Merely
+-- hiding the collection's content view leaves their last rendered text on
+-- screen, duplicating the compact name and leaking HP/distance. Explicitly
+-- synchronize each legacy cell when compact mode or data layout changes.
+function TargetWidget:syncFullRowsVisibility()
+    local source = self:getDataSource()
+    if not source then
+        return
+    end
+    for row = 1, 4 do
+        local cell = source:cellForItemAtIndexPath(IndexPath.new(1, row))
+        if cell then
+            cell:setVisible(not self.compactMode)
+            cell:setNeedsLayout()
+            cell:layoutIfNeeded()
+            if self.compactMode and cell.textView then
+                cell.textView:visible(false)
+            end
+        end
+    end
+end
+
 function TargetWidget:updateCompactVisibility()
+    for _, border in ipairs(self.compactBorderViews) do
+        border:setVisible(self.compactMode)
+        border:layoutIfNeeded()
+    end
     self.compactNameCell:setVisible(self.compactMode)
     self.compactDebuffsView:setVisible(self.compactMode)
     self.compactNameCell:layoutIfNeeded()
     self.compactDebuffsView:layoutIfNeeded()
+    self:syncFullRowsVisibility()
 end
 
 function TargetWidget:setCompactMode(compact)
@@ -469,8 +511,17 @@ end
 function TargetWidget:setPosition(x, y)
     Widget.setPosition(self, x, y)
     if self.compactNameCell then
-        self.compactNameCell:setPosition(4, 0)
-        self.compactDebuffsView:setPosition(4, 20)
+        self.compactNameCell:setPosition(8, 3)
+        self.compactDebuffsView:setPosition(140, 5)
+        -- The underlying View resets child offsets when its parent moves.
+        local width, height = self.compactWidth, self.compactHeight
+        local frames = {
+            { 0, 0 }, { 0, height - 1 },
+            { 0, 0 }, { width - 1, 0 },
+        }
+        for i, border in ipairs(self.compactBorderViews) do
+            border:setPosition(frames[i][1], frames[i][2])
+        end
     end
 end
 
@@ -483,7 +534,13 @@ function TargetWidget:onMouseEvent(type, x, y, delta)
 end
 
 function TargetWidget:layoutIfNeeded()
-    return CompactWidget.layoutIfNeeded(self)
+    local changed = CompactWidget.layoutIfNeeded(self)
+    -- CollectionView's normal layout can temporarily revive its full rows.
+    -- Suppress their separate text renderers after every compact redraw.
+    if self.compactMode then
+        self:syncFullRowsVisibility()
+    end
+    return changed
 end
 
 return TargetWidget
