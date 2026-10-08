@@ -4,7 +4,52 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
-## Current testing batch — 2026-10-08: C0 iteration 2, compact click/drag recovery
+## Current testing batch — 2026-10-08: C1 three-widget compact layout (candidate)
+
+- **Branch:** [`test/compact-trust-title-20261008`](https://github.com/rerorriM-Mirrorer/trust/tree/test/compact-trust-title-20261008); **unmerged**, keep `main` as last live-tested.
+- **User-supplied assets (2026-10-08):** exact 32×32 gold hourglass `icon_timer.png` and gray `item_slot_background.png`, visually compared with existing repo assets in `assets/icons/` and `assets/backgrounds/`. The same assets already exist; no icon image files need copying or replacing. Earlier assistant illustrative search result was **not** the real timer sprite.
+- **Change C1a:** Trust status in compact view is a 40×40 timer sprite with translucent blue square halo for **Idle**, green for **Active**, and no halo for **Off**. It is a visual placeholder, not a claim that Trust exposes an exhaustive three-state API. **Off wins over stale action queue events; Active represents a running main-queue action (not follower locomotion alone).**
+- **Change C1b:** Party in compact view is a 32×32 existing item-slot background with a numeral for actual members in local FFXI party `p0`–`p5` (including player and summoned alter egos). It is **not** the number of simultaneous Trust-addon multibox clients or everyone in the alliance.
+- **Change C1c:** Target in compact view is a **transparent draggable 148×38 hitbox** showing Trust's party-target name and its existing tracked debuff icons. No HP/distance/action text, window background, title, or border. Existing seven-icon cap stays unchanged in this batch; >7 remains a later proposal.
+- **Shared interaction:** Each compact view can be clicked to return **only that widget** to Full; drag >3px and release should save position with existing WidgetManager. `//trust widget full|compact|toggle [all|trust|party|target]` manages all three (defaults to all). An all-widget toggle aligns states according to Trust's current mode. The command is permitted while Trust's menu is open, with other menu restrictions unchanged.
+- **Changed source from `main`:** `Trust.lua`, `commands/GeneralCommands.lua`, `ui/widgets/CompactWidget.lua` (new), `ui/widgets/TrustStatusWidget.lua`, `ui/widgets/PartyStatusWidget.lua`, `ui/widgets/TargetWidget.lua`. `TESTING.md` records test instructions. No EnemyBar2 or automation behavior changes.
+- **Source-check status:** Read source and reviewed target/party update events, icon state priority, drag route and overlay offsets. **Not yet demonstrated in Windower; no live C1 result and no FFXI smoke test.** Do not mark implementation as working until tested.
+
+### Installation / rollback
+
+1. Confirm your installed Trust matches this fork's baseline. Back up **all five existing Lua files**: `Trust.lua`, `commands/GeneralCommands.lua`, `ui/widgets/TrustStatusWidget.lua`, `ui/widgets/PartyStatusWidget.lua`, `ui/widgets/TargetWidget.lua`.
+2. Obtain the current testing branch's versions of these files **and new** `ui/widgets/CompactWidget.lua`. Use the six Lua files together; the shared new module is required. The two original PNG assets are already in the source tree.
+3. Reload with `//lua r trust`. To restore original-sized widget presentations without reverting files: `//trust widget full`. If addon load or input fails, restore the backed-up files, remove only the newly added `CompactWidget.lua`, then reload. Keep a screenshot/log of any error.
+4. On live success, test again on multiple clients; do not install on all six simultaneously before single-client smoke passes.
+
+### Live FFXI test record (C1 — ALL PENDING)
+
+| Test ID | Procedure | Expected result | Actual |
+| --- | --- | --- | --- |
+| C1-01 | Load on one low-resolution client. | 40×40 hourglass, 32×32 party item slot, transparent Target strip only when a Trust party target exists. | **PENDING** |
+| C1-02 | `//trust stop`, `//trust start`, run an actual queued action, then let action end. | Off unlit/gray, Idle blue, Active green, back to Idle. Following alone may remain Idle. | **PENDING** |
+| C1-03 | Solo and then party with 2–6 members; add/remove an alter ego or player. | Numeric local party count updates, including player. | **PENDING** |
+| C1-04 | Set a Trust party target with no debuffs, then with one/multiple, then change/clear it. | Correct name and only tracked debuff icons; no stale icon/name or invisible retained hitbox. | **PENDING** |
+| C1-05 | Short-click each compact widget separately. | Only clicked widget expands; `//trust widget compact` restores all three. | **PENDING** |
+| C1-06 | Drag each icon/strip at least 20px, release, and reload. | Moves without expanding; internal sprite/text/icon spacing preserved; position saves. | **PENDING** |
+| C1-07 | `//trust widget full`, `compact`, `toggle`; try `full target` and `compact party`. | All/full and individual commands work, and original Full controls still work. | **PENDING** |
+| C1-08 | Change targets, action queue state, party composition while compact. | Compact overlays remain visible, no old body/borders popping into view, no gameplay stalls. | **PENDING** |
+| C1-09 | Repeat on larger resolution and 2+ clients. | No misaligned pointer targets, repeated drawings or overlap; other addons unaffected. | **PENDING** |
+
+### Known caveats to verify, not silent assumptions
+
+- Glow is intentionally two translucent **square** halo layers behind Trust's original gold hourglass, not an externally generated smooth blur. Adjust softness after screenshots.
+- Target name/debuff strip is transparent; the **rectangle is the invisible 148×38 mouse hitbox**. It only appears when Trust has a target.
+- The target still tracks at most seven debuff IDs, and its source is the party target, **not necessarily the client's selected target**.
+- Full mode remains accessible but is **not yet saved across reload**. All three start compact after reload. The compact mode does not repair inaccurate full-view job/level values.
+- The status may remain Idle while a follower is moving, because follower movement uses a separate queue.
+- All 32×32 assets are existing repo copies; there are **no new PNG dependencies or sprite-file installation requirements**.
+
+---
+
+## Previous testing batch — 2026-10-08: C0 iteration 2, compact click/drag recovery
+
+**Heading correction (2026-10-08):** ~~Current testing batch — 2026-10-08: C0 iteration 2, compact click/drag recovery~~. Superseded as current by the three-widget visual experiment below; C0 user failures, repairs, and instructions are retained as historical reference.
 
 - **Branch:** [`test/compact-trust-title-20261008`](https://github.com/rerorriM-Mirrorer/trust/tree/test/compact-trust-title-20261008). `main` remains last trusted live-tested code.
 - **Code commits:** [`831b1fc3`](https://github.com/rerorriM-Mirrorer/trust/commit/831b1fc3647d8152c1aee96077a367d6777db939) (compact click/drag), [`122564e9`](https://github.com/rerorriM-Mirrorer/trust/commit/122564e973130432f2b36cb7053a00947ece1151) (commands), [`3da6873c`](https://github.com/rerorriM-Mirrorer/trust/commit/3da6873cb215398f279683aba0210f0e18e156c3) (menu command exception).
@@ -223,6 +268,8 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 ## Delivery and test ledger
 
+**C1 addition (2026-10-08):** Candidate three-widget compact visual branch; six Lua sources including one new shared helper, no modified art assets, **live outcome pending**. Previous delivery rows remain below.
+
 | Date | Batch / artifact | Type | Reference | Outcome |
 | --- | --- | --- | --- | --- |
 | 2026-10-08 | Initial Trust `TESTING.md` | Documentation only | This file; commit available in Git history | Created from user feedback and source inspection; **no behavioral tests or installation package** |
@@ -233,6 +280,8 @@ Private, cumulative development and testing record. Keep this file at the **repo
 | — | EnemyBar2 debuff prototype | Not yet prepared | Separate repository | Not started |
 
 ## User-provided materials and prior findings
+
+**C1 user input (2026-10-08):** User supplied exact 32×32 `icon_timer.png` and `item_slot_background.png` images and requested hourglass blue/green status glow, item-slot party numeral, and transparent draggable target name/debuff strip. Source asset matches were found; no image-file changes needed.
 
 | Date | Item | Origin / reference | Preservation note |
 | --- | --- | --- | --- |
