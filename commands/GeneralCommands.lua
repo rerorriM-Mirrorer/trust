@@ -33,6 +33,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('toggle', self.handle_toggle, 'Toggle Trust On and Off')
     self:add_command('reload', self.handle_reload, 'Reload job settings files')
     self:add_command('status', self.handle_status, 'View Trust status')
+    self:add_command('widget', self.handle_widget, 'Toggle the Trust widget between full and compact, or use // trust widget full|compact|toggle')
 
     -- Modes
     self:add_command('set', self.handle_set_mode, 'Set a mode to a given value, // trust set mode_name mode_value')
@@ -112,6 +113,28 @@ function GeneralTrustCommands:handle_status()
     end
 
     return success, message
+end
+
+-- // trust widget [full|compact|toggle]
+-- This is intentionally independent of the Trust automation enabled state.
+function GeneralTrustCommands:handle_widget(_, mode)
+    mode = mode or 'toggle'
+    if type(mode) ~= 'string' then
+        return false, 'Usage: // trust widget [full|compact|toggle]'
+    end
+    mode = mode:lower()
+    if not S{ 'full', 'compact', 'toggle' }:contains(mode) then
+        return false, 'Usage: // trust widget [full|compact|toggle]'
+    end
+
+    local widget = windower.trust.ui.get_widget('trust')
+    if not widget then
+        return false, 'Trust status widget is unavailable'
+    end
+
+    local expanded = mode == 'full' or (mode == 'toggle' and not widget:isExpanded())
+    widget:setExpanded(expanded)
+    return true, 'Trust widget '..(expanded and 'expanded' or 'compacted')
 end
 
 -- // trust start
