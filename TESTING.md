@@ -1,0 +1,184 @@
+# TESTING.md — Trust
+
+Private, cumulative development and testing record. Keep this file at the **repository root** and at the **root of every testing package**. Read it first before testing or preparing a patch batch. Exclude this internal record from public release packages unless the collaborators agree otherwise.
+
+**Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
+
+## Current testing batch — 2026-10-08: UX and integration proposals
+
+- **Package / batch:** Documentation-only baseline. No testing package.
+- **Repository:** `rerorriM-Mirrorer/trust`, default branch `main`; baseline examined at commit `9a7de430c622b8565edcf3667e72b4d5ca317e46`. Source identifies itself as Trust 17.7.3. Verify baseline again before coding.
+- **Status:** Code inspected; issues and desired changes recorded. **No implementation, static test, automated runtime test, or live FFXI test conducted for this entry.**
+- **Files affected by this batch:** `TESTING.md` only. No behavioral changes; no change to EnemyBar2, XIVCrossbar, or installed game files.
+- **Purpose:** Make Trust quieter and faster to operate; provide an almost invisible compact UI; explore debuff rendering through EnemyBar2; shorten the settings-commit workflow; and prepare safe follow/path troubleshooting.
+- **Read before testing:** All new menu, widget, and integration behavior below is a **proposal**, not an installed feature.
+
+### Evidence and status language
+
+- **USER OBSERVATION** = user-reported experience in live FFXI, not independently reproduced by the developer.
+- **SOURCE-CONFIRMED** = verified by reading a named code path, not necessarily working as intended at runtime.
+- **HYPOTHESIS** = possible cause, awaiting instrumentation/controlled reproduction.
+- **PROPOSAL** = desired behavior or candidate implementation, not yet coded.
+- **PENDING** = test not run. Do not mark an observed symptom as a passing implementation test.
+- Record test date, character/client count, resolution, profile, steps, actual outcome, screenshots/logs if available, regression notes, and commit/package reference.
+
+### User observations / requests (2026-10-08)
+
+1. **Chat:** `//trust set PartyChatMode Off` is an acceptable no-code workaround for repetitive “I can't find you. Whatever happened to no Trust left behind?” and related conversational chat, provided it works in-game. No chat rewrite requested for now.
+2. **Command browser and menus:** The command browser is jarring on opening and visibly hitches when drawn. Other Trust menus also hitch; consider restrained fade-in/out like XIVCrossbar's autohide animation. Do not assume a fade eliminates rendering cost.
+3. **Trust widget:** Displayed main/subjob levels are often incorrect. In **Compact** mode show **only one icon**, colored **gray Off**, **blue Idle**, **green Active**, using the previously discussed palette. No additional proposed “Moving / Attention / Error” colors in this compact design.
+4. **Party widget:** Hide the entire Party window in Compact mode. At most place a small count of in-party Trust members beside the Trust icon. Clarify later whether “Trust members” means multibox clients running the addon, summoned alter egos, or another subset; do not silently substitute total party size.
+5. **Target widget:** Keep a small transparent/floating target indicator + target name + visible debuff icons; remove redundant HP% and distance in Compact mode because EnemyBar2 covers these. More than seven/eight icons if supported cleanly. No enclosing background; emulate the restrained appearance of FFXI status icons.
+6. **EnemyBar2 integration:** Link Trust's *party combat target* to EnemyBar2 by **entity ID**, not by name. When the Trust target matches the current game target, draw debuff icons above/below/alongside EnemyBar2's **main target** bar; when different, draw them at an EnemyBar2 **focus-target** bar. Avoid duplicated HP/name/distance. Alternatively first test standalone EnemyBar2 debuff icons using its existing tracking/assets, then integrate Trust's fuller tracking. Preserve the possibility that the compact Trust Target widget remains as an independent icon/name strip.
+7. **Menu editing:** Current settings may require leaving an editor, navigating to Save, saving separately, and closing the menu before issuing commands. Desired behavior: change list/toggle selections without repeatedly pressing Enter; a single **Enter** commits *all* pending edits in the current editor, persists them to the correct settings/profile, and returns **one menu level**. No deep backtracking. Verify behavior with controller, keyboard, validation errors, and unchanged fields.
+8. **Commands with menu open:** Prior observation: blocking most commands when a menu is visible discourages use of the menu. Essential Stop/Hold/menu-close should remain reachable. Prevent contradictory edits rather than imposing a blanket prohibition.
+9. **On-demand automation:** Interested in adjusting individual buffs/heal frequency or temporarily overriding unsuccessful gambits in play, not necessarily building elaborate permanent party patterns. Distinguish temporary override, one-shot action, and persistent profile edit.
+10. **Following/pathing:** Followers can remain caught on terrain. Investigate stuck detection using position/progress when out of combat, then a bounded, reversible side-step/arc/spiral-like recovery with retry; monitor only before enabling autonomous corrections.
+11. **Documentation:** Keep `TESTING.md` at the repository/testing-package root and maintain observations, hypotheses, tests, previous records, corrections and delivery history.
+
+## Source-confirmed baseline (not live-tested here)
+
+| Area | Current source behavior | File / reference |
+| --- | --- | --- |
+| Party chat | `PartyChatMode` has `Private`, `Party`, `Off` values. The warning passes `follower_follow_failure` with a 30-second throttle. `Off` suppresses ordinary party-chat messages; separate logger/system errors may remain. | [party_chat.lua](cylibs/chat/party_chat.lua); [follower.lua](cylibs/trust/roles/follower.lua) |
+| Trust status | The widget observes addon enabled/disabled and the **main action queue**; empty action text becomes `Idle`, disabled shows `OFF`, and active action text shows the specific action. This is **not an explicit three-value status enum**; following uses a separate queue. | [TrustStatusWidget.lua](ui/widgets/TrustStatusWidget.lua); [follower.lua](cylibs/trust/roles/follower.lua) |
+| Job levels | `setJobs()` reads `windower.ffxi.get_player().main_job_level` and `sub_job_level`. It is invoked during construction, player-level events and zone changes. Whether stale Windower data, update timing, or missed events explain incorrect values remains **unknown**. | [TrustStatusWidget.lua](ui/widgets/TrustStatusWidget.lua) |
+| Party window | Clicking player/member rows opens player or member menus, and highlighting a member can show buff icons. It also provides alliance navigation and assist/command operations. These functions must remain accessible in Full mode. | [PartyStatusWidget.lua](ui/widgets/PartyStatusWidget.lua) |
+| Trust target | `TargetWidget` receives `party:on_party_target_change` and target-tracker events; it does not directly use the client's `get_mob_by_target('t')` to decide the displayed target. Party assist-target tracking and game events feed this state. | [TargetWidget.lua](ui/widgets/TargetWidget.lua); [party_target.lua](cylibs/entity/party/party_target.lua) |
+| Debuff icons | Trust has `self.maxNumDebuffs = 7`. It renders tracked debuff IDs from its monster/debuff tracker and responds to gain/loss events. | [TargetWidget.lua](ui/widgets/TargetWidget.lua) |
+| Existing EnemyBar2 | [EnemyBar2 fork](https://github.com/rerorriM-Mirrorer/enemybar2) supports target/subtarget/focus/aggro bars and `//eb ft`; its `show_debuff` currently covers selected crowd-control status icons, **not** Trust's multi-icon tracked debuff row. | [enemybar2.lua](https://github.com/rerorriM-Mirrorer/enemybar2/blob/master/enemybar2.lua); [bars.lua](https://github.com/rerorriM-Mirrorer/enemybar2/blob/master/bars.lua) |
+| Widget visibility | Widget settings database contains a `visible` field, but the manager initializes widgets visible; Party and Target logic can show them again on updates. Persistent visibility must be respected by render/update flows, not patched by a one-off hide. | [settings/settings.lua](settings/settings.lua); [WidgetManager.lua](ui/widgets/WidgetManager.lua); [PartyStatusWidget.lua](ui/widgets/PartyStatusWidget.lua); [TargetWidget.lua](ui/widgets/TargetWidget.lua) |
+| Browser/menu hitch | The command-menu system dynamically creates menu items/editor views. The code suggests possible layout or creation cost, but the actual hitch cause is **unverified**. | [CommandsMenuItem.lua](ui/settings/menus/commands/CommandsMenuItem.lua); [menu.lua](cylibs/ui/menu/menu.lua); [TrustHud.lua](ui/TrustHud.lua) |
+| Menu saving | `ModeConfigEditor` applies changes on confirmation; `ModesMenuItem` has a separate explicit `Save` action to persist modes to the selected profile. Other ConfigEditor instances may save owning settings when confirming. Save semantics differ between editors. | [ModeConfigEditor.lua](ui/settings/editors/config/ModeConfigEditor.lua); [ConfigEditor.lua](ui/settings/editors/config/ConfigEditor.lua); [ModesMenuItem.lua](ui/settings/menus/ModesMenuItem.lua) |
+| Menu command restriction | Trust refuses nearly all addon commands when `hud.trustMenu:isVisible()`, except `assist`, `send`, `sendall`. Reason for this rule is **undocumented in the inspected code**. | [Trust.lua](Trust.lua) |
+| Pathing | `RunToLocationAction` keeps steering directly toward a point and defines a 10-second max duration. `Pather` advances to its next waypoint when within roughly one yalm. No dedicated stuck/recovery planner was identified in the inspected path. | [runtolocation.lua](cylibs/actions/runtolocation.lua); [pather.lua](cylibs/trust/roles/pather.lua) |
+| Healing | `AutoHealMode` includes `Auto`, `Emergency`, `Off`. An explicit FIXME in `Healer:get_cooldown()` notes that Emergency does not yet consistently implement a separate HP threshold and instead uses a longer cooldown in that path. | [healer.lua](cylibs/trust/roles/healer.lua) |
+
+### Clarifications / corrections kept in the record
+
+- ~~Trust exposes an explicit three-state `Off` / `Idle` / `Active` status enum.~~ **Correction (2026-10-08):** Those are the *proposed compact labels derived from* addon-enabled state and the action queue. Preserve Off's priority over late action-end events; do not claim they enumerate all automation activity.
+- ~~Trust Target displays up to eight debuff icons by default.~~ **Correction (2026-10-08):** Source sets `maxNumDebuffs = 7`. Increasing the limit, layout, data completeness, and performance require tests.
+- ~~A slow fade fixes the opening hitch.~~ **Correction (2026-10-08):** A fade can improve perceptual transition but may not reduce synchronous work. Profile render/layout cost independently.
+
+## Proposed UX design and acceptance tests
+
+### A. Menus, command browser, smooth appearance
+
+**PROPOSAL:** Make opening and dismissing menus visually gentle (brief fade-in, perhaps 120–180 ms initially; fine-tune live), without delayed key handling or interaction. Consider incremental/lazy construction, caching, or prewarming to address real hitch. No new animation during gameplay cutscenes, and avoid unnecessary per-frame work with six clients.
+
+**Test A1:** On one client, record open/close behavior for regular menu and `//trust commands`; note frozen frames, control responsiveness, transient blank/white regions, and memory/CPU impact. Repeat several times to separate first-open cost from repeated-open cost.
+
+**Test A2:** Repeat at a small laptop resolution and a larger modern resolution; repeat with four and six clients. Compare baseline against **fade only**, **construction optimization only**, and **both**, where feasible.
+
+**Pass criteria:** Menus appear/disappear smoothly; keyboard/controller focus works immediately; no uncommanded click, input capture, major repeated hitch, or animation when hidden. Performance claims require observed timings/frame data, not impressions alone.
+
+### B. Enter-to-commit and faster settings navigation
+
+**PROPOSAL:** For an editor with editable rows, arrows/selection changes adjust **staged values** without an additional Enter per toggle. A single Enter validates and commits **all** staged changes, persists to the correct file/profile, and returns to the immediately preceding menu. Support a clear outcome on invalid edits. The mode editor must handle both runtime state and saved profile, instead of retaining the current surprise separation of Confirm vs Save.
+
+**Design questions to resolve during implementation:** Define Escape when edits are dirty (discard/confirm/cancel); distinguish text editing's Enter from editor-wide commit; choose whether intentional *temporary* changes need a separate “Apply temporarily” command; avoid overwriting unsaved edits when another controller/client issues changes.
+
+**Test B1:** Change 2–3 independent settings including boolean, list/picker, and numeric; press Enter once. Verify all changes survive addon reload/relogin and focus returns exactly one level.
+
+**Test B2:** Attempt invalid value, Escape, a no-op Enter, and rapid repeated Enter; verify no partial save or duplicate event, and no keybind remains captured.
+
+**Test B3:** Repeat in Mods/Modes, gambit, healing, and other representative editors. Ensure pre-existing, separately persistent per-job and per-profile settings stay correctly scoped.
+
+### C. Compact status / Party widget
+
+**PROPOSAL:** Add `Full` and `Compact` visual modes, persisted per character or an explicitly chosen scope. In Compact show *only* the Trust icon: **gray Off**, **blue Idle**, **green Active**. No job/level/profile labels. Prioritize Off over queue updates; Active means the main action queue currently executes an action, not that a follower is moving. Provide tooltip/help and at least one non-color indicator for accessibility if possible.
+
+**Party:** Hide Party window in Compact, with **optional** unobtrusive numerical count beside Trust icon only once its meaning is agreed. Full mode retains member-menu/assist/buff interactions.
+
+**Test C1:** Start, stop, queue/complete a combat action, follow someone while otherwise Idle, zone, die, and reload. Verify status transitions and consistent Off priority.
+
+**Test C2:** Check that Full/Compact changes neither automation nor Party controls; switching back restores position and access. Verify profile persistence and appearance at different UI scales.
+
+**Test C3 (job level bug):** Record displayed values and compare with FFXI status window + `windower.ffxi.get_player()` values at login, job change, subjob change, level gain, zone, and UI-mode switch. Identify whether display is stale or data itself incorrect before choosing a fix. **The compact icon simply removes the misleading labels; it does not fix the underlying bug.**
+
+### D. Minimal floating target and debuff icons
+
+**PROPOSAL:** Compact Trust Target becomes a transparent floating row: target icon + short target name + up to configurable number of debuff icons, with no HP%, distance or enclosing panel. Preserve detailed target/skillchain info in Full mode, or in an explicit expanded view. Support more than seven icons, using wrapping or a configurable cap rather than clipping or crossing screen bounds.
+
+**Test D1:** Zero, one, seven, eight, twelve and sixteen simultaneous trackable debuffs (if safely reproducible); check icon order, icon fallbacks, wrapping, update events, and target switches. Do not invent absent debuffs.
+
+**Test D2:** Compare client's direct FFXI target to Trust party target while assisting another player, solo, in a party, with multiple enemies, after enemy KO, zoning and Trust reload. Confirm the label is driven by the party target, not merely by local selection.
+
+**Test D3:** Test transparent overlay, hover/click/hitboxes, cutscene hiding, full/compact transitions, overlapping XIVCrossbar, and small resolutions.
+
+### E. EnemyBar2 integration (independent repository; no changes yet)
+
+**First experiment (low risk):** In EnemyBar2 alone, prototype a transparent row of actual status/debuff icons over or below its main target bar. Reuse its current mob-ID tracking and assets only where suitable; its existing `tracked_debuff` is not guaranteed to supply the same complete set as Trust. Evaluate accuracy and performance before adding a dependency.
+
+**Second experiment (optional integration):** Expose Trust's party target and tracked debuffs as a *read-only optional source* (or a small shared adapter); EnemyBar2 resolves **mob ID** to:
+- Trust target ID == live selected target ID → icons attached to EnemyBar2's **main target bar**.
+- Trust target ID != selected target ID → icons on the **focus-target bar** for Trust's party target (do not take over the user's manually selected focus silently; define override policy).
+- No valid Trust target / Trust unloaded / cross-zone stale data → no orphan overlay; EnemyBar2 standalone functions normally.
+
+**Test E1:** Exact ID comparisons including index→ID conversion, despawn/reuse, multiple mobs with the same name, and party-assist changes. Never match only by name.
+
+**Test E2:** Trust unloaded, EnemyBar2 unloaded/reloaded, either addon missing, target change during cast/debuff, selected target not equal party target, pre-existing user focus target, and multiple clients with different targets.
+
+**Test E3:** Compare Trust's known debuff icons with EnemyBar2's crowd-control status indicators; distinguish confirmed, expired, resisted, overwritten, and unavailable effects. No false “all debuffs known” promise.
+
+**Ownership:** Any EnemyBar2 code change belongs in `rerorriM-Mirrorer/enemybar2` with **its own** root `TESTING.md`/commit and an explicit cross-link here; don't mix repository changes in Trust's test package.
+
+### F. Commands with menu open; on-demand gambit/buff/heal changes
+
+**PROPOSAL:** Make emergency Stop/Hold and menu close work while a menu is open; restrict only genuinely conflicting editor operations. Keep controls reversible, scope command to the correct character, and report partial success across clients.
+
+**Candidate one-shot/temporary behavior:** Briefly lower healing activity, request a specific available buff on a valid recipient, or temporarily disable/replace a problematic gambit. Do **not** persist temporary changes unless requested. The existing `heal`/`buff`/`debuff` command handlers support mode changes and gambit list/add/remove/enable/disable; some **persist** edits and are not equivalent to temporary overrides.
+
+**Test F1:** Open each major menu while issuing Stop, a safe status command, an edit to the currently displayed setting, and a cross-client command. Record which are blocked and whether queued actions continue.
+
+**Test F2:** For a future override, verify spell/ability recast, target validity, job availability, rollback/revert behavior, profile stability, and one concise explanation on failure. Test separately from permanent gambit edits.
+
+### G. Stuck-path diagnostics (no autonomous recovery in first test)
+
+**PROPOSAL:** Observe recent position, distance-to-waypoint and movement request while not in battle, cutscene, zone transition, or manual override. Report “possible stuck” only after a configurable interval with insufficient **net progress toward the goal**. Suppress repeats; keep first batch diagnostic-only.
+
+**Later experimental recovery:** Suspend the competing path/follow command before a short, bounded lateral step or arc (spiral-like if safely constrained); retry the same waypoint. Limit attempts and displacement, avoid ledges/hazardous terrain as far as feasible, and give up with one clear message. No unlimited oscillation. Distinguish following another player vs replaying a recorded path.
+
+**Test G1:** Deliberately walk into flat wall, corner, obstacle, harmless tight turn and normal slow movement. Check false positives, time-to-detection, action-queue arbitration, and no effect while stationary by intention.
+
+**Test G2 (only after diagnostic tests pass):** Try single-client opt-in recovery; preserve original path index; disable on combat/cutscene/manual movement; guarantee finite retries and a stop command; then test multiclient behavior.
+
+## Immediate baseline checks (no code patch required)
+
+| ID | Procedure | Expected / question | Result |
+| --- | --- | --- | --- |
+| B-01 | On one client run `//trust set PartyChatMode Off`; reproduce failed follow; check local/other-client messages. | Conversational warning suppressed; system/error messages remain. Other clients may need their own mode setting. | **PENDING** |
+| B-02 | Run `//trust status` before and after chat setting; inspect `PartyChatMode`. | Verify value and whether it survives reload/profile changes. | **PENDING** |
+| B-03 | Open regular Trust menus and `//trust commands`; repeat open/close and note visual hitch. | Baseline reproduction with resolution/client count and load timing. | **USER OBSERVATION; structured reproduction PENDING** |
+| B-04 | Compare Trust job/subjob levels with FFXI status and Windower data. | Is issue refresh/timing or incorrect source data? | **USER OBSERVATION; structured reproduction PENDING** |
+| B-05 | Open Modes editor, alter multiple modes, Confirm, then save profile, reload. | Record which changes are immediate, temporary, or persistent. | **USER OBSERVATION; structured reproduction PENDING** |
+| B-06 | Compare visible Trust target and current game target; use `//eb ft` in EnemyBar2. | Determine correct target ID and focus behavior; do not change persistent focus unexpectedly. | **SOURCE PATH IDENTIFIED; live reproduction PENDING** |
+| B-07 | Have a follower become stuck on terrain while safe; capture position/goal over time. | Establish positive and negative cases for detector. | **USER OBSERVATION; controlled trace PENDING** |
+
+## Delivery and test ledger
+
+| Date | Batch / artifact | Type | Reference | Outcome |
+| --- | --- | --- | --- | --- |
+| 2026-10-08 | Initial Trust `TESTING.md` | Documentation only | This file; commit available in Git history | Created from user feedback and source inspection; **no behavioral tests or installation package** |
+| — | Subsequent Trust patch | Not yet prepared | — | No claims of implementation |
+| — | EnemyBar2 debuff prototype | Not yet prepared | Separate repository | Not started |
+
+## User-provided materials and prior findings
+
+| Date | Item | Origin / reference | Preservation note |
+| --- | --- | --- | --- |
+| 2026-10-08 | Compact icon colors and three simple labels; Party removed in compact; transparent target name/debuff icons | Current project conversation | Desired design; do not expand the icon's state/color scheme without agreement |
+| 2026-10-08 | Command browser/menu visual hitch; inaccurate displayed job levels; single-Enter auto-commit, navigation improvements | Current project conversation | User observations requiring controlled tests |
+| 2026-10-08 | EnemyBar2 link by target ID; main vs focus debuff overlays; optional EnemyBar2-only prototype | Current project conversation; [EnemyBar2](https://github.com/rerorriM-Mirrorer/enemybar2) | Cross-repository idea; no integration implemented |
+| 2026-10-08 | Quiet-mode workaround; follower warnings; manual behavior overrides; path-stuck recovery | Current and previous Trust discussion | Some source behaviors confirmed; live behavior remains to be measured |
+| 2026-10-07 | Shared workflow/testing conventions | [NPCMirror root documents](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror) | Cumulative records, testing-package roots, strikethrough corrections; historical deletion only by agreement |
+
+## Next development sequence (not authorization to implement everything at once)
+
+1. **Baseline and diagnostics:** reproduce the browser hitch, level mismatch and menu persistence; keep a known-good snapshot.
+2. **Menu UX patch:** fix the most reproducible render hitch separately from fade; single-Enter staged commit/save/back with regression tests; minimal command exceptions while editing.
+3. **Compact Trust UI:** icon + optional agreed count; Party hidden; minimal transparent Target row; preserve Full mode functionality.
+4. **EnemyBar2-first debuff test:** in its own repository, trial floating icons on the main bar; afterward evaluate optional Trust target/debuff adapter and focus fallback.
+5. **Behavior controls and movement:** add only demonstrated-needed one-shot overrides, then diagnostic-only stuck detection; recovery after safe live validation.
+
+**Before delivering any future test package:** update this record with package name, branch/commit, changed files, rollback procedure, exact test instructions, static/smoke results, expected outcomes, and blank spaces for live observations. Include the document at package root; omit it from public release artifacts until agreed otherwise. Correct inaccurate entries using ~~strikethrough~~, a dated note, and replacement text; do not erase history unilaterally.
