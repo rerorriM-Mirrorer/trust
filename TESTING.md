@@ -12,6 +12,7 @@ Private, cumulative development and testing record. Keep this file at the **repo
 - **Modified source:** `ui/widgets/TrustStatusWidget.lua` only. No Party, Target, EnemyBar2, combat, follower or settings schema changes.
 - **Change:** Trust widget begins as a 104×14 title-only tab reusing its existing "Trust" title border. The default title-click callback toggles back to the full widget and back again. The body rows and bottom border are suppressed while compact. This is a **placeholder tab**, not yet a true 20×20 icon; the existing four fixed-width title-border pieces make an icon-width shrink unsafe without changing the renderer.
 - **Deferred:** Gray/blue/green state tint, persistent Full/Compact setting, Party hiding, debuff overlays, menu UX and other requests remain pending as documented below. The action queue and its current state tracking are untouched.
+- **Static check (2026-10-08):** New Lua methods loaded with `texlua` (Lua syntax check). An isolated mock test passed compact → full → compact switching, size selection and visibility calls. These checks do **not** exercise the real Windower renderer, mouse dispatch or Lua 5.1 environment. Full-addon parsing, smoke and live tests remain **PENDING**.
 
 ### Live installation and test instructions (all PENDING)
 
