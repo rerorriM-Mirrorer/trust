@@ -23,11 +23,19 @@ Private, cumulative development and testing record. Keep this file at the **repo
 3. Reload with `//lua r trust`. To restore original-sized widget presentations without reverting files: `//trust widget full`. If addon load or input fails, restore the backed-up files, remove only the newly added `CompactWidget.lua`, then reload. Keep a screenshot/log of any error.
 4. On live success, test again on multiple clients; do not install on all six simultaneously before single-client smoke passes.
 
-### Live FFXI test record (C1 — ALL PENDING)
+### Live FFXI test record (C1 — PARTIAL USER OBSERVATIONS)
+
+**Status correction (2026-10-08):** ~~C1 — ALL PENDING~~. The user has now tested the drop-in in FFXI and reported a positive compact layout appearance after repositioning. Click/drag, Off/Idle/Active transitions, party-count accuracy, target-debuff accuracy, menu commands, persistence, multiple clients and resolutions have **not yet been explicitly confirmed**.
+
+**User live observation — 2026-10-08, C1 package:** "LOOKS AMAZING SO FAR." On opening the addon, the widgets/icons initially appeared shifted completely off-screen; using Trust's in-game menu to select **Menu Layout Right** brought the compact icons back into sight, neatly aligned along the right. This is a **successful visual workaround** but an unresolved initial-placement/repositioning defect. The resolution, number of clients, precise prior coordinates, and cause are not yet known. Do not attribute it to an old saved position or the compact renderer without evidence.
+
+**Follow-up diagnostic:** If convenient, note whether the icons remain visible and aligned after `//lua r trust` or changing resolution. Check saved widget X/Y, screen bounds, and layout presets only after capturing reproduction details; ensure menu placement does not mask an off-screen hitbox.
+
+
 
 | Test ID | Procedure | Expected result | Actual |
 | --- | --- | --- | --- |
-| C1-01 | Load on one low-resolution client. | 40×40 hourglass, 32×32 party item slot, transparent Target strip only when a Trust party target exists. | **PENDING** |
+| C1-01 | Load on one low-resolution client. | 40×40 hourglass, 32×32 party item slot, transparent Target strip only when a Trust party target exists. | ~~PENDING~~ **PARTIAL USER OBSERVATION:** Compact icons look excellent and align at right after selecting *Menu Layout Right*, but startup positions were completely off-screen. Exact sizes, resolution and target behavior not verified. |
 | C1-02 | `//trust stop`, `//trust start`, run an actual queued action, then let action end. | Off dimmed/unlit, Idle blue, Active green, back to Idle. Following alone may remain Idle. | **PENDING** |
 | C1-03 | Solo and then party with 2–6 members; add/remove an alter ego or player. | Numeric local party count updates, including player. | **PENDING** |
 | C1-04 | Set a Trust party target with no debuffs, then with one/multiple, then change/clear it. | Correct name and only tracked debuff icons; no stale icon/name or invisible retained hitbox. | **PENDING** |
@@ -36,6 +44,12 @@ Private, cumulative development and testing record. Keep this file at the **repo
 | C1-07 | `//trust widget full`, `compact`, `toggle`; try `full target` and `compact party`. | All/full and individual commands work, and original Full controls still work. | **PENDING** |
 | C1-08 | Change targets, action queue state, party composition while compact. | Compact overlays remain visible, no old body/borders popping into view, no gameplay stalls. | **PENDING** |
 | C1-09 | Repeat on larger resolution and 2+ clients. | No misaligned pointer targets, repeated drawings or overlap; other addons unaffected. | **PENDING** |
+
+### New placement issue identified (2026-10-08)
+
+- **C1-POS-01 — USER OBSERVATION:** Immediately after addon load, compact widget positions were outside the viewable area. Preset **Menu Layout Right** repositioned them into a good-looking right-side arrangement. Treat placement as a remaining bug despite visual success.
+- **Next test:** Reload using the right-side preset and check whether the widgets remain visible. If they leave the screen again, capture resolution, widget positions and whether previously saved positions predate the compact dimensions. Do not overwrite existing position settings automatically before establishing causation.
+- **Design option (not implemented):** On compact-size transitions and first placement, clamp positions to reachable screen bounds or offer a one-command reset/center/preset recovery. Preserve intentional offscreen placement only if user preference explicitly calls for it.
 
 ### Known caveats to verify, not silent assumptions
 
