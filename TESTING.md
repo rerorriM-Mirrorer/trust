@@ -29,6 +29,7 @@ Private, cumulative development and testing record. Keep this file at the **repo
 - **SOURCE DIAGNOSIS / HYPOTHESIS:** `cylibs/ui/input/mouse.lua` routes input recursively through other views each event. This can interfere with tiny compact hitboxes and pointer continuation; source review suggests a targeted pointer capture, but does not establish that this is the only cause.
 - **C1-DRAG-01 candidate:** On left click of a visible compact Trust/Party/Target widget, capture that widget as the drag receiver; route mouse movement and release directly to it, including when the cursor leaves its icon. Do not intercept non-compact widget events or clicks while a menu/command overlay is open. Release the capture when the left button is released.
 - **New file to replace:** `cylibs/ui/input/mouse.lua` ONLY. The previous six-file C1 package remains the baseline. Make a backup before replacing. **No changes to artwork, compact sizes, position data schema, automation, or main.**
+- **C1-drag delivery:** [`testing-packages/Trust-C1-Drag-Fix.zip`](testing-packages/Trust-C1-Drag-Fix.zip) is a *follow-up overlay* for users already running the six-file C1 build. Extract into the Trust addon root; it contains just the updated `cylibs/ui/input/mouse.lua` plus this root `TESTING.md`. Do not substitute it for the original six-file package.
 - **Preliminary check:** Source reviewed for captured pointer lifecycle, compact-only hit test and menu bypass; **full Windower game test PENDING**.
 
 | ID | Test steps | Expected | Actual |
