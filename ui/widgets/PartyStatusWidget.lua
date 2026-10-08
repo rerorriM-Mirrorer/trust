@@ -360,6 +360,10 @@ end
 function PartyStatusWidget:setPosition(x, y)
     Widget.setPosition(self, x, y)
 
+    if self.compactBackground then
+        self.compactBackground:setPosition(0, 0)
+        self.compactCountCell:setPosition(0, 7)
+    end
     self.leftArrowButton:setPosition(-14, 3)
     self.rightArrowButton:setPosition(self:getSize().width, 3)
 end
