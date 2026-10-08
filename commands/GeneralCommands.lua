@@ -131,12 +131,16 @@ function GeneralTrustCommands:handle_widget(_, mode, scope)
     end
 
     local names = scope == 'all' and L{ 'trust', 'party', 'target' } or L{ scope }
+    -- All-mode toggle follows Trust's current presentation so it reunifies
+    -- widgets even if individual icon clicks expanded just one of them.
+    local reference = windower.trust.ui.get_widget(scope == 'all' and 'trust' or scope)
+    local compact = mode == 'compact' or (mode == 'toggle' and reference and not reference.compactMode)
     for name in names:it() do
         local widget = windower.trust.ui.get_widget(name)
         if not widget or not widget.setCompactMode then
             return false, name..' widget is unavailable'
         end
-        widget:setCompactMode(mode == 'compact' or (mode == 'toggle' and not widget.compactMode))
+        widget:setCompactMode(compact)
     end
     return true, 'Widget appearance: '..mode..' ('..scope..')'
 end
