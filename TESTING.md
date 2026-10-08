@@ -12,6 +12,7 @@ Private, cumulative development and testing record. Keep this file at the **repo
 - **Change C1b:** Party in compact view is a 32×32 existing item-slot background with a numeral for actual members in local FFXI party `p0`–`p5` (including player and summoned alter egos). It is **not** the number of simultaneous Trust-addon multibox clients or everyone in the alliance.
 - **Change C1c:** Target in compact view is a **transparent draggable 148×38 hitbox** showing Trust's party-target name and its existing tracked debuff icons. No HP/distance/action text, window background, title, or border. Existing seven-icon cap stays unchanged in this batch; >7 remains a later proposal.
 - **Shared interaction:** Each compact view can be clicked to return **only that widget** to Full; drag >3px and release should save position with existing WidgetManager. `//trust widget full|compact|toggle [all|trust|party|target]` manages all three (defaults to all). An all-widget toggle aligns states according to Trust's current mode. The command is permitted while Trust's menu is open, with other menu restrictions unchanged.
+- **Drop-in test package (2026-10-08):** [`testing-packages/Trust-CompactWidgets-C1-drop-in.zip`](testing-packages/Trust-CompactWidgets-C1-drop-in.zip), generated from the branch's six Lua source files at code snapshot `13c66c3b9c1a8b8f7a0d549c8440c3ddf8651e50`. The archive has **no enclosing folder**, so extract directly into the existing Trust addon root. ZIP contains only required six Lua files; the new `ui/widgets/CompactWidget.lua` is mandatory. The source tree's root `TESTING.md` remains the test reference, omitted from the minimal user-requested code-only ZIP by exception. Exact ZIP contents validated after upload: six entries; no extra paths. **No runtime test implied.**
 - **Changed source from `main`:** `Trust.lua`, `commands/GeneralCommands.lua`, `ui/widgets/CompactWidget.lua` (new), `ui/widgets/TrustStatusWidget.lua`, `ui/widgets/PartyStatusWidget.lua`, `ui/widgets/TargetWidget.lua`. `TESTING.md` records test instructions. No EnemyBar2 or automation behavior changes.
 - **Source-check status:** Read source and reviewed target/party update events, icon state priority, drag route and overlay offsets. **Not yet demonstrated in Windower; no live C1 result and no FFXI smoke test.** Do not mark implementation as working until tested.
 
@@ -269,6 +270,8 @@ Private, cumulative development and testing record. Keep this file at the **repo
 ## Delivery and test ledger
 
 **C1 addition (2026-10-08):** Candidate three-widget compact visual branch; six Lua sources including one new shared helper, no modified art assets, **live outcome pending**. Previous delivery rows remain below.
+
+**C1 package delivery (2026-10-08):** `testing-packages/Trust-CompactWidgets-C1-drop-in.zip`; six code files, verified ZIP structure and byte sizes; installation and live validation **PENDING**. Minimal-package exception: the `TESTING.md` record is maintained in the test-branch root and linked separately instead of inserted into this code-only archive.
 
 | Date | Batch / artifact | Type | Reference | Outcome |
 | --- | --- | --- | --- | --- |
