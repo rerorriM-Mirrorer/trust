@@ -5,6 +5,7 @@ local ImageItem = require('cylibs/ui/collection_view/items/image_item')
 local IndexedItem = require('cylibs/ui/collection_view/indexed_item')
 local IndexPath = require('cylibs/ui/collection_view/index_path')
 local MarqueeCollectionViewCell = require('cylibs/ui/collection_view/cells/marquee_collection_view_cell')
+local Mouse = require('cylibs/ui/input/mouse')
 local Padding = require('cylibs/ui/style/padding')
 local TextCollectionViewCell = require('cylibs/ui/collection_view/cells/text_collection_view_cell')
 local TextItem = require('cylibs/ui/collection_view/items/text_item')
@@ -198,6 +199,62 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
     self:setExpanded(false)
 
     return self
+end
+
+-- Compact input must bypass Widget:onMouseEvent: that method refuses to start
+-- dragging when collapsed, while the title hitbox may be outside the body.
+function TrustStatusWidget:hitTest(x, y)
+    if not self:isExpanded() then
+        if self.compactDrag then
+            return true
+        end
+        local pos = self:getAbsolutePosition()
+        local size = self:getSize()
+        return x >= pos.x and x <= pos.x + size.width
+            and y >= pos.y - 2 and y <= pos.y + size.height
+    end
+    return Widget.hitTest(self, x, y)
+end
+
+function TrustStatusWidget:onMouseEvent(type, x, y, delta)
+    if self:isExpanded() then
+        return Widget.onMouseEvent(self, type, x, y, delta)
+    end
+
+    if type == Mouse.Event.Click then
+        if not self:hitTest(x, y) then
+            return false
+        end
+        local position = self:getPosition()
+        self.compactDrag = {
+            mouseX = x, mouseY = y,
+            x = position.x, y = position.y,
+            moved = false,
+        }
+        return true
+    elseif type == Mouse.Event.Move and self.compactDrag then
+        local drag = self.compactDrag
+        local dx, dy = x - drag.mouseX, y - drag.mouseY
+        if math.abs(dx) > 3 or math.abs(dy) > 3 then
+            drag.moved = true
+        end
+        if drag.moved then
+            self:setPosition(drag.x + dx, drag.y + dy)
+            self:layoutIfNeeded()
+        end
+        return true
+    elseif type == Mouse.Event.ClickRelease and self.compactDrag then
+        local moved = self.compactDrag.moved
+        self.compactDrag = nil
+        if moved then
+            -- Notify WidgetManager to persist the new per-character position.
+            self:onSettingsChanged():trigger(self)
+        else
+            self:setExpanded(true)
+        end
+        return true
+    end
+    return false
 end
 
 -- Only this widget uses the title-only layout; Party and Target remain unchanged.
