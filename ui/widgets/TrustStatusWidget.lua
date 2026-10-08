@@ -265,6 +265,9 @@ function TrustStatusWidget:refreshCompactIcon()
     end
     self.compactGlowOuter:setBackgroundColor(outer)
     self.compactGlowInner:setBackgroundColor(inner)
+    self.compactIcon.alpha = stateName == 'off' and 100 or 255
+    self.compactIcon:setNeedsLayout()
+    self.compactIcon:layoutIfNeeded()
     self.compactGlowOuter:layoutIfNeeded()
     self.compactGlowInner:layoutIfNeeded()
 end
