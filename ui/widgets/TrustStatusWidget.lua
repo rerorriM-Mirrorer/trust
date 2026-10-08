@@ -1,5 +1,7 @@
 local CollectionViewDataSource = require('cylibs/ui/collection_view/collection_view_data_source')
 local Color = require('cylibs/ui/views/color')
+local ColorView = require('cylibs/ui/views/color_view')
+local Frame = require('cylibs/ui/views/frame')
 local ImageItem = require('cylibs/ui/collection_view/items/image_item')
 local ImageView = require('cylibs/ui/image_view')
 local IndexedItem = require('cylibs/ui/collection_view/indexed_item')
@@ -118,10 +120,16 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
     self.addonEnabled = addonEnabled
     self.currentAction = ''
 
+    -- Two translucent FFXI-like square halos avoid extra binary assets.
+    -- Their colors follow the actual enabled/action queue state.
+    self.compactGlowOuter = ColorView.new(Frame.new(0, 0, 40, 40), Color.clear)
+    self.compactGlowInner = ColorView.new(Frame.new(2, 2, 36, 36), Color.clear)
     self.compactIcon = ImageView.new()
-    self.compactIcon:setPosition(0, 0)
-    self.compactIcon:setSize(40, 40)
-    self.compactIcon:setUserInteractionEnabled(false)
+    self.compactIcon:setPosition(4, 4)
+    self.compactIcon:setSize(32, 32)
+    self.compactIcon:loadImage(windower.addon_path..'assets/icons/icon_timer.png')
+    self:addSubview(self.compactGlowOuter)
+    self:addSubview(self.compactGlowInner)
     self:addSubview(self.compactIcon)
     self:refreshCompactIcon()
 
@@ -221,8 +229,10 @@ function TrustStatusWidget:setCompactMode(compact)
 end
 
 function TrustStatusWidget:updateCompactVisibility()
-    self.compactIcon:setVisible(self.compactMode)
-    self.compactIcon:layoutIfNeeded()
+    for _, view in ipairs({ self.compactGlowOuter, self.compactGlowInner, self.compactIcon }) do
+        view:setVisible(self.compactMode)
+        view:layoutIfNeeded()
+    end
 end
 
 function TrustStatusWidget:refreshCompactIcon()
@@ -234,10 +244,18 @@ function TrustStatusWidget:refreshCompactIcon()
     else
         stateName = 'idle'
     end
-    -- Rasterized glow keeps visual quality at small FFXI resolutions.
-    self.compactIcon:loadImage(windower.addon_path..'assets/icons/icon_timer_'..stateName..'.png')
-    self.compactIcon:setNeedsLayout()
-    self.compactIcon:layoutIfNeeded()
+    local outer, inner = Color.clear, Color.clear
+    if stateName == 'idle' then
+        outer = Color.new(38, 60, 144, 255)
+        inner = Color.new(68, 56, 122, 240)
+    elseif stateName == 'active' then
+        outer = Color.new(38, 36, 215, 109)
+        inner = Color.new(68, 32, 187, 94)
+    end
+    self.compactGlowOuter:setBackgroundColor(outer)
+    self.compactGlowInner:setBackgroundColor(inner)
+    self.compactGlowOuter:layoutIfNeeded()
+    self.compactGlowInner:layoutIfNeeded()
 end
 
 function TrustStatusWidget:hitTest(x, y)
