@@ -81,7 +81,9 @@ function PathRecorder:stop_recording(path_name, discard)
     end
 
     if path_name then
-        local path = Path.new(windower.ffxi.get_info().zone, self.actions, false, 0)
+        -- Newly recorded paths reverse on reaching their final waypoint by default.
+        -- Existing path files retain their own auto_reverse value.
+        local path = Path.new(windower.ffxi.get_info().zone, self.actions, true, 0)
         if path then
             local file_path = self.output_folder..path_name..'.lua'
 
