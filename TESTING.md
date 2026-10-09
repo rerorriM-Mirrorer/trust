@@ -11,6 +11,7 @@ Private, cumulative development and testing record. Keep this file at the **repo
 - **Included changes:** `Trust.lua` (widget command enabled while menus open); `commands/GeneralCommands.lua` (full/compact/toggle all/one); `cylibs/paths/path_recorder.lua` (`auto_reverse=true` on *new recordings only*); `cylibs/ui/input/mouse.lua` (compact drag capture); `ui/widgets/CompactWidget.lua` (new, required); `ui/widgets/TrustStatusWidget.lua` (32px gold hourglass in 40px compact field, blue Idle, green Active, dimmed Off); `ui/widgets/PartyStatusWidget.lua` (32px item-slot with local party count); `ui/widgets/TargetWidget.lua` (264×24 white-outline single row, target name + existing seven debuff slots, no compact HP/distance).
 - **Art:** Requires existing addon assets `assets/icons/icon_timer.png` and `assets/backgrounds/item_slot_background.png`, which already exist in this repo and were NOT modified by these patches.
 - **Scope/compatibility:** This batch is intended for a compatible copy of the same Trust fork. Installing it over an unknown/different fork or outdated Trust version can cause missing module/API errors. Check addon baseline, back up the ENTIRE existing Trust folder, and do a one-client smoke test first.
+- **Archive validation (2026-10-09):** Generated a 10-entry ZIP (eight Lua files, this TESTING.md and INSTALL-COMBINED.txt), inspected the uploaded archive, verified every member's CRC32, central directory/end record, and that the eight Lua paths match **all** Lua changes relative to main. This is an archive integrity check, **not a live FFXI test**.
 - **Live status:** User confirmed smaller appearance, excellent right-aligned icon layout after manually selecting Menu Layout Right, and attractive blue/green hourglass fields. Original load placed icons completely off-screen, compact dragging was difficult, and original Target compact showed duplicate name and HP/HPP: these were **real failures**, not erased by later unverified candidate fixes. Later mouse-capture and Target row changes, and the new reverse default, still await in-game verification.
 - **Docs rule:** Earlier C0/C1 test results and pending items remain in this file. The combined archive references the current cumulative testing record; it is not evidence that any pending behavior now works.
 
@@ -27,7 +28,7 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 | Test | Expected | Status |
 | --- | --- | --- |
-| CB-01 | Package contains eight source Lua files in correct paths plus TESTING.md and installation notes; no unrelated files | **PACKAGE VERIFICATION PENDING** |
+| CB-01 | Package contains eight source Lua files in correct paths plus TESTING.md and installation notes; no unrelated files | **PACKAGE VERIFIED:** 10 entries; 8 Lua files matched branch diff, all file CRC32 values passed, ZIP headers/directory verified. Live install still pending. |
 | CB-02 | Loads/reloads without Lua runtime errors on Frank's PC | **PENDING** |
 | CB-03 | Icons align, click, drag and persist after reload | **PENDING**; prior placement/drag issues observed |
 | CB-04 | Compact Target outlined single row with one name and debuffs, no HP/HPP | **PENDING**; prior duplicate/HP issue observed |
