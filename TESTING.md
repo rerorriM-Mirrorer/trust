@@ -6,6 +6,19 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 ## Current testing batch — 2026-10-08: C1 Target compact outlined row fix (candidate)
 
+### New path-recorder default — 2026-10-09 (SOURCE COMMITTED, LIVE TEST PENDING)
+
+- **User request:** Make newly recorded paths save `auto_reverse = true` by default; user also tried editing a local copy but requested that we commit the fix upstream in their fork.
+- **Code commit:** [`e28d6a37`](https://github.com/rerorriM-Mirrorer/trust/commit/e28d6a37cc47152565c7f302b2d5e143f68d48a3) on `test/compact-trust-title-20261008`. Only `cylibs/paths/path_recorder.lua` modified for this behavior: `Path.new(zone, actions, true, 0)` instead of `false`, plus explanatory comments.
+- **Scope:** This changes the default only for future files saved by PathRecorder; it does **not** rewrite previously saved paths or change `Path.from_file`, `Path.new`, the replay menus, or `reverse_delay` (still zero).
+- **Path-related follow-up discussed earlier, not part of this patch:** Source-observed stuck-path behavior, bounded recovery diagnostics, possible safe detours. Do not conflate with `auto_reverse`, which only reverses a completed path.
+- **Test PATH-01:** Back up existing paths, record and save a short new path, read its generated `.lua` to check `auto_reverse = true`; play it somewhere safe to confirm it retraces at the end. **PENDING.**
+- **Test PATH-02:** Load a previously saved path with `auto_reverse = false` and confirm it stays false. **PENDING.**
+- **Test PATH-03:** Compare the manual replay once/repeat behaviors against the previous addon version; defaults must not force an unrelated replay command. **PENDING.**
+- **Rollback:** Restore just `cylibs/paths/path_recorder.lua` from your prepatch backup. The `main` branch is untouched.
+
+
+
 - **Branch:** [`test/compact-trust-title-20261008`](https://github.com/rerorriM-Mirrorer/trust/tree/test/compact-trust-title-20261008). Unmerged; `main` remains the last live-tested baseline.
 - **USER LIVE FAILURE:** Compact Target name appears doubled, and unwanted HP/HPP and distance text from the original widget remains visible. The transparent, vertically stacked Target name/debuff design does not meet the requested presentation.
 - **USER REQUEST:** A single **white-outlined rectangular field** with no filled background: exactly one Target name and its debuff icons **to the right on the same row**. Keep the field draggable, preserve Full mode and prior Trust/Party icon successes.
@@ -344,6 +357,8 @@ Private, cumulative development and testing record. Keep this file at the **repo
 | B-07 | Have a follower become stuck on terrain while safe; capture position/goal over time. | Establish positive and negative cases for detector. | **USER OBSERVATION; controlled trace PENDING** |
 
 ## Delivery and test ledger
+
+**2026-10-09 recorder default:** One-line behavior change in `cylibs/paths/path_recorder.lua` (plus intent comments), commit `e28d6a37`; new recordings should default to `auto_reverse = true`. **Live test pending; existing paths unchanged.**
 
 **C1 Target row follow-up (2026-10-08):** User reported doubled target name, HP/HPP leakage in compact mode, and requested a 1px white outlined single row with debuffs after the name. Target-only code patch and cumulative test record prepared. **All new C1-TARGET live checks pending.**
 
