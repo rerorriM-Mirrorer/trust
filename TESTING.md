@@ -4,7 +4,42 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
-## Current testing batch — 2026-10-08: C1 Target compact outlined row fix (candidate)
+## Current testing batch — 2026-10-09: Combined Trust installation for Frank's PC (candidate)
+
+- **User requested a single drop-in ZIP** combining all source patches so far rather than applying individual historical overlays in order. **Source baseline:** `main` commit `575bf583ef41e0018f05b922c6673ab89b54af95`; current testing branch `test/compact-trust-title-20261008`; do not merge into `main` before live acceptance.
+- **Archive:** [`testing-packages/Trust-Combined-Patches-20261009.zip`](testing-packages/Trust-Combined-Patches-20261009.zip). Complete incremental addon-source patch: exactly eight changed/new Lua files, root `TESTING.md`, and a short `INSTALL-COMBINED.txt` describing installation/rollback. **Not a complete Trust addon installation.** No old package ZIPs or duplicate paths inside.
+- **Included changes:** `Trust.lua` (widget command enabled while menus open); `commands/GeneralCommands.lua` (full/compact/toggle all/one); `cylibs/paths/path_recorder.lua` (`auto_reverse=true` on *new recordings only*); `cylibs/ui/input/mouse.lua` (compact drag capture); `ui/widgets/CompactWidget.lua` (new, required); `ui/widgets/TrustStatusWidget.lua` (32px gold hourglass in 40px compact field, blue Idle, green Active, dimmed Off); `ui/widgets/PartyStatusWidget.lua` (32px item-slot with local party count); `ui/widgets/TargetWidget.lua` (264×24 white-outline single row, target name + existing seven debuff slots, no compact HP/distance).
+- **Art:** Requires existing addon assets `assets/icons/icon_timer.png` and `assets/backgrounds/item_slot_background.png`, which already exist in this repo and were NOT modified by these patches.
+- **Scope/compatibility:** This batch is intended for a compatible copy of the same Trust fork. Installing it over an unknown/different fork or outdated Trust version can cause missing module/API errors. Check addon baseline, back up the ENTIRE existing Trust folder, and do a one-client smoke test first.
+- **Live status:** User confirmed smaller appearance, excellent right-aligned icon layout after manually selecting Menu Layout Right, and attractive blue/green hourglass fields. Original load placed icons completely off-screen, compact dragging was difficult, and original Target compact showed duplicate name and HP/HPP: these were **real failures**, not erased by later unverified candidate fixes. Later mouse-capture and Target row changes, and the new reverse default, still await in-game verification.
+- **Docs rule:** Earlier C0/C1 test results and pending items remain in this file. The combined archive references the current cumulative testing record; it is not evidence that any pending behavior now works.
+
+### Installing combined batch — Frank's PC
+
+1. Confirm the target folder contains a compatible Trust install with `Trust.lua`, `commands/`, `cylibs/`, `ui/`, `assets/`. Back it up as a whole before overwriting files. Do not delete/replace settings, character profiles or existing saved paths.
+2. Extract the ZIP **into the addon root**, not a nested `Trust-Combined-Patches` folder. Allow overwriting eight existing/new Lua source paths; preserve all unlisted addon files.
+3. Run `//lua r trust`. If the addon will not load, restore the backup and collect the error message. If it loads, select Widgets → Layout → Right if icons appear out of view; this was a previously reported workaround, not a verified permanent fix.
+4. Verify `//trust widget full`, `//trust widget compact`, and `//trust widget full target`. Check click/drag and save/reload of each widget; check target name is singular, no compact HP text, and debuff icons appear to the right. Test the Off/Idle/Active status change and changing party count.
+5. Save a **new** harmless path and inspect its serialized `auto_reverse = true` before experimenting with replay. Confirm an older saved path retains its existing setting. Try only in a safe area.
+6. Record resolution, character and observations. Do not proceed to all clients or merge `main` until smoke tests pass.
+
+### Combined-batch validation status
+
+| Test | Expected | Status |
+| --- | --- | --- |
+| CB-01 | Package contains eight source Lua files in correct paths plus TESTING.md and installation notes; no unrelated files | **PACKAGE VERIFICATION PENDING** |
+| CB-02 | Loads/reloads without Lua runtime errors on Frank's PC | **PENDING** |
+| CB-03 | Icons align, click, drag and persist after reload | **PENDING**; prior placement/drag issues observed |
+| CB-04 | Compact Target outlined single row with one name and debuffs, no HP/HPP | **PENDING**; prior duplicate/HP issue observed |
+| CB-05 | Old Full widget functionality remains available | **PENDING** |
+| CB-06 | New recordings default reverse, old path files unaffected | **PENDING** |
+| CB-07 | Multi-client and low/high resolution regression | **PENDING** |
+
+---
+
+## Previous testing batch — 2026-10-08: C1 Target compact outlined row fix (candidate)
+
+**Heading correction (2026-10-09):** ~~Current testing batch — 2026-10-08: C1 Target compact outlined row fix (candidate)~~. Superseded by combined-installation testing batch below; target-only test status remains pending and its details are preserved.
 
 ### New path-recorder default — 2026-10-09 (SOURCE COMMITTED, LIVE TEST PENDING)
 
@@ -357,6 +392,8 @@ Private, cumulative development and testing record. Keep this file at the **repo
 | B-07 | Have a follower become stuck on terrain while safe; capture position/goal over time. | Establish positive and negative cases for detector. | **USER OBSERVATION; controlled trace PENDING** |
 
 ## Delivery and test ledger
+
+**2026-10-09 combined install batch:** User requested one consolidated source overlay for Frank's PC. Eight Lua files from testing branch; root TESTING.md + install notes. Baseline code preserved; **live verification not yet performed**.
 
 **2026-10-09 recorder default:** One-line behavior change in `cylibs/paths/path_recorder.lua` (plus intent comments), commit `e28d6a37`; new recordings should default to `auto_reverse = true`. **Live test pending; existing paths unchanged.**
 
