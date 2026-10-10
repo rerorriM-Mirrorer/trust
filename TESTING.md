@@ -4,7 +4,45 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
-## Current testing batch — 2026-10-09: Combined Trust installation for Frank's PC (candidate)
+## Current testing batch — 2026-10-10: Shared single-slot compact control (candidate)
+
+- **User layout decision (2026-10-09 evening):** Replace the three independently positioned compact widgets with **one overlapping, draggable display**. Party numeral stays **small at upper-left** of a single 32×32 asset within a 40×40 hitbox; target name uses Trust's actual yellow bold italic Arial 9pt styling **centered on the lower edge of the same slot (not underneath)**. Target name visible only when Trust's party target exists.
+- **Trust state visual:** Stopped/Off = original hourglass sprite with **very low alpha**; enabled and no active main-queue action = original `item_slot_background.png` with partial opacity; active main-queue action = same partially translucent item slot with modest green tint and halo. The number remains legible in the upper-left; status is *not* inferred from follower movement alone. No new PNG files.
+- **Source design:** `ui/widgets/TrustStatusWidget.lua` owns the sprite, count text, target text and all compact dragging. `ui/widgets/PartyStatusWidget.lua` continues local-party counting but relays updates to Trust, and `ui/widgets/TargetWidget.lua` continues target/debuff tracking but relays name changes. Their **standalone compact views are hidden while hosted**. `ui/TrustWidgets.lua` wires the host on creation; previously stored positions for Party and Target remain available in Full mode but no longer affect the compact group.
+- **Interaction change:** A mouse click without dragging must do **nothing**; clicking a title must not switch these three widgets between compact and full. The existing explicit commands `//trust widget full`, `compact`, `toggle` (and scoped variants) remain. Shared compact pointer capture and draggable target-name overflow still belong to Trust only.
+- **Rendering:** Trust's compact slot is still 40×40 with 32×32 artwork inset by 4px. The party numeral is intentionally toward the **top-left**, not centered. Name anchors around y=25 in the same 40px box, roughly centered using existing 9px bold italic style, and may slightly overhang horizontally while remaining in Trust's click/drag region. No separate target border, no compact HP/HPP, no debuff icons in this newer compact representation.
+- **Files changed vs. previous combined ZIP:** `ui/TrustWidgets.lua`, `ui/widgets/TrustStatusWidget.lua`, `ui/widgets/PartyStatusWidget.lua`, `ui/widgets/TargetWidget.lua`, `ui/widgets/CompactWidget.lua`, and `ui/widgets/Widget.lua` (small optional title-toggle guard; other widgets retain defaults). No database schema, art, combat, or path-recorder behavior changes.
+- **Preserved behavior:** Three original Full widget views, player party count and Trust party-target tracking; earlier path `auto_reverse = true` default remains on this branch. Original detailed target debuff rendering is still available in Full mode.
+- **Branch:** [`test/compact-trust-title-20261008`](https://github.com/rerorriM-Mirrorer/trust/tree/test/compact-trust-title-20261008). `main` stays last live-tested. This is a **new candidate**, not proof of live success.
+- **Proposed drop-in overlay:** [`testing-packages/Trust-Shared-Compact-Slot-20261010.zip`](testing-packages/Trust-Shared-Compact-Slot-20261010.zip), layered over the prior `Trust-Combined-Patches-20261009.zip` installation. Contains the six updated code files, this TESTING.md and a short readme.
+
+### Test instructions — all pending
+
+1. Back up the installed Trust addon before replacing the **six** changed Lua files; install only on one character/client first. Keep existing assets and prior combined base files, and run `//lua r trust`.
+2. Check Off, Idle and Active in actual gameplay: faint hourglass Off; semi-transparent slot Idle; green-tinted slot Active. Verify the number is small and top-left (including Off), and correctly reflects local party size after changes.
+3. Acquire/clear a Trust party target: name appears **across the slot's bottom edge**, not below; no additional Target strip/window appears in compact mode. Test long names and fresh target changes; no duplicate name or residual HP text. The name should vanish on target clear.
+4. Press and release on the slot **without moving**: no expansion or UI mode changes. Drag from the slot and then from any overhanging part of the visible name, release and reload: all three layers move together and position is saved once. Test near screen edges / low resolution.
+5. `//trust widget full` restores all three independent detailed widgets and `//trust widget compact` restores one shared control. Test `//trust widget full target` separately and ensure no duplicated hosted name.
+6. Test Trust menu clicks, other widgets, and combat actions. Compact drag routing must not intercept menu/command overlay clicks.
+7. Existing **known unresolved issue**: saved positions may put widgets off-screen on some client resolutions; Widgets → Layout → Right was a user-confirmed workaround, **not a fix**.
+
+| Test | Expected | Observed |
+| --- | --- | --- |
+| C2-01 | One shared 40×40 compact control; no extra Party/Target compact windows | **PENDING** |
+| C2-02 | Off hourglass faint; Idle slot translucent; Active slot visibly green and still translucent | **PENDING** |
+| C2-03 | Correct upper-left party count through party changes | **PENDING** |
+| C2-04 | Single name centered along bottom only when party target exists; clear removes it | **PENDING** |
+| C2-05 | Click alone never changes widget mode; drag saves unified position | **PENDING** |
+| C2-06 | Full/compact commands restore detailed Full views and hosted compact | **PENDING** |
+| C2-07 | Resolution, multi-client, menu and ghost-text regression checks | **PENDING** |
+
+**Rollback:** Restore the six replaced files from the previous Combined-Patches ZIP or a local backup. Do not restore the entire addon settings database unless needed. Reload Trust and verify old layout. This patch is not merged to main.
+
+---
+
+## Previous testing batch — 2026-10-09: Combined Trust installation for Frank's PC (candidate)
+
+**Heading correction (2026-10-10):** ~~Current testing batch — 2026-10-09: Combined Trust installation for Frank's PC (candidate)~~. The existing combined ZIP remains a pinned code snapshot for the earlier visual design; this test begins a newer, reversible compact overlay design. Preserve all earlier observations and bugs.
 
 - **User requested a single drop-in ZIP** combining all source patches so far rather than applying individual historical overlays in order. **Source baseline:** `main` commit `575bf583ef41e0018f05b922c6673ab89b54af95`; current testing branch `test/compact-trust-title-20261008`; do not merge into `main` before live acceptance.
 - **Archive:** [`testing-packages/Trust-Combined-Patches-20261009.zip`](testing-packages/Trust-Combined-Patches-20261009.zip). Complete incremental addon-source patch: exactly eight changed/new Lua files, root `TESTING.md`, and a short `INSTALL-COMBINED.txt` describing installation/rollback. **Not a complete Trust addon installation.** No old package ZIPs or duplicate paths inside.
@@ -393,6 +431,8 @@ Private, cumulative development and testing record. Keep this file at the **repo
 | B-07 | Have a follower become stuck on terrain while safe; capture position/goal over time. | Establish positive and negative cases for detector. | **USER OBSERVATION; controlled trace PENDING** |
 
 ## Delivery and test ledger
+
+**2026-10-10 C2 design test:** User requested one shared draggable 40×40 compact slot that morphs from faint hourglass when Off to translucent item slot when On, green tinted on Active. Party numeral upper left; name over lower edge only with a Trust target; clicking no longer expands. Six-code-file testing candidate, **no live test yet**. Earlier C1 visual success and failures retained.
 
 **2026-10-09 combined install batch:** User requested one consolidated source overlay for Frank's PC. Eight Lua files from testing branch; root TESTING.md + install notes. Baseline code preserved; **live verification not yet performed**.
 
