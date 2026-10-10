@@ -34,6 +34,12 @@ function TrustWidgets:init()
     local partyStatusWidget = PartyStatusWidget.new(Frame.new(40, 397, 125, 55), self.trust:get_alliance(), self.trust:get_party(), self.trust, self.mediaPlayer, self.soundTheme)
     self.widgetManager:addWidget(partyStatusWidget, "party")
 
+    -- One shared compact presentation and draggable surface. These widgets
+    -- keep their tracking and Full-mode views, but their compact overlays are
+    -- supplied to Trust rather than separately positioned/drawn.
+    partyStatusWidget:setCompactHost(trustStatusWidget)
+    targetWidget:setCompactHost(trustStatusWidget)
+
     for widget in self.widgetManager:getAllWidgets():it() do
         self:addSubview(widget)
     end
