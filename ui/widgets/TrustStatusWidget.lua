@@ -13,6 +13,7 @@ local TextItem = require('cylibs/ui/collection_view/items/text_item')
 local TextStyle = require('cylibs/ui/style/text_style')
 local VerticalFlowLayout = require('cylibs/ui/collection_view/layouts/vertical_flow_layout')
 local Widget = require('ui/widgets/Widget')
+local TargetWidget = require('ui/widgets/TargetWidget')
 local CompactWidget = require('ui/widgets/CompactWidget')
 
 local TrustStatusWidget = setmetatable({}, {__index = Widget })
@@ -111,26 +112,45 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
 
     self.mainJobName = mainJobName
     self.subJobName = subJobName
+    self.disableTitleModeToggle = true
 
-    -- The full view remains available; compact uses a 40px sprite/hitbox.
+    -- One compact control owns all three visual layers: Trust background,
+    -- Party count, and Target name. Party and Target retain their own data
+    -- tracking and Full views, but do not draw independent compact widgets.
     self.fullWidth = frame.width
     self.fullHeight = frame.height
     self.compactWidth = 40
     self.compactHeight = 40
     self.addonEnabled = addonEnabled
     self.currentAction = ''
+    self.compactPartyCount = nil
+    self.compactTargetName = ''
 
-    -- Two translucent FFXI-like square halos avoid extra binary assets.
-    -- Their colors follow the actual enabled/action queue state.
     self.compactGlowOuter = ColorView.new(Frame.new(0, 0, 40, 40), Color.clear)
-    self.compactGlowInner = ColorView.new(Frame.new(2, 2, 36, 36), Color.clear)
+    self.compactGlowInner = ColorView.new(Frame.new(4, 4, 32, 32), Color.clear)
     self.compactIcon = ImageView.new()
     self.compactIcon:setPosition(4, 4)
     self.compactIcon:setSize(32, 32)
     self.compactIcon:loadImage(windower.addon_path..'assets/icons/icon_timer.png')
+    -- The green overlay tints the slot rather than replacing its artwork.
+    self.compactTint = ColorView.new(Frame.new(4, 4, 32, 32), Color.clear)
+
+    local countItem = TextItem.new('', TrustStatusWidget.TextSmall)
+    self.compactCountCell = TextCollectionViewCell.new(countItem)
+    self.compactCountCell:setPosition(2, 0)
+    self.compactCountCell:setSize(32, 16)
+
+    -- Reuse Target's exact yellow, bold-italic Arial style.
+    self.compactTargetCell = TextCollectionViewCell.new(TextItem.new('', TargetWidget.Text))
+    self.compactTargetCell:setPosition(0, 25)
+    self.compactTargetCell:setSize(40, 14)
+
     self:addSubview(self.compactGlowOuter)
     self:addSubview(self.compactGlowInner)
     self:addSubview(self.compactIcon)
+    self:addSubview(self.compactTint)
+    self:addSubview(self.compactCountCell)
+    self:addSubview(self.compactTargetCell)
     self:refreshCompactIcon()
 
     self:getDisposeBag():addAny(L{ self.action_queue })
@@ -218,15 +238,17 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
     return self
 end
 
--- Keep Widget.expanded aligned for the upstream title-click handler.
--- Base View:setPosition moves child views to (0,0); re-anchor sprites
--- after saved-position restore and mouse dragging.
+-- The shared compact shell is the only drag target; child labels never
+-- create additional windows, hitboxes, or independent saved positions.
 function TrustStatusWidget:setPosition(x, y)
     Widget.setPosition(self, x, y)
-    if self.compactGlowOuter then
+    if self.compactIcon then
         self.compactGlowOuter:setPosition(0, 0)
-        self.compactGlowInner:setPosition(2, 2)
+        self.compactGlowInner:setPosition(4, 4)
         self.compactIcon:setPosition(4, 4)
+        self.compactTint:setPosition(4, 4)
+        self.compactCountCell:setPosition(2, 0)
+        self.compactTargetCell:setPosition(0, 25)
     end
 end
 
@@ -240,36 +262,107 @@ function TrustStatusWidget:setCompactMode(compact)
 end
 
 function TrustStatusWidget:updateCompactVisibility()
-    for _, view in ipairs({ self.compactGlowOuter, self.compactGlowInner, self.compactIcon }) do
-        view:setVisible(self.compactMode)
+    local compact = self.compactMode
+    for _, view in ipairs({
+        self.compactGlowOuter, self.compactGlowInner, self.compactIcon,
+        self.compactTint, self.compactCountCell, self.compactTargetCell,
+    }) do
+        view:setVisible(compact)
+        view:setNeedsLayout()
+        view:layoutIfNeeded()
+    end
+    self:refreshCompactIcon()
+    self:refreshCompactLabels()
+end
+
+function TrustStatusWidget:getCompactState()
+    if not self.addonEnabled:getValue() then
+        return 'off'
+    elseif self.currentAction ~= '' and self.currentAction ~= 'Idle' and self.currentAction ~= 'OFF' then
+        return 'active'
+    end
+    return 'idle'
+end
+
+function TrustStatusWidget:refreshCompactIcon()
+    if not self.compactIcon then
+        return
+    end
+    local status = self:getCompactState()
+    local stopped = status == 'off'
+    local path = stopped and 'assets/icons/icon_timer.png'
+        or 'assets/backgrounds/item_slot_background.png'
+
+    self.compactIcon:loadImage(windower.addon_path..path)
+    -- Stopped: barely-visible hourglass. Idle: translucent slot.
+    -- Active: translucent slot with subtle green tint and halo.
+    self.compactIcon.alpha = stopped and 75 or 185
+    local active = status == 'active'
+    self.compactGlowOuter:setBackgroundColor(active and Color.new(26, 26, 163, 80) or Color.clear)
+    self.compactGlowInner:setBackgroundColor(active and Color.new(42, 18, 145, 70) or Color.clear)
+    self.compactTint:setBackgroundColor(active and Color.new(63, 37, 160, 62) or Color.clear)
+
+    for _, view in ipairs({
+        self.compactIcon, self.compactGlowOuter, self.compactGlowInner, self.compactTint,
+    }) do
+        view:setNeedsLayout()
         view:layoutIfNeeded()
     end
 end
 
-function TrustStatusWidget:refreshCompactIcon()
-    local stateName
-    if not self.addonEnabled:getValue() then
-        stateName = 'off'
-    elseif self.currentAction ~= '' and self.currentAction ~= 'Idle' and self.currentAction ~= 'OFF' then
-        stateName = 'active'
-    else
-        stateName = 'idle'
+function TrustStatusWidget:setCompactPartyCount(count)
+    local value = count and tostring(count) or ''
+    if self.compactPartyCount == value then
+        return
     end
-    local outer, inner = Color.clear, Color.clear
-    if stateName == 'idle' then
-        outer = Color.new(38, 60, 144, 255)
-        inner = Color.new(68, 56, 122, 240)
-    elseif stateName == 'active' then
-        outer = Color.new(38, 36, 215, 109)
-        inner = Color.new(68, 32, 187, 94)
+    self.compactPartyCount = value
+    self:refreshCompactLabels()
+end
+
+function TrustStatusWidget:setCompactTargetName(name)
+    local value = name or ''
+    if self.compactTargetName == value then
+        return
     end
-    self.compactGlowOuter:setBackgroundColor(outer)
-    self.compactGlowInner:setBackgroundColor(inner)
-    self.compactIcon.alpha = stateName == 'off' and 100 or 255
-    self.compactIcon:setNeedsLayout()
-    self.compactIcon:layoutIfNeeded()
-    self.compactGlowOuter:layoutIfNeeded()
-    self.compactGlowInner:layoutIfNeeded()
+    self.compactTargetName = value
+    self:refreshCompactLabels()
+end
+
+function TrustStatusWidget:refreshCompactLabels()
+    if not self.compactCountCell or not self.compactTargetCell then
+        return
+    end
+    local countItem = TextItem.new(self.compactPartyCount or '', TrustStatusWidget.TextSmall)
+    countItem:setOffset(4, 0)
+    self.compactCountCell:setItem(countItem)
+
+    -- Center the single name across the slot's lower edge. The text can
+    -- extend to either side while remaining part of this one draggable widget.
+    local targetName = self.compactTargetName or ''
+    if targetName:length() > 18 then
+        targetName = localization_util.truncate(targetName, 18)
+    end
+    local textItem = TextItem.new(targetName, TargetWidget.Text)
+    textItem:setShouldWordWrap(false)
+    textItem:setOffset(math.floor((self.compactWidth - #targetName * 5.2) / 2), 0)
+    self.compactTargetCell:setItem(textItem)
+
+    self.compactCountCell:setVisible(self.compactMode and (self.compactPartyCount or '') ~= '')
+    self.compactTargetCell:setVisible(self.compactMode and targetName ~= '')
+    self.compactCountCell:setNeedsLayout()
+    self.compactTargetCell:setNeedsLayout()
+    self.compactCountCell:layoutIfNeeded()
+    self.compactTargetCell:layoutIfNeeded()
+end
+
+function TrustStatusWidget:compactExtraHitTest(x, y)
+    if self.compactTargetName == '' then
+        return false
+    end
+    local pos = self:getAbsolutePosition()
+    local width = math.min(#self.compactTargetName, 18) * 6
+    return x >= pos.x + 20 - width / 2 and x <= pos.x + 20 + width / 2
+        and y >= pos.y + 25 and y <= pos.y + 40
 end
 
 function TrustStatusWidget:hitTest(x, y)
