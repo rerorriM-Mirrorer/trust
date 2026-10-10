@@ -71,7 +71,8 @@ function PartyStatusWidget.new(frame, alliance, party, trust, mediaPlayer, sound
     self.compactWidth = 32
     self.compactHeight = 32
 
-    -- An item-slot face with one centered digit replaces the member list.
+    -- Retain the old standalone compact face for compatibility; when a
+    -- compact host is attached, its upper-left numeral is drawn by Trust.
     -- Count members of the player's party, not total alliance or remote bots.
     self.compactBackground = ImageView.new()
     self.compactBackground:setPosition(0, 0)
