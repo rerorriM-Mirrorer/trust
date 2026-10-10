@@ -63,8 +63,13 @@ function CompactWidget.hitTest(widget, x, y)
         return true
     end
     local position = widget:getAbsolutePosition()
-    return x >= position.x and x <= position.x + widget.compactWidth
-        and y >= position.y and y <= position.y + widget.compactHeight
+    if x >= position.x and x <= position.x + widget.compactWidth
+            and y >= position.y and y <= position.y + widget.compactHeight then
+        return true
+    end
+    -- A name may extend past the slot, but still belongs to the same drag
+    -- surface. Each widget can offer its own additional compact hit region.
+    return widget.compactExtraHitTest and widget:compactExtraHitTest(x, y) or false
 end
 
 function CompactWidget.onMouseEvent(widget, eventType, x, y, delta)
@@ -96,9 +101,9 @@ function CompactWidget.onMouseEvent(widget, eventType, x, y, delta)
         if moved then
             -- WidgetManager owns the existing per-character position storage.
             widget:onSettingsChanged():trigger(widget)
-        else
-            widget:setCompactMode(false)
         end
+        -- A simple click no longer changes presentation mode. Use the
+        -- explicit //trust widget full|compact commands instead.
         return true
     end
     return false
