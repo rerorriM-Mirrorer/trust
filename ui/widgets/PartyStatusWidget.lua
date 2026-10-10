@@ -64,6 +64,7 @@ function PartyStatusWidget.new(frame, alliance, party, trust, mediaPlayer, sound
     local self = setmetatable(Widget.new(frame, "Party", dataSource, VerticalFlowLayout.new(0, Padding.new(6, 4, 0, 0), 4), 20), PartyStatusWidget)
 
     self.alliance = alliance
+    self.disableTitleModeToggle = true
 
     self.fullWidth = frame.width
     self.fullHeight = frame.height
@@ -424,6 +425,9 @@ function PartyStatusWidget:updateCompactCount()
         return
     end
     local count = self.parties[1]:length()
+    if self.compactHost then
+        self.compactHost:setCompactPartyCount(self.compactMode and count or nil)
+    end
     if self.compactCountCell:getItem():getText() ~= tostring(count) then
         local textItem = TextItem.new(tostring(count), PartyStatusWidget.TextSmall)
         textItem:setOffset(6, 0)
@@ -431,16 +435,34 @@ function PartyStatusWidget:updateCompactCount()
     end
 end
 
+-- When hosted, this widget tracks the party but draws no independent
+-- compact box. The Trust shell owns its number, position and pointer events.
+function PartyStatusWidget:setCompactHost(host)
+    self.compactHost = host
+    self:updateCompactCount()
+    self:updateCompactVisibility()
+end
+
+function PartyStatusWidget:setVisible(visible)
+    Widget.setVisible(self, visible and not (self.compactMode and self.compactHost))
+end
+
 function PartyStatusWidget:updateCompactVisibility()
-    self.compactBackground:setVisible(self.compactMode)
-    self.compactCountCell:setVisible(self.compactMode)
+    local standalone = self.compactMode and not self.compactHost
+    self.compactBackground:setVisible(standalone)
+    self.compactCountCell:setVisible(standalone)
     self.compactBackground:layoutIfNeeded()
     self.compactCountCell:layoutIfNeeded()
+    -- Existing Full list returns when //trust widget full is used.
+    self:setVisible(true)
+    self:updateCompactCount()
     self:updateButtons()
 end
 
 function PartyStatusWidget:setCompactMode(compact)
-    return CompactWidget.setMode(self, compact)
+    local changed = CompactWidget.setMode(self, compact)
+    self:updateCompactVisibility()
+    return changed
 end
 
 function PartyStatusWidget:layoutIfNeeded()
