@@ -125,6 +125,7 @@ function TargetWidget.new(frame, party, trust)
     self.party = party
     self.alliance = player.alliance
     self.trust = trust
+    self.disableTitleModeToggle = true
     self.debuffsView = self:createDebuffsView()
     self.maxNumDebuffs = 7
     self.needsResize = true
@@ -324,6 +325,10 @@ function TargetWidget:setTarget(target_index)
     self:getDataSource():updateItem(targetItem, IndexPath.new(1, 1))
     self.compactNameCell:setItem(TextItem.new(localization_util.truncate(targetText, 15), TargetWidget.Text))
     self.compactNameCell:layoutIfNeeded()
+    self.targetText = targetText
+    if self.compactHost then
+        self.compactHost:setCompactTargetName(self.compactMode and targetText or nil)
+    end
 
     self:setVisible(not targetText:empty())
 
@@ -372,7 +377,7 @@ function TargetWidget:setAction(text)
 end
 
 function TargetWidget:setVisible(visible)
-    if self.target_index == nil then
+    if self.target_index == nil or (self.compactMode and self.compactHost) then
         visible = false
     end
     Widget.setVisible(self, visible)
@@ -491,20 +496,34 @@ function TargetWidget:syncFullRowsVisibility()
     end
 end
 
+-- In shared compact mode, the target name is rendered inside the Trust
+-- slot. This widget still tracks targets, debuffs and all Full-mode rows.
+function TargetWidget:setCompactHost(host)
+    self.compactHost = host
+    self:updateCompactVisibility()
+end
+
 function TargetWidget:updateCompactVisibility()
+    local standalone = self.compactMode and not self.compactHost
     for _, border in ipairs(self.compactBorderViews) do
-        border:setVisible(self.compactMode)
+        border:setVisible(standalone)
         border:layoutIfNeeded()
     end
-    self.compactNameCell:setVisible(self.compactMode)
-    self.compactDebuffsView:setVisible(self.compactMode)
+    self.compactNameCell:setVisible(standalone)
+    self.compactDebuffsView:setVisible(standalone)
     self.compactNameCell:layoutIfNeeded()
     self.compactDebuffsView:layoutIfNeeded()
     self:syncFullRowsVisibility()
+    if self.compactHost then
+        self.compactHost:setCompactTargetName(self.compactMode and self.targetText or nil)
+    end
+    self:setVisible((self.targetText or '') ~= '')
 end
 
 function TargetWidget:setCompactMode(compact)
-    return CompactWidget.setMode(self, compact)
+    local changed = CompactWidget.setMode(self, compact)
+    self:updateCompactVisibility()
+    return changed
 end
 
 -- Reapply local offsets after View:setPosition shifts every subview.
