@@ -51,7 +51,11 @@ function Widget.new(frame, title, dataSource, layout, titleWidth, hideCursor)
     backgroundView:setTitle(title, titleSize)
 
     self:getDisposeBag():add(backgroundView:onSelectTitle():addAction(function(_)
-        self:setExpanded(not self.expanded)
+        -- Compact Trust/Party/Target are moved by dragging only; changing
+        -- presentation belongs to //trust widget, not an accidental click.
+        if not self.disableTitleModeToggle then
+            self:setExpanded(not self.expanded)
+        end
     end), backgroundView:onSelectTitle())
 
     self:setNeedsLayout()
