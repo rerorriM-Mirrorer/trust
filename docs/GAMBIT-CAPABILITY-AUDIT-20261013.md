@@ -91,3 +91,168 @@ Sample source: `settings/default/BLM.lua` includes Thunder VI and other tier-IV�
 - `ui/settings/menus/gambits/library/GambitLibrary.lua` — prebuilt gambit examples
 
 **Verification status:** Source audited; no live FFXI gambit execution tested during maintenance. Neither current character's exact level/learned spells nor their personalized saved Trust job settings were inspected, so the beginner designs are conditional suggestions, not confirmed working profiles.
+
+## Appendix A — Complete condition module index (93)
+
+**Menu picker** is source-confirmed in `getEditableConditionClasses()`. **Loaded, not picked** means registered by the main conditions include without an Add Condition entry. **Other module** means not in either list; it might still be required directly elsewhere. These are exposure indicators, *not* a functionality or persistence certification.
+
+| Condition file | Exposure |
+| --- | --- |
+| `action.lua` | Menu picker |
+| `aggroed.lua` | Other module (no auto-import) |
+| `begin_cast.lua` | Menu picker |
+| `buff_conflicts.lua` | Other module (no auto-import) |
+| `can_equip_set.lua` | Other module (no auto-import) |
+| `claimed.lua` | Other module (no auto-import) |
+| `cluster_hpp_range.lua` | Menu picker |
+| `combat_skills.lua` | Menu picker |
+| `condition.lua` | Loaded, not picked |
+| `conditional.lua` | Other module (no auto-import) |
+| `cooldown.lua` | Other module (no auto-import) |
+| `distance.lua` | Other module (no auto-import) |
+| `enemies_nearby.lua` | Menu picker |
+| `finish_ability.lua` | Menu picker |
+| `gain_debuff.lua` | Menu picker |
+| `has_alter_ego.lua` | Other module (no auto-import) |
+| `has_attachments_condition.lua` | Loaded, not picked |
+| `has_buff_condition.lua` | Menu picker |
+| `has_buffs.lua` | Menu picker |
+| `has_cumulative_magic_effect.lua` | Menu picker |
+| `has_daze.lua` | Menu picker |
+| `has_debuff.lua` | Menu picker |
+| `has_key_items.lua` | Menu picker |
+| `has_max_num_alter_egos.lua` | Other module (no auto-import) |
+| `has_max_num_songs.lua` | Other module (no auto-import) |
+| `has_pet.lua` | Menu picker |
+| `has_raise.lua` | Menu picker |
+| `has_roll.lua` | Other module (no auto-import) |
+| `has_runes.lua` | Menu picker |
+| `has_songs.lua` | Menu picker |
+| `has_status_effect.lua` | Other module (no auto-import) |
+| `has_weapon_skill.lua` | Other module (no auto-import) |
+| `hpp_range.lua` | Menu picker |
+| `idle.lua` | Menu picker |
+| `immune.lua` | Other module (no auto-import) |
+| `in_battle.lua` | Menu picker |
+| `in_mog_house.lua` | Loaded, not picked |
+| `in_town.lua` | Menu picker |
+| `is_alter_ego.lua` | Menu picker |
+| `is_assist_target.lua` | Other module (no auto-import) |
+| `is_standing.lua` | Other module (no auto-import) |
+| `item_count.lua` | Menu picker |
+| `job.lua` | Menu picker |
+| `job_ability_recast_ready.lua` | Loaded, not picked |
+| `main_job.lua` | Menu picker |
+| `max_distance.lua` | Menu picker |
+| `max_height_distance.lua` | Other module (no auto-import) |
+| `max_hpp.lua` | Menu picker |
+| `max_mpp.lua` | Menu picker |
+| `max_num_songs.lua` | Other module (no auto-import) |
+| `max_tp.lua` | Menu picker |
+| `melee_accuracy.lua` | Menu picker |
+| `min_hpp.lua` | Menu picker |
+| `min_mp.lua` | Menu picker |
+| `min_mpp.lua` | Menu picker |
+| `min_tp.lua` | Menu picker |
+| `mode.lua` | Menu picker |
+| `never.lua` | Loaded, not picked |
+| `not_condition.lua` | Loaded, not picked |
+| `num_buffs.lua` | Other module (no auto-import) |
+| `num_expiring_songs.lua` | Other module (no auto-import) |
+| `num_resists.lua` | Menu picker |
+| `num_songs.lua` | Other module (no auto-import) |
+| `party_claimed.lua` | Other module (no auto-import) |
+| `party_has_main_job.lua` | Menu picker |
+| `party_hpp_range.lua` | Menu picker |
+| `party_leader.lua` | Other module (no auto-import) |
+| `party_member_count.lua` | Menu picker |
+| `party_targeted.lua` | Other module (no auto-import) |
+| `pet_distance.lua` | Loaded, not picked |
+| `pet_hpp.lua` | Menu picker |
+| `pet_status.lua` | Menu picker |
+| `pet_tp.lua` | Menu picker |
+| `ready_ability.lua` | Menu picker |
+| `ready_charges.lua` | Menu picker |
+| `skillchain_ability.lua` | Menu picker |
+| `skillchain_property.lua` | Menu picker |
+| `skillchain_step.lua` | Menu picker |
+| `skillchain_window.lua` | Menu picker |
+| `song_duration.lua` | Other module (no auto-import) |
+| `spell_recast_ready.lua` | Loaded, not picked |
+| `status.lua` | Menu picker |
+| `strategem_count.lua` | Menu picker |
+| `sub_job.lua` | Menu picker |
+| `target_ids.lua` | Other module (no auto-import) |
+| `target_mismatch.lua` | Other module (no auto-import) |
+| `target_name.lua` | Menu picker |
+| `target_names.lua` | Other module (no auto-import) |
+| `unclaimed.lua` | Loaded, not picked |
+| `valid_spell_target.lua` | Other module (no auto-import) |
+| `valid_target.lua` | Loaded, not picked |
+| `zone.lua` | Menu picker |
+| `zone_change.lua` | Loaded, not picked |
+
+## Appendix B — Complete low-level action index (41)
+
+These are runtime execution primitives, NOT a list of selectable gambit actions. Many are reachable indirectly from a higher-level `battle/*:to_action()` wrapper. Do not add these directly to the gambit picker without a valid action wrapper.
+
+`action.lua` · `action_queue.lua` · `block.lua` · `blood_pact_rage.lua` · `blood_pact_ward.lua` · `command.lua` · `disengage.lua` · `dismount.lua` · `engage.lua` · `equip_attachment.lua` · `equip_set.lua` · `equip_spell.lua` · `flourish.lua` · `follow.lua` · `import_action.lua` · `job_ability.lua` · `key.lua` · `mount.lua` · `npc.lua` · `party_chat_message.lua` · `ranged_attack.lua` · `runaway.lua` · `runbehind.lua` · `runto.lua` · `runtolocation.lua` · `sequence.lua` · `spell.lua` · `status_removal.lua` · `strategem.lua` · `switch_target.lua` · `trade_accept.lua` · `trade_confirm.lua` · `trade_npc.lua` · `trade_offer.lua` · `trade_request.lua` · `turn.lua` · `ui/debug_view.lua` · `wait.lua` · `walk.lua` · `waltz.lua` · `weapon_skill.lua`
+
+## Appendix C — Complete battle module index (50)
+
+“Direct gambit choice” is listed in `GambitEditorStyle:getAbilitiesForTargets()`. “Dynamic” is selected from current job/spell/ability data. All other modules may still be used by specialist roles or as execution infrastructure.
+
+| Battle module | User-facing action chooser |
+| --- | --- |
+| `abilities/blood_pact_magic.lua` | Specialized ability/spell wrapper |
+| `abilities/blood_pact_rage.lua` | Specialized ability/spell wrapper |
+| `abilities/blood_pact_ward.lua` | Specialized ability/spell wrapper |
+| `abilities/elemental_magic.lua` | Specialized ability/spell wrapper |
+| `abilities/job_ability.lua` | Dynamic gambit choice |
+| `abilities/phantom_roll.lua` | Specialized ability/spell wrapper |
+| `abilities/ready_move.lua` | Specialized ability/spell wrapper |
+| `abilities/weapon_skill.lua` | Dynamic gambit choice |
+| `approach.lua` | Direct gambit choice |
+| `aura_tracker.lua` | Support, role, tracker or other |
+| `battle_stat_tracker.lua` | Support, role, tracker or other |
+| `buff_record.lua` | Support, role, tracker or other |
+| `buff_tracker.lua` | Support, role, tracker or other |
+| `command.lua` | Direct gambit choice |
+| `disengage.lua` | Support, role, tracker or other |
+| `engage.lua` | Direct gambit choice |
+| `equip_set.lua` | Support, role, tracker or other |
+| `healing/status_removal.lua` | Support, role, tracker or other |
+| `monster.lua` | Support, role, tracker or other |
+| `monster_buff_tracker.lua` | Support, role, tracker or other |
+| `monsters/mob_filter.lua` | Support, role, tracker or other |
+| `monsters/mob_tracker.lua` | Support, role, tracker or other |
+| `monsters/ui/target_info_view.lua` | Support, role, tracker or other |
+| `ranged_attack.lua` | Direct gambit choice |
+| `resist_tracker.lua` | Support, role, tracker or other |
+| `roll.lua` | Support, role, tracker or other |
+| `run_away.lua` | Direct gambit choice |
+| `run_to.lua` | Direct gambit choice |
+| `script.lua` | Action wrapper, not in picker |
+| `sequence.lua` | Action wrapper, not in picker |
+| `skillchains/abilities/skillchain_ability.lua` | Support, role, tracker or other |
+| `skillchains/element.lua` | Support, role, tracker or other |
+| `skillchains/skillchain_builder.lua` | Support, role, tracker or other |
+| `skillchains/skillchain_step.lua` | Support, role, tracker or other |
+| `skillchains/skillchain_tracker.lua` | Support, role, tracker or other |
+| `song_tracker.lua` | Support, role, tracker or other |
+| `songs/song_record.lua` | Support, role, tracker or other |
+| `spell.lua` | Dynamic gambit choice |
+| `spells/buff.lua` | Specialized ability/spell wrapper |
+| `spells/debuff.lua` | Specialized ability/spell wrapper |
+| `status_ailment.lua` | Support, role, tracker or other |
+| `target.lua` | Support, role, tracker or other |
+| `trackers/cumulative_magic_tracker.lua` | Support, role, tracker or other |
+| `trackers/debuff_tracker.lua` | Support, role, tracker or other |
+| `trackers/step_tracker.lua` | Support, role, tracker or other |
+| `turn_around.lua` | Direct gambit choice |
+| `turn_to_face.lua` | Direct gambit choice |
+| `use_item.lua` | Direct gambit choice |
+| `wait.lua` | Action wrapper, not in picker |
+| `weapons/weapon.lua` | Support, role, tracker or other |
+
+**Related ability outside battle directory:** `cylibs/gambits/abilities/set_mode.lua` is also directly exposed under Self actions.
