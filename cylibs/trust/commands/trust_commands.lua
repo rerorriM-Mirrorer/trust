@@ -30,16 +30,32 @@ function TrustCommands:get_localized_command_name()
 end
 
 function TrustCommands:is_valid_command(command_name, ...)
-    return S(self.commands:keyset()):contains(command_name) or self.commands['default']
+    -- Only registered command words are case-insensitive. A default handler
+    -- may accept names or paths as its first argument, so don't rewrite it.
+    local key = type(command_name) == 'string' and command_name:lower() or command_name
+    return self.commands[key] ~= nil or self.commands['default'] ~= nil
 end
 
 function TrustCommands:handle_command(...)
-    local cmd = select(1, ...)
-    local full_cmd = table.concat({...}, " ") or ""
+    local args = { ... }
+    local raw = args[1]
+    local cmd = type(raw) == 'string' and raw:lower() or raw
+    local full_cmd = table.concat(args, " ") or ""
 
-    local trust_command = self.commands[cmd] or self.commands[full_cmd] or self.commands['default']
+    local trust_command = self.commands[cmd]
     if trust_command then
-        local success, message = trust_command.callback(...)
+        -- A recognized verb receives its canonical lowercase spelling;
+        -- other arguments (player names, profile names, item text, paths,
+        -- and forwarded command payloads) stay exactly as provided.
+        args[1] = cmd
+    else
+        -- Some registered commands contain spaces; compare only the complete
+        -- registered phrase case-insensitively, not free-form arguments.
+        trust_command = self.commands[full_cmd] or self.commands[full_cmd:lower()]
+            or self.commands['default']
+    end
+    if trust_command then
+        local success, message = trust_command.callback(unpack(args))
         if success then
             if message then
                 addon_message(207, self.__class..' '..message)
