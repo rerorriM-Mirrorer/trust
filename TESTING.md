@@ -4,7 +4,36 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
-## Current testing batch — 2026-10-10: Shared single-slot compact control (candidate)
+## Current testing batch — 2026-10-12: Compact target-name edge anchoring (candidate)
+
+- **User observation:** The centered target name at the bottom edge of the shared 40×40 compact slot was visually unsatisfactory. Requested: **Left** widget-layout preset makes the target name begin at the lower **left edge of the 32×32 sprite**; **Right** preset makes the name end at the lower **right edge** of that sprite. The name is still drawn only when Trust has a target, and the entire compact assembly remains draggable.
+- **Source adjustment:** `ui/widgets/TrustStatusWidget.lua` now places the name at x=4 (Left) or calculates its starting X from x=36 minus estimated rendered name width (Right), relative to the existing 40px Trust hitbox. The source has no rendered-text width API in this cell; an existing ~5.2px-per-character estimate is used, so right-edge optical alignment **needs live visual calibration**, particularly for variable-width letters, fonts, and Japanese locales. The extra mouse hitbox uses the same edge estimate, remaining in sync with the name.
+- **Layout picker wiring:** `ui/settings/menus/widgets/WidgetSettingsMenuItem.lua` calls `TrustStatusWidget:setCompactAlignment('Left'|'Right')` when the preset is confirmed, and the picker reflects the most recently chosen in-session value instead of always starting at Left. This does **not** change the positions of other widgets beyond existing layout behavior.
+- **Initialization:** `ui/TrustWidgets.lua` calls `restoreCompactAlignmentFromPosition()` **after** WidgetManager restores the saved Trust widget X position. Since the existing Layout picker persists only widget X/Y, not a distinct Alignment key, a saved position on the left/right half of the current screen is used to infer the intended side after reload. Dragging does not automatically switch the anchor; explicitly selecting Left/Right does.
+- **Files changed vs. preceding C2 ZIP:** `ui/widgets/TrustStatusWidget.lua`, `ui/TrustWidgets.lua`, `ui/settings/menus/widgets/WidgetSettingsMenuItem.lua`, and this cumulative `TESTING.md`. No sprite, path recorder, combat, gambit, or command dispatch modifications. The new book/crystal overlay scheme and hiding party numeral for solo were **discussed proposals, not coded as part of this batch**.
+- **Other checks on 2026-10-12:** Previous source patches remain present: old Target rows suppressed in hosted compact mode (earlier duplicate-name issue), click-to-toggle removed, and new recorded paths use `auto_reverse=true`. These are source-confirmed; full multi-client regression and recorded-path replay tests remain pending.
+- **Startup finding:** `Trust.lua:loaded()` schedules six actions through `loading/Trust-Init-Include.lua`: import `includes/*` via local `require`, load settings, language, globals, logger and theme. `ImportAction:perform()` schedules sequential `require` calls. Only after initialization does the addon create Trust role instances, widgets, commands, and event handlers. A **separate** delayed updater `check_version()` requests a manifest over HTTPS, checks version, and prints an advisory; it is not a remote code loader. Full startup behavior was inspected from source, not profiled live.
+- **Build:** [`testing-packages/Trust-Target-Name-Edge-Alignment-20261012.zip`](testing-packages/Trust-Target-Name-Edge-Alignment-20261012.zip). Incremental patch for the preceding [C2 shared-slot ZIP](testing-packages/Trust-Shared-Compact-Slot-20261010.zip); no separate C1 install required if already on current combined+C2 build. Unmerged testing branch `test/compact-trust-title-20261008`. `main` is unchanged.
+
+### Installation / live checks
+
+Back up the addon and extract into the folder containing `Trust.lua`, overwriting the three specified Lua files while keeping the other C2 files and assets. Reload `//lua r trust`. For rollback, restore just the three files from the preceding C2 version and reload.
+
+| ID | Steps | Expected | Status |
+| --- | --- | --- | --- |
+| C2-EDGE-01 | Set Widgets → Layout → Left and acquire/change a long Trust target | Name begins at the lower-left of the sprite (x=4), not centered; no extra window | **PENDING** |
+| C2-EDGE-02 | Set Widgets → Layout → Right and acquire/change targets | Name **ends** at sprite lower-right (x=36) and visually grows leftward; no screen-edge clipping | **PENDING** |
+| C2-EDGE-03 | Drag the shared compact control; click without movement; change target | All layers move as one; clicks don't expand; single name updates without duplicated HP or ghost text | **PENDING** |
+| C2-EDGE-04 | Reload on saved right-hand layout and reopen layout picker | Right-hand anchor recovered from saved X; picker displays Right; no unintended repositioning | **PENDING** |
+| C2-EDGE-05 | Switch Full ↔ Compact with commands; test small/high resolutions and multiclient | Original Full widget contents still work and compact has no extra independent Party/Target window | **PENDING** |
+
+**Known uncertainty:** Right-edge text width is approximate; the old preset doesn't retain a durable separate `Alignment` setting. Treat any positional discrepancy or nonstandard screen placement as a new test result; do not silently mark it passed.
+
+---
+
+## Previous testing batch — 2026-10-10: Shared single-slot compact control (candidate)
+
+**Heading correction (2026-10-12):** ~~Current testing batch — 2026-10-10: Shared single-slot compact control (candidate)~~. This layout remains the base; only the target-name alignment is superseded. Prior C2 observations and pending tests below are historical, not erased.
 
 - **User layout decision (2026-10-09 evening):** Replace the three independently positioned compact widgets with **one overlapping, draggable display**. Party numeral stays **small at upper-left** of a single 32×32 asset within a 40×40 hitbox; target name uses Trust's actual yellow bold italic Arial 9pt styling **centered on the lower edge of the same slot (not underneath)**. Target name visible only when Trust's party target exists.
 - **Trust state visual:** Stopped/Off = original hourglass sprite with **very low alpha**; enabled and no active main-queue action = original `item_slot_background.png` with partial opacity; active main-queue action = same partially translucent item slot with modest green tint and halo. The number remains legible in the upper-left; status is *not* inferred from follower movement alone. No new PNG files.
@@ -431,6 +460,9 @@ Private, cumulative development and testing record. Keep this file at the **repo
 | B-07 | Have a follower become stuck on terrain while safe; capture position/goal over time. | Establish positive and negative cases for detector. | **USER OBSERVATION; controlled trace PENDING** |
 
 ## Delivery and test ledger
+
+**2026-10-12 edge alignment:** User requested compact Target name left/right anchored to the icon artwork according to Widgets → Layout Left/Right. Three targeted Lua changes committed, archive planned. Previous fixes for click-to-expand, duplicate target row and new path auto-reverse remain in source. **Live visual confirmation pending.**
+
 
 **2026-10-10 C2 design test:** User requested one shared draggable 40×40 compact slot that morphs from faint hourglass when Off to translucent item slot when On, green tinted on Active. Party numeral upper left; name over lower edge only with a Trust target; clicking no longer expands. Six-code-file testing candidate, **no live test yet**. Earlier C1 visual success and failures retained.
 
