@@ -34,6 +34,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('reload', self.handle_reload, 'Reload job settings files')
     self:add_command('status', self.handle_status, 'View Trust status')
     self:add_command('widget', self.handle_widget, 'Set widget appearance: // trust widget [full|compact|toggle] [all|trust|party|target]')
+    self:add_command('menuperf', self.handle_menuperf, 'Measure CPU time opening Trust menu: // trust menuperf [on|off]')
 
     -- Modes
     self:add_command('set', self.handle_set_mode, 'Set a mode to a given value, // trust set mode_name mode_value')
@@ -143,6 +144,25 @@ function GeneralTrustCommands:handle_widget(_, mode, scope)
         widget:setCompactMode(compact)
     end
     return true, 'Widget appearance: '..mode..' ('..scope..')'
+end
+
+-- // trust menuperf [on|off]
+-- Lightweight opt-in timing only. No work or chat output on ordinary opens.
+-- os.clock() reports CPU time, not presentation latency; graphics stalls may
+-- occur after this timing ends and should be tracked separately in live tests.
+function GeneralTrustCommands:handle_menuperf(_, mode)
+    if mode == nil then
+        return true, 'Menu CPU timings '..(windower.trust.menu_perf_enabled and 'ON' or 'OFF')
+    end
+    if type(mode) ~= 'string' then
+        return false, 'Usage: //trust menuperf [on|off]'
+    end
+    mode = mode:lower()
+    if mode ~= 'on' and mode ~= 'off' then
+        return false, 'Usage: //trust menuperf [on|off]'
+    end
+    windower.trust.menu_perf_enabled = mode == 'on'
+    return true, 'Menu CPU timings '..(windower.trust.menu_perf_enabled and 'ON' or 'OFF')
 end
 
 -- // trust start
