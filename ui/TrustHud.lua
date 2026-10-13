@@ -124,13 +124,30 @@ function TrustHud:getViewStack()
 end
 
 function TrustHud:toggleMenu()
+    -- Measure only when explicitly enabled by //trust menuperf on.
+    -- Break out the lazy menu-tree construction from the view recreation
+    -- so we can distinguish a first-open hitch from every-open rendering.
+    local profiling = windower.trust and windower.trust.menu_perf_enabled
+    local started = profiling and os.clock()
     self.trustMenu:closeAll()
+    local closed = profiling and os.clock()
 
-    if self.mainMenuItem == nil then
+    local coldOpen = self.mainMenuItem == nil
+    if coldOpen then
         self.mainMenuItem = self:getMainMenuItem()
     end
+    local built = profiling and os.clock()
 
     self.trustMenu:showMenu(self.mainMenuItem)
+
+    if profiling then
+        local shown = os.clock()
+        addon_system_message(string.format(
+            "Trust menu CPU (%s): close %.1fms | build %.1fms | show %.1fms | total %.1fms",
+            coldOpen and 'first' or 'cached',
+            (closed - started) * 1000, (built - closed) * 1000,
+            (shown - built) * 1000, (shown - started) * 1000))
+    end
 end
 
 function TrustHud:closeAllMenus()
