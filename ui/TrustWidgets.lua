@@ -25,6 +25,10 @@ function TrustWidgets:init()
     local TrustStatusWidget = require('ui/widgets/TrustStatusWidget')
     local trustStatusWidget = TrustStatusWidget.new(Frame.new(40, 324, 125, 69), self.addonEnabled, self.actionQueue, player.main_job_name, player.sub_job_name, self.trust:get_party():get_player())
     self.widgetManager:addWidget(trustStatusWidget, "trust")
+    -- WidgetManager has now restored the per-character X position. The
+    -- layout picker does not persist its Left/Right choice separately, so
+    -- initialize the target-name anchor from the saved side of the screen.
+    trustStatusWidget:restoreCompactAlignmentFromPosition()
 
     local TargetWidget = require('ui/widgets/TargetWidget')
     local targetWidget = TargetWidget.new(Frame.new(40, 496, 125, 40), self.trust:get_party(), self.trust)
