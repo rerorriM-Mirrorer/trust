@@ -38,6 +38,7 @@ end
 
 function TrustCommands:handle_command(...)
     local args = { ... }
+    local argc = select('#', ...)
     local raw = args[1]
     local cmd = type(raw) == 'string' and raw:lower() or raw
     local full_cmd = table.concat(args, " ") or ""
@@ -55,7 +56,7 @@ function TrustCommands:handle_command(...)
             or self.commands['default']
     end
     if trust_command then
-        local success, message = trust_command.callback(unpack(args))
+        local success, message = trust_command.callback(unpack(args, 1, argc))
         if success then
             if message then
                 addon_message(207, self.__class..' '..message)
