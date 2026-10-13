@@ -4,7 +4,53 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
-## Current testing batch — 2026-10-12: IPC follower lookup startup/reload guard (candidate)
+## Current testing batch — 2026-10-12: C3 sprites and case-insensitive command dispatch
+
+**Two separate change sets, each independently reversible.** Baseline: test branch `test/compact-trust-title-20261008`, including successful earlier IPC startup guard and C2 shared compact slot/edge alignment. `main` remains unmerged.
+
+### C3 — Original book/crystal compact visual (SOURCE PATCHED, LIVE TEST PENDING)
+
+- **User-supplied authentic sprites, 32×32 RGBA:** `55_menu-mapsg(2).png` (open book) committed byte-for-byte as `assets/icons/menu_mapsg_book.png`; `54_menu-maphp.png` (blue crystal) committed byte-for-byte as `assets/icons/menu_maphp_crystal.png`. SHA-1 Git blobs: `5ebcad212e9acdb7c6e724c1e827e9f66b120f2e` and `8d6707b60ab12849c14d419c5eb7ab0107925839`, checked against local uploaded PNGs. Existing hourglass remains `assets/icons/icon_timer.png`.
+- **Visual states:** Trust Off = same faint 32px hourglass alpha 75; Idle = the book sprite alpha 185; Active = **same book underneath** plus crystal on a separate `ImageView` pulsing alpha 24–220. A restrained green halo remains active behind the sprite; the old filled tint is disabled. The period is **2.4 seconds** with a smooth sinusoidal opacity curve and updates at ~10 Hz.
+- **Lifecycle:** `Timer.scheduledTimer(0.1)` is attached to TrustStatusWidget's existing dispose bag and **starts only in compact Active**, cancelling for Idle/Off/Full. The item background doesn't reload each animation frame, only on state transitions; image alpha itself is applied by `ImageView:layoutIfNeeded()`.
+- **Party badge:** Show the small numeral in the slot's top-left only when the local party count is **2 or more**; when solo, show no numeral and no red glow. The target name still uses the existing Left/Right-aligned label on the lower sprite edge only when a target exists. Click remains inert, dragging moves one unified control.
+- **C3 source changed:** `ui/widgets/TrustStatusWidget.lua` plus two new image assets. No changes to movement, combat, AutoEnable, state definitions, saved positions, Target/Party data trackers, or underlying path default.
+- **C3 ZIP:** [`testing-packages/Trust-C3-Book-Crystal-20261012.zip`](testing-packages/Trust-C3-Book-Crystal-20261012.zip). Extract over the installed C2+edge shared-slot build, backup `ui/widgets/TrustStatusWidget.lua` first. Contains 1 Lua, two assets, this document and `INSTALL-C3.txt`.
+
+| C3 test | In-game check | Expected | Result |
+| --- | --- | --- | --- |
+| C3-01 | Trust stopped | Faint hourglass (no book or crystal) | **PENDING** |
+| C3-02 | Trust enabled and idle | Stable translucent book, no crystal | **PENDING** |
+| C3-03 | Active main action followed by idle | Crystal fades smoothly above visible book and disappears when idle | **PENDING** |
+| C3-04 | Toggle Full/Compact, zone, reload, multiple clients | No extra timer callbacks, stale overlays, crashes or sprite flicker | **PENDING** |
+| C3-05 | Solo vs party of 2–6 | Number invisible solo, small upper-left number for 2–6 | **PENDING** |
+| C3-06 | Acquire/clear targets, choose Layout Left/Right, drag | Name on correct edge; no duplicate or missing label, one drag surface | **PENDING** |
+
+### CMD — Case-insensitive command words (SOURCE PATCHED, LIVE TEST PENDING)
+
+- **Scope:** In `Trust.lua`, lowercase only the root command category (e.g. `WIDGET`, `FOLLOW`, `PROFILE`, `SET`). In `cylibs/trust/commands/trust_commands.lua`, case-insensitively match a **registered subcommand** (e.g. `STOP`, `CLEAR`, `CREATE`, `START`) and pass its canonical lowercase spelling to the original handler. Unknown first arguments to `default` handlers are **not modified**. Complete multiword registered command names can be matched case-insensitively, without rewriting arbitrary payloads. Full vararg count preserved.
+- **Existing support discovered:** `cylibs/util/States.lua:get_state()` already searches state names case-insensitively, and `cylibs/util/Modes.lua:M:set()` already accepts list-mode values case-insensitively. Thus commands like `//trust SET autoengagemode off` should work through the existing mode code without extending scope.
+- **Preserve case:** Do not modify player names, free-form item names, profile names being created, path filenames, message payloads or IPC forwarded commands. This batch **does not** implement fuzzy/case-insensitive filesystem path lookup or aliases for party-wide profile maps.
+- **CMD source changed:** `Trust.lua`, `cylibs/trust/commands/trust_commands.lua`. No new commands, no change to underlying permission/menu restrictions, job actions, stored profiles or settings.
+- **CMD ZIP:** [`testing-packages/Trust-Case-Insensitive-Commands-20261012.zip`](testing-packages/Trust-Case-Insensitive-Commands-20261012.zip). Extract over same baseline, backup both files first; includes this document and `INSTALL-COMMANDS.txt`.
+
+| CMD test | Command and expectation | Result |
+| --- | --- | --- |
+| CMD-01 | `//trust STOP`, `//trust StArT`, `//trust WIDGET FULL`, `//trust widget COMPACT` work as lowercase | **PENDING** |
+| CMD-02 | `//trust FOLLOW STOP`, `//trust follow START`, `//trust PROFILE CREATE ExampleCase` recognize subverb without mangling `ExampleCase` | **PENDING** |
+| CMD-03 | `//trust SET autoengagemode off`, `//trust CYCLE AutoEngageMode` and mixed-case enum values behave like canonical settings | **PENDING** |
+| CMD-04 | `//trust PATH save MySpecificPath` retains filename casing; `//trust sendall /echo MixedCase` retains forwarded text | **PENDING** |
+| CMD-05 | Unknown verbs, menu-open restrictions, autocomplete, IPC messaging and all lower-case commands behave as before | **PENDING** |
+
+**Installation/rollback:** Treat these as independent overlays. Back up the existing Trust folder, apply C3 and/or CMD ZIP(s) to the folder containing `Trust.lua`, preserving paths, reload one client before multiclient. To roll back C3, restore only `ui/widgets/TrustStatusWidget.lua` (unused new PNGs may remain). To roll back CMD, restore only `Trust.lua` and `cylibs/trust/commands/trust_commands.lua`. Keep your prior IPC reload guard.
+
+**Next after C3 and CMD:** 5) inventory of existing action/gambit classes vs exposed menus; 6) safe diagnostics for stuck following/path replay. Party-wide profile aliases explicitly deferred by user.
+
+---
+
+## Previous testing batch — 2026-10-12: IPC follower lookup startup/reload guard
+
+**Heading/status correction (2026-10-12):** ~~Current testing batch — 2026-10-12: IPC follower lookup startup/reload guard (candidate)~~. After installing the guard, the user reported Trust **loading smoothly across multiple clients**. This confirms multi-client startup/reload success at that time. Follow-target fallback during missing-mob IPC, low-resolution behavior and other regression checks remain pending. Keep the original failure report and diagnosis below.
 
 - **User live failure:** Reloading two Trust instances after installing the new compact Target name alignment patch produces `cylibs/Cylibs-Windower-Events.lua:660: attempt to index field 'trust'`. Treat this as an observed runtime exception; no success has been reported yet.
 - **Source-confirmed cause:** In the `MobUpdateMessage` IPC handler, if `windower.ffxi.get_mob_by_name()` returns `nil`, the code unconditionally calls `player.trust.main_job:role_with_type('follower')`. During startup/reload, `player = {}` precedes settings and job creation, so `player.trust` or `player.trust.main_job` can be absent while other clients publish IPC messages. The unsafe line is **identical on `main` and the testing branch before this patch**; it is not caused by the compact visual changes.
@@ -17,7 +63,7 @@ Private, cumulative development and testing record. Keep this file at the **repo
 | Test ID | Steps | Expected | Live status |
 | --- | --- | --- | --- |
 | IPC-01 | Reload Trust on one client while another is running and sending follow/position IPC updates. | No `attempt to index field 'trust'` during initialization. | **PENDING** |
-| IPC-02 | Reload two Trust instances close together, including another active IPC sender. | Both initialize without a Lua error. | **PENDING** |
+| IPC-02 | Reload two Trust instances close together, including another active IPC sender. | Both initialize without a Lua error. | **USER CONFIRMED PARTIAL PASS:** Trust now loads smoothly across multiple clients after installing the guard. Exact simultaneous IPC conditions not separately instrumented. |
 | IPC-03 | After full init, follow another player and observe position updates. | Normal follower fallback still works when game mob lookup returns nil. | **PENDING** |
 | IPC-04 | Repeat startup on low-resolution client using latest compact Target patch. | Widgets continue to render and update without changing position/saved settings. | **PENDING** |
 
@@ -483,6 +529,9 @@ Back up the addon and extract into the folder containing `Trust.lua`, overwritin
 | B-07 | Have a follower become stuck on terrain while safe; capture position/goal over time. | Establish positive and negative cases for detector. | **USER OBSERVATION; controlled trace PENDING** |
 
 ## Delivery and test ledger
+
+**2026-10-12 C3/CMD:** User confirmed smoother Trust loads across multiple clients after the IPC fix. Separate source commits for original book/crystal sprite pulse + solo count hidden and case-insensitive registered commands. Both **await FFXI visual/command tests**. Next priorities: gambit/action menu audit, then path recovery; party-wide profile aliases deferred.
+
 
 **2026-10-12 IPC reload guard:** User reproduced `Cylibs-Windower-Events.lua:660` nil `player.trust` when reloading two clients. Source bug existed unchanged on main. Guard added in testing branch commit `da9e69f3`; one-file install overlay planned. **Live retest pending.**
 
