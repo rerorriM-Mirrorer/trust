@@ -24,11 +24,14 @@ function CommandTrie:addCommand(text)
 
     local node = self.root
 
-    for i = 1, text:length() do
-        local childNode = node.children[text[i]]
+    -- Normalize only trie lookup keys; keep the original command string
+    -- in each leaf so suggestions preserve display casing (mode names, etc).
+    local lookup = text:lower()
+    for i = 1, lookup:length() do
+        local childNode = node.children[lookup[i]]
         if childNode == nil then
             childNode = Node.new()
-            node.children[text[i]] = childNode
+            node.children[lookup[i]] = childNode
         end
         node = childNode
     end
@@ -38,8 +41,9 @@ end
 function CommandTrie:getCommands(prefix)
     local node = self.root
 
-    for i = 1, prefix:length() do
-        local childNode = node.children[prefix[i]]
+    local lookup = prefix:lower()
+    for i = 1, lookup:length() do
+        local childNode = node.children[lookup[i]]
         if childNode then
             node = childNode
         else
