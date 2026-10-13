@@ -13,7 +13,7 @@ Private, cumulative development and testing record. Keep this file at the **repo
 - **Source inspection:** `cylibs/ui/input/autocomplete/chat_auto_completer.lua` previously checked only lowercase `//trust` or `// trust` as raw substrings. Its `CommandTrie` stores exact characters as keys, so case-mismatched prefixes such as `//TRUST FOLL` or `//trust wIdGeT` do not match. This is separate from the command execution dispatch (already user-confirmed).
 - **Small change:** Index and search trie nodes with lowercase lookup keys while storing each leaf's original command string for display. Recognize the case-insensitive `//TRUST` prefix only at start of the chat input, and pass the suffix in its original case to the trie. No change to command execution, profile names, path filenames, or existing capitalization in suggestions.
 - **Source files:** `cylibs/ui/input/autocomplete/command_trie.lua` and `cylibs/ui/input/autocomplete/chat_auto_completer.lua`. Case folding is limited to prefix matching.
-- **Patch:** [`testing-packages/Trust-Case-Insensitive-Lookup-20261012.zip`](testing-packages/Trust-Case-Insensitive-Lookup-20261012.zip). Requires previous command-dispatch patch; may be installed independently of the menu diagnostics.
+- **Patch:** [`testing-packages/Trust-Case-Insensitive-Lookup-20261012.zip`](testing-packages/Trust-Case-Insensitive-Lookup-20261012.zip). Requires previous command-dispatch patch; may be installed independently of the menu diagnostics. Root TESTING.md is the source of historical results.
 
 | Lookup test | In-game expected | Status |
 | --- | --- | --- |
@@ -28,7 +28,7 @@ Private, cumulative development and testing record. Keep this file at the **repo
 - **Every-open source finding:** `TrustHud:toggleMenu()` calls `Menu:closeAll()` then `Menu:showMenu()`; the latter creates a new `MenuView` when the previous was destroyed, populates cells, sets up FFXI backgrounds/layout, presents it, and plays the menu sound. Even when the menu tree is cached, the view is rebuilt. This is a plausible repeat-open hitch, not confirmed as causal. `MenuCommands:handle_toggle_menu()` schedules menu opening after a 0.2-second coroutine delay; that delay alone is not the graphical stall.
 - **No speculative optimization yet.** Instrument `TrustHud:toggleMenu()` with opt-in `os.clock()` phase timing for `close`, `build`, `show`, and total, noting first vs cached. Use `//trust menuperf on` to enable, `//trust menuperf off` to disable (or no argument to report status). Normal menu opens have no log and only a constant flag check. Timings represent Lua CPU time, not GPU presentation or render-frame duration; if a visible hitch persists with small numbers, follow-up renderer/frame diagnostics are needed.
 - **Source files:** `commands/GeneralCommands.lua` and `ui/TrustHud.lua`. Does not change the menu's appearance, creation strategy, keybindings, or menu actions.
-- **Patch:** [`testing-packages/Trust-Menu-Open-Profiler-20261012.zip`](testing-packages/Trust-Menu-Open-Profiler-20261012.zip), independent of the autocomplete patch.
+- **Patch:** [`testing-packages/Trust-Menu-Open-Profiler-20261012.zip`](testing-packages/Trust-Menu-Open-Profiler-20261012.zip), independent of the autocomplete patch. Root TESTING.md is the source of historical results.
 
 | Menu test | In-game steps | Status |
 | --- | --- | --- |
@@ -37,7 +37,7 @@ Private, cumulative development and testing record. Keep this file at the **repo
 | MENU-03 | Note whether hitch is limited to visually drawing menu, navigating job Settings/Gambits, or both | **PENDING** |
 | MENU-04 | Disable probe; confirm old menu navigation, no timing logs, no unexpected cursor/focus issues | **PENDING** |
 
-**Installation/rollback:** Each ZIP contains its own changed Lua files plus cumulative TESTING.md and notes; extract at Trust root after a backup, preserving the paths. Roll back lookup by restoring the two autocomplete files; roll back the CPU probe by restoring `commands/GeneralCommands.lua` and `ui/TrustHud.lua`. `main` stays unchanged.
+**Installation/rollback:** Each small ZIP contains its changed Lua files plus installation notes; the authoritative cumulative TESTING.md stays linked in the testing branch root. The originally uploaded ZIPs containing the long record **failed post-upload CRC validation and must not be used**; they are replaced with newly verified compact archives. Extract at Trust root after a backup, preserving the paths. Roll back lookup by restoring the two autocomplete files; roll back the CPU probe by restoring `commands/GeneralCommands.lua` and `ui/TrustHud.lua`. `main` stays unchanged.
 
 **Priority:** Measure the hitch before restructuring menu construction. Later project priorities remain the action/gambit capability audit and then path/follow recovery; party-wide aliases are deferred by agreement.
 
