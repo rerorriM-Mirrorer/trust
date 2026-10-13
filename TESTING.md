@@ -4,6 +4,22 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
+## Packaging standard — cumulative testing overlays (adopted 2026-10-13)
+
+**Decision:** All **future** Trust test ZIPs are cumulative over a single pinned original baseline, rather than depending on a sequence of old patch ZIPs. The baseline is original `main` commit `575bf583ef41e0018f05b922c6673ab89b54af95` (Trust 17.7.3). Git `main` itself is protected and remains last live-tested. Each ZIP is still an **overlay for an installed compatible Trust**; it is not a complete standalone copy of upstream Trust.
+
+**Composition and compatibility**
+1. Compare the selected testing-branch snapshot against that pinned baseline. Include **every added or modified live addon source and asset file** from the comparison, preserving exact addon-root paths (e.g. `Trust.lua`, `commands/`, `cylibs/`, `ui/`, `assets/`). At adoption time the comparison reports **18 live files**, including two new PNGs and `ui/widgets/CompactWidget.lua`. Do **not** assemble a package by simply layering previous ZIPs because those may be older or malformed.
+2. Exclude earlier `testing-packages/` artifacts, generated logs, cache, and all untouched/private `data/`, `settings/`, `profiles/`, saved paths and user customization files. Include a short root `INSTALL-CUMULATIVE.txt` with the pinned baseline SHA, target testing commit SHA, exact file list, install and rollback guidance, and the link to this cumulative `TESTING.md`. This test ledger stays in the repo (avoid re-embedding a giant history file if it makes the ZIP fragile).
+3. **Idempotent extraction:** The latest overlay can be applied once or repeatedly on a matching original or previously patched install. Replacing files with the same bytes has no new effect beyond normal reload. Never silently delete installed files, change user data, or assume extraction solves an older incompatible upstream installation.
+4. **Deletions and migrations:** Overwrite-only ZIPs do not remove obsolete files; if an actual source deletion, rename, or settings migration becomes necessary, call it out explicitly and provide a separate, reversible migration/cleanup step. Do not auto-delete a user's files.
+5. **Verification:** Re-fetch the uploaded GitHub artifact, verify ZIP local headers, central-directory/EOCD, complete manifest and each member's CRC32, and ensure contents match the testing-branch source snapshot. If the archive fails, **do not ship the link**; replace it and verify again. This confirms archive integrity, **not** live in-game correctness.
+6. Install by backing up the addon folder, extracting the latest ZIP to the existing folder containing `Trust.lua`, preserving paths, then `//lua r trust` on one client before multiclient. Rollback should use the pre-install backup or a separately pinned previous cumulative version. **Never merge to main** until accepted in-game.
+
+**Historical deliveries:** Earlier incremental C1/C2/C3/command/diagnostic ZIPs remain documented for provenance; they are not the new distribution format. Future fixes and features produce **one cumulative ZIP** each. File-level and commit-level granularity is retained for code review and regression isolation, not as a prerequisite install chain.
+
+---
+
 ## Current testing batch — 2026-10-12: Case-insensitive command lookup and menu-open hitch diagnostics
 
 **User live report:** The previous command dispatcher case-insensitivity works well; the book/compact icons look good. The crystal's Active animation and anchored target name have not yet been observed during live action and remain pending. Preserve this difference between confirmed and untested states.
