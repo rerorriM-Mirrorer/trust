@@ -2,7 +2,14 @@
 
 Private, cumulative development and testing record. Keep this file at the **repository root** and at the **root of every testing package**. Read it first before testing or preparing a patch batch. Exclude this internal record from public release packages unless the collaborators agree otherwise.
 
-**Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
+**Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), ~~[DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md)~~, ~~[AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md)~~. **Correction (2026-10-13):** The separate Design and Agathos documents were consolidated; consult this repository's [WORKFLOW.md](WORKFLOW.md), which contains Agathos, Design, and Workflow in order. Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
+
+## Documentation adoption — 2026-10-13
+
+- Added root-level [`WORKFLOW.md`](WORKFLOW.md) as an exact copy of the consolidated NPCMirror guide.
+- **Commit:** [`5dc9371`](https://github.com/rerorriM-Mirrorer/trust/commit/5dc93710688ad5956a930cc347609aea0a308574).
+- Corrected the retired Design/Agathos links above with strikethrough and explanatory note; preserved the entire existing testing record below.
+- **Verification:** Documentation-only; no Trust code, settings, or behavior changed. No runtime or in-game tests performed for this documentation batch.
 
 ## Current testing batch — 2026-10-08: UX and integration proposals
 
