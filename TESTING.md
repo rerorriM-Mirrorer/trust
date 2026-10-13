@@ -4,7 +4,30 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
-## Current testing batch — 2026-10-12: Compact target-name edge anchoring (candidate)
+## Current testing batch — 2026-10-12: IPC follower lookup startup/reload guard (candidate)
+
+- **User live failure:** Reloading two Trust instances after installing the new compact Target name alignment patch produces `cylibs/Cylibs-Windower-Events.lua:660: attempt to index field 'trust'`. Treat this as an observed runtime exception; no success has been reported yet.
+- **Source-confirmed cause:** In the `MobUpdateMessage` IPC handler, if `windower.ffxi.get_mob_by_name()` returns `nil`, the code unconditionally calls `player.trust.main_job:role_with_type('follower')`. During startup/reload, `player = {}` precedes settings and job creation, so `player.trust` or `player.trust.main_job` can be absent while other clients publish IPC messages. The unsafe line is **identical on `main` and the testing branch before this patch**; it is not caused by the compact visual changes.
+- **Smallest change:** `cylibs/Cylibs-Windower-Events.lua`: `local main_job = player and player.trust and player.trust.main_job`; `local follower = main_job and main_job:role_with_type("follower")`. Existing follow-target and position-change dispatch logic remains unchanged when roles exist. When they do not, only the optional unavailable-mob follower fallback is skipped until ready. No new logging or globals.
+- **Code commit:** [`da9e69f3`](https://github.com/rerorriM-Mirrorer/trust/commit/da9e69f3231ea1444194bba8fbfd35edf38c9258) on `test/compact-trust-title-20261008`. The `main` branch remains unchanged.
+- **Minimal patch ZIP:** [`testing-packages/Trust-IPC-Reload-Guard-20261012.zip`](testing-packages/Trust-IPC-Reload-Guard-20261012.zip) with only the changed Lua file, this cumulative TESTING.md and INSTALL-IPC-GUARD.txt. This is an overlay for the **existing** Trust install, not an addon distribution and not a replacement for the prior compact/edge patches.
+- **Install:** Back up `cylibs/Cylibs-Windower-Events.lua` on each client. Unzip at Trust addon root, replacing only that code file, and `//lua r trust` on one client, then the next. With multiple instances running simultaneously, stagger reloads and repeat concurrent IPC as a regression test. Restore only this Lua file to roll back.
+- **Static verification:** Guarded source code reviewed. No actual Windower 4/FFXI runtime test has been performed by the assistant. **Live test pending.**
+
+| Test ID | Steps | Expected | Live status |
+| --- | --- | --- | --- |
+| IPC-01 | Reload Trust on one client while another is running and sending follow/position IPC updates. | No `attempt to index field 'trust'` during initialization. | **PENDING** |
+| IPC-02 | Reload two Trust instances close together, including another active IPC sender. | Both initialize without a Lua error. | **PENDING** |
+| IPC-03 | After full init, follow another player and observe position updates. | Normal follower fallback still works when game mob lookup returns nil. | **PENDING** |
+| IPC-04 | Repeat startup on low-resolution client using latest compact Target patch. | Widgets continue to render and update without changing position/saved settings. | **PENDING** |
+
+**Separate startup finding:** The local `ImportAction` invokes `require()` for bundled modules during boot, rather than downloading a remote automation engine. `check_version()` makes a delayed HTTPS manifest request to **check for updates only**. This is independent of the reported IPC exception.
+
+---
+
+## Previous testing batch — 2026-10-12: Compact target-name edge anchoring (candidate)
+
+**Heading correction (2026-10-12):** ~~Current testing batch — 2026-10-12: Compact target-name edge anchoring (candidate)~~. The new IPC startup guard is an independent candidate; all prior Target alignment tests and observations are retained unchanged.
 
 - **User observation:** The centered target name at the bottom edge of the shared 40×40 compact slot was visually unsatisfactory. Requested: **Left** widget-layout preset makes the target name begin at the lower **left edge of the 32×32 sprite**; **Right** preset makes the name end at the lower **right edge** of that sprite. The name is still drawn only when Trust has a target, and the entire compact assembly remains draggable.
 - **Source adjustment:** `ui/widgets/TrustStatusWidget.lua` now places the name at x=4 (Left) or uses Windower `texts:right_justified(true)` and compensates for the screen-width coordinate origin to **end at x=36 (Right)**, relative to the 40px hitbox. This uses the native text renderer rather than estimating variable-width glyphs. The additional drag hitbox uses `texts:extents()` for actual rendered width, with a safe estimate as fallback. Both positions are relative to the original 32px artwork inset 4px inside the 40px field; visual verification on clients/fonts remains pending.
@@ -460,6 +483,9 @@ Back up the addon and extract into the folder containing `Trust.lua`, overwritin
 | B-07 | Have a follower become stuck on terrain while safe; capture position/goal over time. | Establish positive and negative cases for detector. | **USER OBSERVATION; controlled trace PENDING** |
 
 ## Delivery and test ledger
+
+**2026-10-12 IPC reload guard:** User reproduced `Cylibs-Windower-Events.lua:660` nil `player.trust` when reloading two clients. Source bug existed unchanged on main. Guard added in testing branch commit `da9e69f3`; one-file install overlay planned. **Live retest pending.**
+
 
 **2026-10-12 edge alignment:** User requested compact Target name left/right anchored to the icon artwork according to Widgets → Layout Left/Right. Three targeted Lua changes committed, archive planned. Previous fixes for click-to-expand, duplicate target row and new path auto-reverse remain in source. **Live visual confirmation pending.**
 
