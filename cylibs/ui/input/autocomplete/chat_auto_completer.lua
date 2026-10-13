@@ -52,8 +52,13 @@ function ChatAutoCompleter:onKeyboardEvent(key, pressed, flags, blocked)
                 return
             end
             self.lastChatText = chatText
-            if chatText and (chatText:contains("// trust") or chatText:contains("//trust")) then
-                local result = self.commandTrie:getCommands(chatText:gsub("^//%s*trust%s*", ""))
+            -- Accept //trust, // trust and any capitalization of TRUST.
+            -- Read the original suffix so suggestions keep their real names.
+            -- Anchor to the start: unrelated chat mentioning //trust should
+            -- not trigger completion.
+            local prefixEnd = chatText and chatText:lower():find("^//%s*trust%s*")
+            if prefixEnd then
+                local result = self.commandTrie:getCommands(chatText:sub(prefixEnd + 1))
                 self:onAutoCompleteListChange():trigger(self, result)
             else
                 self:onAutoCompleteListChange():trigger(self, L{})
