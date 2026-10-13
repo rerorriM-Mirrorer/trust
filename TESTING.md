@@ -4,6 +4,12 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
+## Research audit — 2026-10-13: Gambit/condition capabilities for low-level characters
+
+Source-only investigation during FFXI maintenance. [Read the complete Gambit capability audit](docs/GAMBIT-CAPABILITY-AUDIT-20261013.md) and its full 93-condition / 41-low-level-action / 50-battle-module inventories. **No game/automation code changed; no claim of successful live gambit testing.** Findings: 53 conditions are in the picker; 11 condition modules imported but unlisted; 29 modules neither imported in the main conditions include nor listed; the user-facing action chooser is much narrower than the underlying low-level action directory. Generic gambits are evaluated in priority order, usually on a 1-second role timer; missing OR/ally comparator editors and some condition serializers limit safe exposure. Current BLM, WHM, WAR and MNK default job gambits are notably oriented to higher-level play. Recommended order: read-only gambit diagnostics, beginner-level templates based on learned abilities and job roles, carefully selected condition exposure, then OR/priority composition. Existing path-follow recovery remains the subsequent project priority; party-wide profile aliases stay deferred.
+
+---
+
 ## Packaging standard — cumulative testing overlays (adopted 2026-10-13)
 
 **Decision:** All **future** Trust test ZIPs are cumulative over a single pinned original baseline, rather than depending on a sequence of old patch ZIPs. The baseline is original `main` commit `575bf583ef41e0018f05b922c6673ab89b54af95` (Trust 17.7.3). Git `main` itself is protected and remains last live-tested. Each ZIP is still an **overlay for an installed compatible Trust**; it is not a complete standalone copy of upstream Trust.
