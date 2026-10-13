@@ -125,6 +125,9 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
     self.currentAction = ''
     self.compactPartyCount = nil
     self.compactTargetName = ''
+    -- The widget layout preset selects the text anchor; the saved X position
+    -- supplies a best-effort initial side on reload (preset itself is not saved).
+    self.compactAlignment = 'Left'
 
     self.compactGlowOuter = ColorView.new(Frame.new(0, 0, 40, 40), Color.clear)
     self.compactGlowInner = ColorView.new(Frame.new(4, 4, 32, 32), Color.clear)
@@ -336,15 +339,18 @@ function TrustStatusWidget:refreshCompactLabels()
     countItem:setOffset(4, 0)
     self.compactCountCell:setItem(countItem)
 
-    -- Center the single name across the slot's lower edge. The text can
-    -- extend to either side while remaining part of this one draggable widget.
+    -- Anchor against the 32px artwork, not the 40px drag field:
+    -- Left begins at x=4; Right ends at x=36. The visual text may overhang
+    -- inward from either edge, but remains part of Trust's single hit area.
     local targetName = self.compactTargetName or ''
     if targetName:length() > 18 then
         targetName = localization_util.truncate(targetName, 18)
     end
     local textItem = TextItem.new(targetName, TargetWidget.Text)
     textItem:setShouldWordWrap(false)
-    textItem:setOffset(math.floor((self.compactWidth - #targetName * 5.2) / 2), 0)
+    local textWidth = math.floor(#targetName * 5.2 + 0.5)
+    local textX = self.compactAlignment == 'Right' and 36 - textWidth or 4
+    textItem:setOffset(textX, 0)
     self.compactTargetCell:setItem(textItem)
 
     self.compactCountCell:setVisible(self.compactMode and (self.compactPartyCount or '') ~= '')
@@ -355,13 +361,36 @@ function TrustStatusWidget:refreshCompactLabels()
     self.compactTargetCell:layoutIfNeeded()
 end
 
+-- The layout picker explicitly sets the edge. It has no persistent
+-- alignment setting today, so infer the last Left/Right choice from the
+-- restored widget position on initial load; dragging doesn't change the side.
+function TrustStatusWidget:setCompactAlignment(alignment)
+    if alignment ~= 'Left' and alignment ~= 'Right' then
+        return
+    end
+    if self.compactAlignment ~= alignment then
+        self.compactAlignment = alignment
+        self:refreshCompactLabels()
+    end
+end
+
+function TrustStatusWidget:restoreCompactAlignmentFromPosition()
+    local width = windower.get_windower_settings().ui_x_res
+    if width and width > 0 then
+        local x = self:getPosition().x
+        self:setCompactAlignment(x + self.compactWidth / 2 > width / 2 and 'Right' or 'Left')
+    end
+end
+
 function TrustStatusWidget:compactExtraHitTest(x, y)
     if self.compactTargetName == '' then
         return false
     end
     local pos = self:getAbsolutePosition()
-    local width = math.min(#self.compactTargetName, 18) * 6
-    return x >= pos.x + 20 - width / 2 and x <= pos.x + 20 + width / 2
+    local length = math.min(#self.compactTargetName, 18)
+    local textWidth = math.floor(length * 5.2 + 0.5)
+    local startX = self.compactAlignment == 'Right' and 36 - textWidth or 4
+    return x >= pos.x + startX and x <= pos.x + startX + textWidth
         and y >= pos.y + 25 and y <= pos.y + 40
 end
 
