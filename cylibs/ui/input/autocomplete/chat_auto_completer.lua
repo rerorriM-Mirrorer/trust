@@ -56,7 +56,11 @@ function ChatAutoCompleter:onKeyboardEvent(key, pressed, flags, blocked)
             -- Read the original suffix so suggestions keep their real names.
             -- Anchor to the start: unrelated chat mentioning //trust should
             -- not trigger completion.
-            local prefixEnd = chatText and chatText:lower():find("^//%s*trust%s*")
+            local prefixEnd
+            if chatText then
+                local _, matchEnd = chatText:lower():find("^//%s*trust%s*")
+                prefixEnd = matchEnd
+            end
             if prefixEnd then
                 local result = self.commandTrie:getCommands(chatText:sub(prefixEnd + 1))
                 self:onAutoCompleteListChange():trigger(self, result)
