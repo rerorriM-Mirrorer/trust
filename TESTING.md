@@ -39,6 +39,8 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Installation/rollback:** Each small ZIP contains its changed Lua files plus installation notes; the authoritative cumulative TESTING.md stays linked in the testing branch root. The originally uploaded ZIPs containing the long record **failed post-upload CRC validation and must not be used**; they are replaced with newly verified compact archives. Extract at Trust root after a backup, preserving the paths. Roll back lookup by restoring the two autocomplete files; roll back the CPU probe by restoring `commands/GeneralCommands.lua` and `ui/TrustHud.lua`. Install both small profiler ZIPs before testing `//trust menuperf on`. `main` stays unchanged.
 
+**Archive verification (2026-10-12):** The uploaded autocomplete ZIP (`Trust-Case-Insensitive-Lookup-20261012.zip`) and two small diagnostic ZIPs (`Trust-Menu-Profiler-Command-20261012.zip`, `Trust-Menu-Profiler-HUD-20261012.zip`) were re-fetched from GitHub and passed per-entry CRC32, ZIP central-directory/end-record, and file-list checks. The earlier large malformed diagnostic archive was removed; the earlier large malformed lookup archive was overwritten. The new archives deliberately link to this authoritative cumulative `TESTING.md` instead of embedding it. **Package integrity is confirmed, but no new live tests have yet been reported.**
+
 **Priority:** Measure the hitch before restructuring menu construction. Later project priorities remain the action/gambit capability audit and then path/follow recovery; party-wide aliases are deferred by agreement.
 
 ---
