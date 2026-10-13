@@ -77,8 +77,11 @@ function WidgetSettingsMenuItem:getLayoutMenuItem()
     }, {}, function(_, _, _)
         local allAlignments = L{ 'Left', 'Right' }
 
+        local trustWidget = windower.trust.ui.get_widget('trust')
         local layoutSettings = {
-            Alignment = allAlignments[1]
+            -- Show the actual compact anchor rather than resetting the picker
+            -- to Left every time the menu is opened.
+            Alignment = trustWidget and trustWidget.compactAlignment or allAlignments[1]
         }
 
         local configItems = L{
@@ -90,6 +93,14 @@ function WidgetSettingsMenuItem:getLayoutMenuItem()
 
         self.disposeBag:add(configEditor:onConfigChanged():addAction(function(newSettings, _)
             local yPos = windower.get_windower_settings().ui_y_res / 2 - 75
+
+            -- The compact name belongs to Trust's slot: the left preset
+            -- starts the text at the left sprite edge, and the right preset
+            -- ends the text at the right sprite edge.
+            local host = windower.trust.ui.get_widget('trust')
+            if host and host.setCompactAlignment then
+                host:setCompactAlignment(newSettings.Alignment)
+            end
 
             for widgetName in L{ 'Trust', 'Party', 'Target' }:it() do
                 local widget = windower.trust.ui.get_widget(widgetName)
