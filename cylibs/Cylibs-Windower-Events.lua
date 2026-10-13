@@ -657,7 +657,11 @@ WindowerEvents.DisposeBag:add(IpcRelay.shared():on_message_received():addAction(
     if ipc_message.__class == MobUpdateMessage.__class then
         local mob = windower.ffxi.get_mob_by_name(ipc_message:get_mob_name())
         if mob == nil then
-            local follower = player.trust.main_job:role_with_type("follower")
+            -- IPC messages can arrive while Trust is loading or unloading.
+            -- Its player/trust/main_job objects are not guaranteed to exist
+            -- yet, so skip the follower fallback until that role is ready.
+            local main_job = player and player.trust and player.trust.main_job
+            local follower = main_job and main_job:role_with_type("follower")
             if follower and follower:get_follow_target() and follower:get_follow_target():get_name() == ipc_message:get_mob_name() then
                 mob = follower:get_follow_target()
             end
