@@ -610,7 +610,9 @@ end
 -- Setup
 
 local function addon_command(cmd, ...)
-    local cmd = cmd or 'help'
+    -- Only the command category is normalized. Names of players, profiles,
+    -- paths, items and forwarded commands in ... must retain their casing.
+    local cmd = type(cmd) == 'string' and cmd:lower() or 'help'
 	
 	if hud.trustMenu:isVisible() and not S{ 'assist', 'send', 'sendall', 'widget'}:contains(cmd) then
 		addon_system_error("Unable to execute commands while the menu is open.")
