@@ -339,18 +339,20 @@ function TrustStatusWidget:refreshCompactLabels()
     countItem:setOffset(4, 0)
     self.compactCountCell:setItem(countItem)
 
-    -- Anchor against the 32px artwork, not the 40px drag field:
-    -- Left begins at x=4; Right ends at x=36. The visual text may overhang
-    -- inward from either edge, but remains part of Trust's single hit area.
+    -- Anchor against the 32px artwork, not the 40px drag field.
+    -- Windower texts uses the *right edge of the screen* as its coordinate
+    -- origin when right_justified(true), so compensate for screen width to
+    -- place the actual glyph edge exactly at the slot's x=36.
     local targetName = self.compactTargetName or ''
     if targetName:length() > 18 then
         targetName = localization_util.truncate(targetName, 18)
     end
     local textItem = TextItem.new(targetName, TargetWidget.Text)
     textItem:setShouldWordWrap(false)
-    local textWidth = math.floor(#targetName * 5.2 + 0.5)
-    local textX = self.compactAlignment == 'Right' and 36 - textWidth or 4
-    textItem:setOffset(textX, 0)
+    local right = self.compactAlignment == 'Right'
+    self.compactTargetCell.textView:right_justified(right)
+    local screenWidth = windower.get_windower_settings().ui_x_res
+    textItem:setOffset(right and (36 - screenWidth) or 4, 0)
     self.compactTargetCell:setItem(textItem)
 
     self.compactCountCell:setVisible(self.compactMode and (self.compactPartyCount or '') ~= '')
@@ -387,8 +389,10 @@ function TrustStatusWidget:compactExtraHitTest(x, y)
         return false
     end
     local pos = self:getAbsolutePosition()
-    local length = math.min(#self.compactTargetName, 18)
-    local textWidth = math.floor(length * 5.2 + 0.5)
+    local textWidth = self.compactTargetCell.textView:extents()
+    if type(textWidth) ~= 'number' then
+        textWidth = math.floor(math.min(#self.compactTargetName, 18) * 5.2 + 0.5)
+    end
     local startX = self.compactAlignment == 'Right' and 36 - textWidth or 4
     return x >= pos.x + startX and x <= pos.x + startX + textWidth
         and y >= pos.y + 25 and y <= pos.y + 40
