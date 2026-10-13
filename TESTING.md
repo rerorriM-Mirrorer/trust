@@ -4,7 +4,48 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
-## Current testing batch — 2026-10-12: C3 sprites and case-insensitive command dispatch
+## Current testing batch — 2026-10-12: Case-insensitive command lookup and menu-open hitch diagnostics
+
+**User live report:** The previous command dispatcher case-insensitivity works well; the book/compact icons look good. The crystal's Active animation and anchored target name have not yet been observed during live action and remain pending. Preserve this difference between confirmed and untested states.
+
+### Autocomplete — case-insensitive lookup (candidate)
+
+- **Source inspection:** `cylibs/ui/input/autocomplete/chat_auto_completer.lua` previously checked only lowercase `//trust` or `// trust` as raw substrings. Its `CommandTrie` stores exact characters as keys, so case-mismatched prefixes such as `//TRUST FOLL` or `//trust wIdGeT` do not match. This is separate from the command execution dispatch (already user-confirmed).
+- **Small change:** Index and search trie nodes with lowercase lookup keys while storing each leaf's original command string for display. Recognize the case-insensitive `//TRUST` prefix only at start of the chat input, and pass the suffix in its original case to the trie. No change to command execution, profile names, path filenames, or existing capitalization in suggestions.
+- **Source files:** `cylibs/ui/input/autocomplete/command_trie.lua` and `cylibs/ui/input/autocomplete/chat_auto_completer.lua`. Case folding is limited to prefix matching.
+- **Patch:** [`testing-packages/Trust-Case-Insensitive-Lookup-20261012.zip`](testing-packages/Trust-Case-Insensitive-Lookup-20261012.zip). Requires previous command-dispatch patch; may be installed independently of the menu diagnostics.
+
+| Lookup test | In-game expected | Status |
+| --- | --- | --- |
+| LOOKUP-01 | `//TRUST WID` suggests normal widget commands, preserving display case | **PENDING** |
+| LOOKUP-02 | `//tRuSt fOlLoW`, `// TRUST SET auto`, and lowercase forms match the same set | **PENDING** |
+| LOOKUP-03 | Names/values remain canonical in suggestion and selecting one inserts a valid command | **PENDING** |
+| LOOKUP-04 | Unrelated chat lines containing `//trust` no longer show popup; no odd behavior with autocomplete when chat closes | **PENDING** |
+
+### Menu hitch — evidence and opt-in CPU probe (candidate)
+
+- **First-open source finding:** `ui/TrustHud.lua:getMainMenuItem()` lazily creates the root `MenuItem`, immediately runs `reloadJobMenuItems()` to build main/sub-job settings, and creates the full Commands menu. Job settings eagerly construct role menus and Gambits submenus. These allocations can generate a first-open CPU spike; **cause not proven without timings**.
+- **Every-open source finding:** `TrustHud:toggleMenu()` calls `Menu:closeAll()` then `Menu:showMenu()`; the latter creates a new `MenuView` when the previous was destroyed, populates cells, sets up FFXI backgrounds/layout, presents it, and plays the menu sound. Even when the menu tree is cached, the view is rebuilt. This is a plausible repeat-open hitch, not confirmed as causal. `MenuCommands:handle_toggle_menu()` schedules menu opening after a 0.2-second coroutine delay; that delay alone is not the graphical stall.
+- **No speculative optimization yet.** Instrument `TrustHud:toggleMenu()` with opt-in `os.clock()` phase timing for `close`, `build`, `show`, and total, noting first vs cached. Use `//trust menuperf on` to enable, `//trust menuperf off` to disable (or no argument to report status). Normal menu opens have no log and only a constant flag check. Timings represent Lua CPU time, not GPU presentation or render-frame duration; if a visible hitch persists with small numbers, follow-up renderer/frame diagnostics are needed.
+- **Source files:** `commands/GeneralCommands.lua` and `ui/TrustHud.lua`. Does not change the menu's appearance, creation strategy, keybindings, or menu actions.
+- **Patch:** [`testing-packages/Trust-Menu-Open-Profiler-20261012.zip`](testing-packages/Trust-Menu-Open-Profiler-20261012.zip), independent of the autocomplete patch.
+
+| Menu test | In-game steps | Status |
+| --- | --- | --- |
+| MENU-01 | Enable `//trust menuperf on`, then close/reopen menu 3 times and copy the timings | **PENDING** |
+| MENU-02 | Reload and measure first opening vs subsequent openings; compare if hitch only on first | **PENDING** |
+| MENU-03 | Note whether hitch is limited to visually drawing menu, navigating job Settings/Gambits, or both | **PENDING** |
+| MENU-04 | Disable probe; confirm old menu navigation, no timing logs, no unexpected cursor/focus issues | **PENDING** |
+
+**Installation/rollback:** Each ZIP contains its own changed Lua files plus cumulative TESTING.md and notes; extract at Trust root after a backup, preserving the paths. Roll back lookup by restoring the two autocomplete files; roll back the CPU probe by restoring `commands/GeneralCommands.lua` and `ui/TrustHud.lua`. `main` stays unchanged.
+
+**Priority:** Measure the hitch before restructuring menu construction. Later project priorities remain the action/gambit capability audit and then path/follow recovery; party-wide aliases are deferred by agreement.
+
+---
+
+## Previous testing batch — 2026-10-12: C3 sprites and case-insensitive command dispatch
+
+**Heading correction (2026-10-12):** ~~Current testing batch — 2026-10-12: C3 sprites and case-insensitive command dispatch~~. The source tests remain recorded below. User subsequently confirmed case-insensitive execution and the appearance of the basic compact icons; live Active crystal and Target-name behavior are still pending.
 
 **Two separate change sets, each independently reversible.** Baseline: test branch `test/compact-trust-title-20261008`, including successful earlier IPC startup guard and C2 shared compact slot/edge alignment. `main` remains unmerged.
 
@@ -529,6 +570,9 @@ Back up the addon and extract into the folder containing `Trust.lua`, overwritin
 | B-07 | Have a follower become stuck on terrain while safe; capture position/goal over time. | Establish positive and negative cases for detector. | **USER OBSERVATION; controlled trace PENDING** |
 
 ## Delivery and test ledger
+
+**2026-10-12 lookup/menu:** User likes the now case-insensitive command execution and compact icons; awaiting live Active crystal and Target label observations. New lookup casefold patch prepared, plus opt-in menu CPU timing to investigate first-open lazy settings/gambit menus and per-open view reconstruction. Neither new patch live-tested yet. Previous confirmed IPC multi-client reload remains passed.
+
 
 **2026-10-12 C3/CMD:** User confirmed smoother Trust loads across multiple clients after the IPC fix. Separate source commits for original book/crystal sprite pulse + solo count hidden and case-insensitive registered commands. Both **await FFXI visual/command tests**. Next priorities: gambit/action menu audit, then path recovery; party-wide profile aliases deferred.
 
