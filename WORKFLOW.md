@@ -226,3 +226,30 @@ Maintain `WORKFLOW.md` and `TESTING.md` at the root of each active development r
 Review these conventions when beginning development work or preparing a new testing batch. Preserve project-specific principles, documentation, and history when adopting shared conventions. Propagate improvements deliberately, reviewing differences rather than overwriting existing material. 
 
 Reflect useful improvements back into the shared reference when appropriate.
+
+---
+
+### Shared Addon Standards
+
+Apply these conventions to new addons and to existing addons as they are developed. Preserve established behavior; add optional features only when they serve a useful purpose.
+
+**Commands and help**
+- Provide `help`, `status`, `restart`, and `unload` commands.
+- **Show help for bare or invalid commands.** Entering `//addon` alone or an unrecognized subcommand displays the command list, optionally preceded by a brief error. The only bare-command exception is an intentionally defined primary action; document that behavior in help.
+- Use BattleStations-inspired, chat-only help: full `//addon command` examples, concise descriptions, `<required>` and `[optional]` arguments, and deterministic order.
+- Color individual fragments using Windower's `require('chat')` and `string.color()`: separators **140**, headings **167**, `//addon` prefix and `->` arrow **200**, syntax **207**, descriptions **0** (neutral white). Emit each line with `windower.add_to_chat(0, line)`; do **not** also print normal help to the console.
+- Give concise command feedback. Keep `reload` distinct from a complete `restart` when an addon uses both.
+
+**Visual interface (where applicable)**
+- Support draggable positioning, saved coordinates, edit-mode guides, lock/unlock, and recovery when a UI is positioned off-screen.
+- Offer scaling, sensible minimum border widths, and layout choices suitable for small client windows and multiboxing.
+- Offer contextual `show`, `hide`, and `auto` visibility when useful.
+- Use restrained entrance/exit fades; support optional previews or demo states when they make tuning possible without waiting for gameplay events.
+- Avoid invisible UI intercepting input, redundant rendering, unnecessary sounds, and noisy startup messages.
+
+**Lifecycle and delivery**
+- Make `restart` and `unload` graceful: report the action, fade visible elements where applicable, clean up resources, and dispatch the lifecycle command **once**.
+- Commit and push coherent changes frequently. Every testing package must correspond to an identifiable Git commit on the appropriate development branch; do not present uncommitted work as published.
+- Keep documentation, saved-setting compatibility, and tests aligned with changes. Distinguish simulated verification from live FFXI testing.
+
+**Principle:** Make each addon feel like a natural extension of FFXI. Reuse proven patterns without adding complexity that serves no purpose.
