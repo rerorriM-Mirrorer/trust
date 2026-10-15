@@ -4,6 +4,31 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
+## Current testing delivery — 2026-10-15: Trust 17.7.3 cumulative overlay (Cioara and companions)
+
+**Purpose:** One install package for compatible **Cyrite Trust 17.7.3** addon folders, regardless of which earlier incremental Trust test patches were installed. The literal `_addon.version = '17.7.3'` line stays unchanged across these test patches; this version string **cannot** identify patch status. The user reported this exact header on Cioara and three companion clients.
+
+**Source baseline:** pinned original commit `575bf583ef41e0018f05b922c6673ab89b54af95` (Trust 17.7.3). **Patch source snapshot:** `2aa54f0cad8ad4a2aa2a59c5f799bd83f68adda4`, branch `test/compact-trust-title-20261008`. No 2026-10-13 Manual Override, custom waypoint recorder, or Gambit Inspector implementation is included; those are **discussion and research only**.
+
+**Package name:** `testing-packages/Trust-Cumulative-17.7.3-20261015.zip`. Planned overlay manifest (18 live files) from exact baseline comparison: `Trust.lua`; `assets/icons/menu_maphp_crystal.png`; `assets/icons/menu_mapsg_book.png`; `commands/GeneralCommands.lua`; `cylibs/Cylibs-Windower-Events.lua`; `cylibs/paths/path_recorder.lua`; `cylibs/trust/commands/trust_commands.lua`; `cylibs/ui/input/autocomplete/chat_auto_completer.lua`; `cylibs/ui/input/autocomplete/command_trie.lua`; `cylibs/ui/input/mouse.lua`; `ui/TrustHud.lua`; `ui/TrustWidgets.lua`; `ui/settings/menus/widgets/WidgetSettingsMenuItem.lua`; `ui/widgets/CompactWidget.lua`; `ui/widgets/PartyStatusWidget.lua`; `ui/widgets/TargetWidget.lua`; `ui/widgets/TrustStatusWidget.lua`; `ui/widgets/Widget.lua`. Documentation: `INSTALL-CUMULATIVE.txt`, `TESTING.md`, `WORKFLOW.md`. These docs are not addon runtime components.
+
+**Major cumulative patches:** compact Trust/Party/Target widgets with shared slot, book/crystal icons and animation candidates, command execution and autocomplete case folding, multi-client IPC reload guard, configurable widget/drag input refinements, menu CPU profiling behind `//trust menuperf on`, newly recorded paths defaulting to `auto_reverse = true`. Existing path files remain intact.
+
+**Install:** Back up the **entire** existing `addons/trust` directory (including `data/`), close or unload Trust, extract the overlay into that same folder (the directory already containing `Trust.lua`), preserve hierarchy and allow replacement of the 15 modified live files. The three added live files are two PNGs and `ui/widgets/CompactWidget.lua`. The ZIP intentionally does not include the source installation's unchanged dependencies or any saved profile/settings/path files. Start with one character (prefer Cioara), then roll out the identical package to the companions. To restore prior behavior, use the backed-up folder; restore only the source files if intentionally keeping newer user data.
+
+| Test | Expected | Status |
+| --- | --- | --- |
+| CUM-01 | ZIP local headers, central directory/EOCD, CRC32, manifest and uploaded artifact match source snapshot | **PENDING ARCHIVE VERIFICATION** |
+| CUM-02 | One client loads; known prior case-insensitive commands and menu/UI interactions work | **PENDING IN-GAME** |
+| CUM-03 | Crystal pulse and anchored target names work in actual active Trust state | **PENDING IN-GAME** |
+| CUM-04 | Autocomplete works with mixed case; menu performance timings available only when enabled | **PENDING IN-GAME** |
+| CUM-05 | Three companion clients load independently; no IPC reload race; independent character data unaffected | **PENDING IN-GAME** |
+| CUM-06 | Existing recorded paths not changed; any newly recorded path defaults to reverse; path stop/clear semantics unchanged | **PENDING IN-GAME** |
+
+**Compatibility limitation:** This is an overwrite-only overlay for Trust source based on the specified original snapshot. It cannot automatically remove obsolete files or guarantee compatibility with unrelated modified forks. Static ZIP integrity is not an in-game success claim. `main` remains unchanged by this delivery.
+
+---
+
 ## Research audit — 2026-10-13: Gambit/condition capabilities for low-level characters
 
 Source-only investigation during FFXI maintenance. [Read the complete Gambit capability audit](docs/GAMBIT-CAPABILITY-AUDIT-20261013.md) and its full 93-condition / 41-low-level-action / 50-battle-module inventories. **No game/automation code changed; no claim of successful live gambit testing.** Findings: 53 conditions are in the picker; 11 condition modules imported but unlisted; 29 modules neither imported in the main conditions include nor listed; the user-facing action chooser is much narrower than the underlying low-level action directory. Generic gambits are evaluated in priority order, usually on a 1-second role timer; missing OR/ally comparator editors and some condition serializers limit safe exposure. Current BLM, WHM, WAR and MNK default job gambits are notably oriented to higher-level play. Recommended order: read-only gambit diagnostics, beginner-level templates based on learned abilities and job roles, carefully selected condition exposure, then OR/priority composition. Existing path-follow recovery remains the subsequent project priority; party-wide profile aliases stay deferred.
