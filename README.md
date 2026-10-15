@@ -180,3 +180,10 @@ Normal commands retain feedback; validation/IPC errors remain visible. Install
 on each participating client. TrustMovement 0.1.1 enables quiet by default and
 provides `//tm quiet off` for troubleshooting. Source/API behavior otherwise
 remains unchanged; see TESTING.md for verification and the live-testing status.
+
+TrustMovement's source is maintained with the controller transport in the
+[XIVCrossbar fork](https://github.com/rerorriM-Mirrorer/xivcrossbar), under
+`companions/trustmovement/`. Its movement bridge is `movement_signal.ahk` beside
+the shared AHK wrapper. At installation, `trustmovement`, `xivcrossbar` and
+`trust` are sibling folders under `Windower/addons`. Trust owns the optional
+quiet follow/assist API; the companion owns movement-triggered invocation.
