@@ -1,4 +1,5 @@
 local CommandMessage = require('cylibs/messages/command_message')
+local command_feedback = require('cylibs/util/command_feedback')
 local PickerConfigItem = require('ui/settings/editors/config/PickerConfigItem')
 local TrustCommands = require('cylibs/trust/commands/trust_commands')
 local FollowTrustCommands = setmetatable({}, {__index = TrustCommands })
@@ -46,7 +47,8 @@ function FollowTrustCommands:handle_follow_me()
 
     if L{'All', 'Send'}:contains(state.IpcMode.value) then
         self:get_follower():set_follow_target(nil)
-        IpcRelay.shared():send_message(CommandMessage.new('trust follow '..windower.ffxi.get_player().name))
+        local quiet_flag = command_feedback.is_quiet() and ' --quiet' or ''
+        IpcRelay.shared():send_message(CommandMessage.new('trust follow '..windower.ffxi.get_player().name..quiet_flag))
         success = true
         message = 'Follow set to me on everyone else'
     else
@@ -65,7 +67,7 @@ function FollowTrustCommands:handle_follow_party_member(party_member_name)
     party_member_name = party_member_name:gsub("^%l", string.upper)
 
     if self:get_follower():is_valid_target(party_member_name) then
-        handle_set('AutoFollowMode', 'Always')
+        self:handle_set_mode('AutoFollowMode', 'Always', command_feedback.is_quiet())
 
         local error_message = self:get_follower():follow_target_named(party_member_name)
         if error_message then

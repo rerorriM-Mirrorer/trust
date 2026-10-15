@@ -169,3 +169,14 @@ See [Windower Commands](https://github.com/cyritegamestudios/trust/wiki/Commands
     * [Truster](https://github.com/cyritegamestudios/trust/wiki/Truster)
 
 
+
+
+## Movement handoff quiet update (2026-10-15)
+
+Follow/assist commands accept an optional trailing `--quiet`, for example
+`//trust follow me --quiet` and `//trust assist me --quiet`. This suppresses
+routine success acknowledgments locally and propagates quiet to IPC recipients.
+Normal commands retain feedback; validation/IPC errors remain visible. Install
+on each participating client. TrustMovement 0.1.1 enables quiet by default and
+provides `//tm quiet off` for troubleshooting. Source/API behavior otherwise
+remains unchanged; see TESTING.md for verification and the live-testing status.

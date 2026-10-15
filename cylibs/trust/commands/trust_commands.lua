@@ -1,4 +1,5 @@
 local TrustCommands = {}
+local command_feedback = require('cylibs/util/command_feedback')
 TrustCommands.__index = TrustCommands
 TrustCommands.__class = "TrustCommands"
 
@@ -39,6 +40,16 @@ end
 function TrustCommands:handle_command(...)
     local args = { ... }
     local argc = select('#', ...)
+    -- Only follow/assist reserve a trailing --quiet flag. Forwarded text,
+    -- paths and arguments belonging to other command groups stay untouched.
+    local group = self:get_command_name()
+    local quiet = command_feedback.is_quiet()
+    if (group == 'follow' or group == 'assist') and argc >= 2
+            and type(args[argc]) == 'string' and args[argc]:lower() == '--quiet' then
+        quiet = true
+        args[argc] = nil
+        argc = argc - 1
+    end
     local raw = args[1]
     local cmd = type(raw) == 'string' and raw:lower() or raw
     local full_cmd = table.concat(args, " ") or ""
@@ -56,9 +67,11 @@ function TrustCommands:handle_command(...)
             or self.commands['default']
     end
     if trust_command then
-        local success, message = trust_command.callback(unpack(args, 1, argc))
+        local success, message = command_feedback.run(quiet, function()
+            return trust_command.callback(unpack(args, 1, argc))
+        end)
         if success then
-            if message then
+            if message and not quiet then
                 addon_message(207, self.__class..' '..message)
             end
         else

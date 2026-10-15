@@ -1,3 +1,39 @@
+# Trust movement — quiet update, 0.1.1 (2026-10-15)
+
+User live report on Test 1: "IT WORKED"; movement-generated messages from both
+TrustMovement and Trust are the next requested refinement. That confirms the
+working handoff, but does not individually certify every earlier checklist row.
+
+This update leaves the proven AHK files byte-for-byte unchanged. Overlay only
+addons/trust and addons/trustmovement for an existing Test 1 install. Reload
+Trust with `//lua reload trust`, then `//lua reload trustmovement`, in each
+participating client. Saved mode is retained; new quiet setting defaults on.
+No wrapper restart is needed. Read README.md for fresh installation/rollback.
+
+## Current checks
+
+- PASS: 57 mocked receiver assertions, including quiet default, saved-setting
+  migration, quiet on/off, idempotent settings, diagnostics, status and guards.
+- PASS: 24 Trust integration assertions executing edited command/role methods,
+  including IPC flag propagation, unchanged control effects, manual feedback,
+  visible errors, path notices, literal arguments in other command groups,
+  nested quiet scopes and cleanup after exceptions.
+- PASS: Lua 5.1 syntax checks for 10 source/test files. Existing Windower
+  quoted-string method syntax is normalized only for standard-parser tests.
+- PASS: whitespace/diff review; original AHK wrapper/helper unchanged.
+- PENDING: live quiet handoff with all recipients patched; manual commands and
+  deliberate invalid-target feedback; //tm quiet off restores acknowledgments.
+
+## Delivery register
+
+TrustMovement 0.1.1 Quiet: cumulative movement package plus a targeted Trust
+source overlay. BUILD.txt records both local source commits. Source remains
+local; no new GitHub push is attempted. Rollback contains the Test 1 receiver
+and unmodified Trust baseline files, plus the originally uploaded wrapper.
+Trust baseline: 89939a7a26522bb92670bd000a771b235230b77d.
+
+---
+
 # TESTING.md — Trust
 
 Private, cumulative development and testing record. Keep this file at the **repository root** and at the **root of every testing package**. Read it first before testing or preparing a patch batch. Exclude this internal record from public release packages unless the collaborators agree otherwise.

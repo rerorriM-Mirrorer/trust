@@ -10,6 +10,7 @@ local Event = require('cylibs/events/Luvent')
 local monster_util = require('cylibs/util/monster_util')
 local MobTracker = require('cylibs/battle/monsters/mob_tracker')
 local PartyMember = require('cylibs/entity/party_member')
+local command_feedback = require('cylibs/util/command_feedback')
 local Player = require('cylibs/entity/party/player')
 local PartyTarget = require('cylibs/entity/party/party_target')
 local party_util = require('cylibs/util/party_util')
@@ -293,7 +294,7 @@ end
 -- @tparam PartyMember party_member Party member to assist
 function Party:set_assist_target(party_member)
     if self.assist_target and self.assist_target:get_id() == party_member:get_id() then
-        if self.assist_target:get_id() ~= windower.ffxi.get_player().id then
+        if self.assist_target:get_id() ~= windower.ffxi.get_player().id and not command_feedback.is_quiet() then
             self:add_to_chat(self:get_player(), "I'm already assisting "..party_member:get_name().."!")
         end
         return
@@ -303,7 +304,7 @@ function Party:set_assist_target(party_member)
     self.party_target:set_assist_target(self.assist_target)
 
     if party_member then
-        if party_member:get_name() ~= windower.ffxi.get_player().name then
+        if party_member:get_name() ~= windower.ffxi.get_player().name and not command_feedback.is_quiet() then
             self:add_to_chat(self:get_player(), "Okay, I'll assist "..party_member:get_name().." in battle.")
         end
     end

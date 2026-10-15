@@ -1,4 +1,5 @@
 local Follower = setmetatable({}, {__index = Role })
+local command_feedback = require('cylibs/util/command_feedback')
 Follower.__index = Follower
 Follower.__class = "Follower"
 
@@ -131,7 +132,9 @@ function Follower:follow_target_named(target_name)
 
     self:start_following()
 
-    self:get_party():add_to_chat(self:get_party():get_player(), "Okay, I'll follow "..target_name.." when I'm not in battle.")
+    if not command_feedback.is_quiet() then
+        self:get_party():add_to_chat(self:get_party():get_player(), "Okay, I'll follow "..target_name.." when I'm not in battle.")
+    end
 end
 
 function Follower:start_following(override)

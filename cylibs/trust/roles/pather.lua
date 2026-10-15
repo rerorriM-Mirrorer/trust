@@ -1,4 +1,5 @@
 local Pather = setmetatable({}, {__index = Role })
+local command_feedback = require('cylibs/util/command_feedback')
 Pather.__index = Pather
 Pather.__class = "Pather"
 
@@ -60,11 +61,11 @@ function Pather:stop(clear_path)
 
         self.follower:set_follow_target(nil)
 
-        addon_system_message("Path cleared.")
+        if not command_feedback.is_quiet() then addon_system_message("Path cleared.") end
     else
         self.follower:stop_following()
 
-        addon_system_message("Path paused.")
+        if not command_feedback.is_quiet() then addon_system_message("Path paused.") end
     end
 end
 

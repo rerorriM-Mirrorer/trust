@@ -1,4 +1,5 @@
 local CommandMessage = require('cylibs/messages/command_message')
+local command_feedback = require('cylibs/util/command_feedback')
 local PickerConfigItem = require('ui/settings/editors/config/PickerConfigItem')
 local TargetLock = require('cylibs/entity/party/target_lock')
 
@@ -55,7 +56,7 @@ function AssistTrustCommands:handle_assist_player(party_member_name, mirror)
 
         if mirror == "true" then
             for mode_name in L{ 'CombatMode' }:it() do
-                handle_set(mode_name, 'Mirror')
+                self:handle_set_mode(mode_name, 'Mirror', command_feedback.is_quiet())
             end
             message = message.." (mirroring combat distance)"
         end
@@ -80,7 +81,8 @@ function AssistTrustCommands:handle_assist_me()
     local message
 
     if L{'All', 'Send'}:contains(state.IpcMode.value) then
-        IpcRelay.shared():send_message(CommandMessage.new('trust assist '..windower.ffxi.get_player().name))
+        local quiet_flag = command_feedback.is_quiet() and ' --quiet' or ''
+        IpcRelay.shared():send_message(CommandMessage.new('trust assist '..windower.ffxi.get_player().name..quiet_flag))
         success = true
         message = 'Assist set to me on everyone else'
     else
