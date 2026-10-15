@@ -1,3 +1,11 @@
+# Publication record — 2026-10-15
+
+Source, tests and documentation are published on `test/movement-quiet-20261015`.
+Earlier local-only/push-blocked notes below describe their delivery-time status
+and are retained as history. Runtime code is unchanged by publication.
+
+---
+
 # Trust movement — quiet update, 0.1.1 (2026-10-15)
 
 User live report on Test 1: "IT WORKED"; movement-generated messages from both
