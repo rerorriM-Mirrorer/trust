@@ -4,6 +4,15 @@ Private, cumulative development and testing record. Keep this file at the **repo
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), [DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md), [AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md). Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
+## Research and live feedback — 2026-10-15: Menu safety, autosave, Manual Override
+
+- **User live confirmation:** The active-crystal pulse and widget target placement look great on current client(s). Previous ledger records listing those exact effects as untested are now superseded **for the character(s) observed**, not necessarily all four characters. No UI changes requested.
+- **Read-only source audit:** [Manual Override and Menu Interaction Audit](docs/MANUAL-OVERRIDE-MENU-AUDIT-20261015.md). Reviewed broad command blocker, menu focus/escape, 0.2-second scheduled opener (original rationale unknown), ConfigEditor draft/Confirm/Save path, Modes temporary Confirm vs profile Save, job-vs-mode persistence, and upstream movement cancellation limitations. No runtime files changed.
+- **Priority selected:** Prototype AUTO/MANUAL movement ownership first. Later: test command-effect classification instead of category allowlist, immediate menu close, valid-change autosave to the selected named set, pending draft/profile transitions, and menu timing. Controller detection should instrument actual PS5 analog input through XIVCrossbar's existing AutoHotkey DirectInput bridge; it currently observes gamepad buttons/POV, not analog stick takeover.
+- **Status:** Design/research only. No manual control or autosave implementation, no in-game test of such functions.
+
+---
+
 ## Current testing delivery — 2026-10-15: Trust 17.7.3 cumulative overlay (Cioara and companions)
 
 **Purpose:** One install package for compatible **Cyrite Trust 17.7.3** addon folders, regardless of which earlier incremental Trust test patches were installed. The literal `_addon.version = '17.7.3'` line stays unchanged across these test patches; this version string **cannot** identify patch status. The user reported this exact header on Cioara and three companion clients.
