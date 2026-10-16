@@ -1,6 +1,14 @@
 # TESTING.md — Trust
 
-Private, cumulative development and testing record. Keep this file at the **repository root** and at the **root of every testing package**. Read it first before testing or preparing a patch batch. Exclude this internal record from public release packages unless the collaborators agree otherwise.
+## Package layout convention — 2026-10-16
+
+- **Repository:** Keep `WORKFLOW.md` and `TESTING.md` at repository root.
+- **Testing ZIPs:** Include both inside the addon folder alongside its README and code, or beside patch/test files when there is no addon folder. Outer ZIP-root duplicates are unnecessary.
+- **Reference commit:** [`622c842`](https://github.com/rerorriM-Mirrorer/trust/commit/622c8429d4fb853dcb6d09c46980e700157cd455).
+- **Verification:** Documentation-only change. No addon code or runtime behavior changed; no in-game testing performed.
+- **History:** Superseded package-root instructions below remain struck through with the corrected placement stated explicitly.
+
+Private, cumulative development and testing record. Keep this file at the **repository root** and ~~at the **root of every testing package**~~. **Correction (2026-10-16):** In testing ZIPs, place both `TESTING.md` and `WORKFLOW.md` inside the installable addon folder or beside the delivered patch/test files, not at the outer ZIP root. Read it first before testing or preparing a patch batch. Exclude this internal record from public release packages unless the collaborators agree otherwise.
 
 **Reference conventions:** [NPCMirror WORKFLOW.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/WORKFLOW.md), ~~[DESIGN.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/DESIGN.md)~~, ~~[AGATHOS.md](https://github.com/rerorriM-Mirrorer/ffxi-NPCmirror/blob/main/AGATHOS.md)~~. **Correction (2026-10-13):** The separate Design and Agathos documents were consolidated; consult this repository's [WORKFLOW.md](WORKFLOW.md), which contains Agathos, Design, and Workflow in order. Apply the smallest responsible change, protect known-good states, document corrections using strikethrough plus explanation, and remove historical entries only by mutual agreement.
 
@@ -188,4 +196,4 @@ Private, cumulative development and testing record. Keep this file at the **repo
 4. **EnemyBar2-first debuff test:** in its own repository, trial floating icons on the main bar; afterward evaluate optional Trust target/debuff adapter and focus fallback.
 5. **Behavior controls and movement:** add only demonstrated-needed one-shot overrides, then diagnostic-only stuck detection; recovery after safe live validation.
 
-**Before delivering any future test package:** update this record with package name, branch/commit, changed files, rollback procedure, exact test instructions, static/smoke results, expected outcomes, and blank spaces for live observations. Include the document at package root; omit it from public release artifacts until agreed otherwise. Correct inaccurate entries using ~~strikethrough~~, a dated note, and replacement text; do not erase history unilaterally.
+**Before delivering any future test package:** update this record with package name, branch/commit, changed files, rollback procedure, exact test instructions, static/smoke results, expected outcomes, and blank spaces for live observations. ~~Include the document at package root~~; **correction (2026-10-16):** include `WORKFLOW.md` and `TESTING.md` with the addon or patch/test payload rather than the outer ZIP root. Omit the internal testing record from public release artifacts until agreed otherwise. Correct inaccurate entries using ~~strikethrough~~, a dated note, and replacement text; do not erase history unilaterally.
