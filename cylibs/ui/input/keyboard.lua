@@ -3,6 +3,7 @@ local FocusManager = require('cylibs/ui/focus/focus_manager')
 local Keybind = require('cylibs/ui/input/keybind')
 local Shortcut = require('settings/settings').Shortcut
 local ValueRelay = require('cylibs/events/value_relay')
+local MenuPreferences = require('cylibs/ui/menu/menu_preferences')
 
 local Keyboard = {}
 Keyboard.__index = Keyboard
@@ -53,6 +54,7 @@ function Keyboard.new()
     self.chat_open = ValueRelay.new(windower.ffxi.get_info().chat_open)
     self.key_pressed = Event.newEvent()
     self.events = {}
+    self.directionKeys = {}
 
     self.events.keyboard = windower.register_event('keyboard', function(key, pressed, flags, blocked)
         if not pressed then
@@ -60,6 +62,24 @@ function Keyboard.new()
         end
 
         self:on_key_pressed():trigger(key, pressed, flags, blocked)
+
+        -- Translate only focused Trust UI input, never chat or a text field.
+        -- Consume matching releases even when the menu closes between edges.
+        if not pressed and self.directionKeys[key] then
+            local route = self.directionKeys[key]
+            self.directionKeys[key] = nil
+            if not route.target.destroyed then
+                route.target:onKeyboardEvent(route.key, false, flags, false)
+            end
+            return true
+        end
+        local mapped = pressed and self:directionKey(key, flags, blocked)
+        if mapped then
+            local focused = FocusManager.shared():getFocusable()
+            self.directionKeys[key] = {key=mapped, target=focused}
+            focused:onKeyboardEvent(mapped, pressed, flags, false, self:getKey(mapped, flags))
+            return true
+        end
 
         if not blocked and self:isValidKeybind(key, flags) and pressed and FocusManager.shared():getFocusable() == nil then
             local keybind = Keybind.new(self:getKey(key), flags)
@@ -78,6 +98,19 @@ function Keyboard.new()
     self:setupKeybinds()
 
     return self
+end
+
+function Keyboard:directionKey(key, flags, blocked)
+    local focused = FocusManager.shared():getFocusable()
+    if blocked or windower.ffxi.get_info().chat_open or not focused
+            or not focused.onKeyboardEvent or not MenuPreferences.get('ijkl')
+            or (flags ~= 0 and flags ~= 1)
+            or (focused.acceptsTextInput and focused:acceptsTextInput()) then
+        return nil
+    end
+    -- DIK I/J/K/L -> Up/Left/Down/Right; numeric arrows feed the existing
+    -- list, slider, picker and menu handlers without generating OS keys.
+    return ({ [0x17] = 200, [0x24] = 203, [0x25] = 208, [0x26] = 205 })[key]
 end
 
 function Keyboard:setupKeybinds()

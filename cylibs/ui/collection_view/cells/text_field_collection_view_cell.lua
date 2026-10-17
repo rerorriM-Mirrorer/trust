@@ -113,6 +113,10 @@ function TextFieldCollectionViewCell:getKeyBlacklist()
     return S{ 'Left', 'Right', 'Escape', 'LShift', 'RRhift', 'Enter' }
 end
 
+function TextFieldCollectionViewCell:acceptsTextInput()
+    return true
+end
+
 function TextFieldCollectionViewCell:setCursorVisible(cursorVisible)
     if cursorVisible then
         self.cursorTimer:resume()
