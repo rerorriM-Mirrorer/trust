@@ -1,3 +1,14 @@
+# Publication and package verification — 2026-10-17
+
+Menu options Test 1 source is published at `73aaa3839b66ae698bc692cdf9ac721add354565`.
+The cumulative ZIP passed CRC and exact source/doc-byte verification against the
+fetched published tree. See [the delivery record](docs/MENU-OPTIONS-TEST1-DELIVERY.md)
+for the manifest, checksum and package link. All new live acceptance remains pending.
+The embedded TESTING is pinned to the packaged source snapshot; this publication
+entry is a later documentation addition. Main was not changed or merged.
+
+---
+
 # Menu options Test 1 — 2026-10-17 (America/Chicago)
 
 **Author:** Awake. **Repository:** `rerorriM-Mirrorer/trust`.
