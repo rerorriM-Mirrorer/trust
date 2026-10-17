@@ -25,6 +25,8 @@ local TextItem = require('cylibs/ui/collection_view/items/text_item')
 local TextStyle = require('cylibs/ui/style/text_style')
 local ToggleButtonCollectionViewCell = require('cylibs/ui/collection_view/cells/toggle_button_collection_view_cell')
 local VerticalFlowLayout = require('cylibs/ui/collection_view/layouts/vertical_flow_layout')
+local MenuPreferences = require('cylibs/ui/menu/menu_preferences')
+local EditorValues = require('cylibs/ui/menu/editor_values')
 
 local ModelSettings = {}
 ModelSettings.__index = ModelSettings
@@ -128,9 +130,19 @@ function ConfigEditor.new(trustSettings, configSettings, configItems, infoView, 
 
     self.trustSettings = trustSettings
     self.configSettings = configSettings
+    self.exitOwnerRoot = trustSettings and trustSettings.getSettings and trustSettings:getSettings()
+    self.exitModeScope = {}
+    if trustSettings and trustSettings.jobNameShort and state then
+        for _, name in ipairs({'TrustMode', 'MainTrustSettingsMode', 'SubTrustSettingsMode', 'WeaponSkillSettingsMode'}) do
+            self.exitModeScope[name] = state[name] and state[name].value
+        end
+    end
     self.validator = validator or function() return true end
     self.showMenu = function(menuItem)
-        self:resignFocus()
+        -- A nested picker is still part of this edit, not Save & Back.
+        self.openingChildPicker = true
+        FFXIWindow.resignFocus(self)
+        self.openingChildPicker = false
         showMenu(menuItem)
     end
     self.valueForCellConfigItem = {}
@@ -191,6 +203,8 @@ function ConfigEditor.new(trustSettings, configSettings, configItems, infoView, 
     self:setNeedsLayout()
     self:layoutIfNeeded()
 
+    self.exitBaseline = self:readDraft()
+    self.exitSourceValues = EditorValues.copy(self.configSettings)
     return self
 end
 
@@ -366,16 +380,8 @@ function ConfigEditor:sectionForConfigKey(key)
     return nil
 end
 
-function ConfigEditor:onConfirmClick(skipSave)
-    self:resignFirstResponder()
-
-    local originalSettings
-    if self.configSettings.copy then
-        originalSettings = self.configSettings:copy()
-    else
-        originalSettings = T(self.configSettings):copy(true)
-    end
-
+function ConfigEditor:readDraft()
+    local draft = EditorValues.copy(self.configSettings)
     for sectionIndex = 1, self:getDataSource():numberOfSections(), 1 do
         local configItem = self.configItems[sectionIndex]
         if configItem then
@@ -393,46 +399,176 @@ function ConfigEditor:onConfirmClick(skipSave)
                     end
                 end
                 configValues = configValues:filter(function(value) return value ~= 'None' end)
-                self.configSettings[configKey] = configValues
+                draft[configKey] = configValues
             else
                 local cellConfigItem = self:getDataSource():itemAtIndexPath(IndexPath.new(sectionIndex, 1))
 
                 local valueForCellConfigItem = self.valueForCellConfigItem[cellConfigItem.__type]
                 if valueForCellConfigItem then
-                    self.configSettings[configKey] = valueForCellConfigItem(cellConfigItem)
+                    draft[configKey] = valueForCellConfigItem(cellConfigItem)
                 else
                     if cellConfigItem.__type == SliderItem.__type then
-                        self.configSettings[configKey] = cellConfigItem:getCurrentValue()
+                        draft[configKey] = cellConfigItem:getCurrentValue()
                     elseif cellConfigItem.__type == FFXIToggleButtonItem.__type then
-                        self.configSettings[configKey] = cellConfigItem:getEnabled()
+                        draft[configKey] = cellConfigItem:getEnabled()
                     elseif cellConfigItem.__type == PickerItem.__type then
-                        self.configSettings[configKey] = cellConfigItem:getCurrentValue()
+                        draft[configKey] = cellConfigItem:getCurrentValue()
                     elseif cellConfigItem.__type == TextFieldItem.__type then
-                        self.configSettings[configKey] = cellConfigItem:getTextItem():getText()
+                        draft[configKey] = cellConfigItem:getTextItem():getText()
                     elseif cellConfigItem.__type == TextItem.__type then
-                        self.configSettings[configKey] = configItem:getInitialValues()
+                        draft[configKey] = configItem:getInitialValues()
                     end
                 end
             end
         end
     end
 
-    local isValid, errorMessage = self.validator(self.configSettings)
+    return draft
+end
+
+function ConfigEditor:onConfirmClick(skipSave, quiet)
+    self:resignFirstResponder()
+    local originalSettings = EditorValues.copy(self.configSettings)
+    local draft = self:readDraft()
+    -- Validation must precede mutation: an invalid exit leaves live settings
+    -- untouched and the editor available for correction.
+    local isValid, errorMessage = self.validator(draft)
+    if isValid then
+        for i, configItem in ipairs(self.configItems) do
+            local item = self:getDataSource():itemAtIndexPath(IndexPath.new(i, 1))
+            if item and item.__type == TextFieldItem.__type and item.isValid
+                    and not item:isValid(draft[configItem:getKey()]) then
+                isValid, errorMessage = false, 'Invalid '..configItem:getKey()..'.'
+                break
+            end
+        end
+    end
     if not isValid then
         self:onConfigValidationError():trigger(errorMessage)
-        return
+        if quiet then addon_system_error(errorMessage or 'Correct the highlighted options before leaving.') end
+        return false
     end
+
+    for key, value in pairs(draft) do self.configSettings[key] = value end
 
     self:onConfigConfirm():trigger(self.configSettings, originalSettings)
 
-    if self.configSettings ~= originalSettings then
+    if not quiet or not EditorValues.equal(draft, originalSettings) then
         self:onConfigChanged():trigger(self.configSettings, originalSettings)
     end
 
     if self.trustSettings and not skipSave then
-        self.trustSettings:saveSettings(true)
-        addon_message(260, '('..windower.ffxi.get_player().name..') '.."Alright, I've updated my settings!")
+        local result, err = self.trustSettings:saveSettings(true)
+        if result == false then error(err or 'Unable to save settings.') end
+        if not quiet then
+            addon_message(260, '('..windower.ffxi.get_player().name..') '.."Alright, I've updated my settings!")
+        end
     end
+    self.exitBaseline = self:readDraft()
+    self.exitSourceValues = EditorValues.copy(self.configSettings)
+    return true
+end
+
+-- Ordinary option editors are eligible by default. Command forms, renamed
+-- profiles, nested multi-pickers and structural gambit editors stay explicit.
+-- A menu can opt in a known safe ownerless editor with an explicit writer.
+function ConfigEditor:canSaveOnExit()
+    if self.saveOnExit == false then return false end
+    if self.exitWriter then return true end
+    if getmetatable(self) ~= ConfigEditor or not self.trustSettings then return false end
+    local hasOptions = false
+    for configItem in self.configItems:it() do
+        if L{ ConfigItem.__type, BooleanConfigItem.__type, PickerConfigItem.__type }:contains(configItem.__type) then
+            hasOptions = true
+        elseif configItem.__type == GroupConfigItem.__type then
+            for child in configItem:getConfigItems():it() do
+                if not L{ ConfigItem.__type, BooleanConfigItem.__type, PickerConfigItem.__type }:contains(child.__type) then return false end
+            end
+            hasOptions = true
+        elseif configItem.__type ~= TextInputConfigItem.__type then
+            return false
+        end
+    end
+    -- Name/creation forms containing only text fields remain explicit.
+    return hasOptions
+end
+
+function ConfigEditor:setSaveOnExit(enabled, writer, guard)
+    self.saveOnExit = enabled
+    self.exitWriter = writer
+    self.exitGuard = guard
+end
+
+function ConfigEditor:commitOnExit()
+    if self.committingExit or self.openingChildPicker or not MenuPreferences.get('save_on_exit')
+            or not self:canSaveOnExit() then return true end
+    local draft = self:readDraft()
+    if EditorValues.equal(draft, self.exitBaseline) then return true end
+    if self.exitSourceValues then
+        for configItem in self.configItems:it() do
+            local key = configItem:getKey()
+            if not EditorValues.equal(self.configSettings[key], self.exitSourceValues[key])
+                    and not EditorValues.equal(self.configSettings[key], draft[key]) then
+                addon_system_error('An option changed outside this editor. Discard and reopen it before saving.')
+                return false
+            end
+        end
+    end
+    if self.exitOwnerRoot and self.trustSettings:getSettings() ~= self.exitOwnerRoot then
+        addon_system_error('This settings set was reloaded. Reopen the editor before saving.')
+        return false
+    end
+    for name, value in pairs(self.exitModeScope or {}) do
+        if state[name] and state[name].value ~= value then
+            addon_system_error('The profile changed. Reopen this editor before saving.')
+            return false
+        end
+    end
+    if self.exitGuard then
+        local valid, message = self.exitGuard(draft)
+        if not valid then
+            addon_system_error(message or 'Settings changed outside this editor. Reopen it before saving.')
+            return false
+        end
+    end
+    self.committingExit = true
+    local baseline = self.exitBaseline
+    local sourceValues = self.exitSourceValues
+    local owner = self.trustSettings
+    local save = owner and owner.saveSettings
+    local ownSave = owner and rawget(owner, 'saveSettings')
+    -- Several existing onConfigChanged callbacks save the same owner too.
+    -- Coalesce those synchronous requests into one final save/notification.
+    if owner and save then owner.saveSettings = function() return true end end
+    local ok, result = pcall(function()
+        if not self:onConfirmClick(true, true) then return false end
+        if owner then owner.saveSettings = ownSave end
+        if self.exitWriter then self.exitWriter(self.configSettings) end
+        if save then
+            local success, err = save(owner, true)
+            if success == false then error(err or 'Unable to save settings.') end
+        end
+        return true
+    end)
+    if owner then owner.saveSettings = ownSave end
+    self.committingExit = false
+    if not ok or not result then
+        -- A failed write may have applied runtime values. Keep the draft dirty
+        -- so a deliberate retry can persist it rather than claiming success.
+        self.exitBaseline = baseline
+        self.exitSourceValues = sourceValues
+        if not ok then addon_system_error('Settings were not saved: '..tostring(result)) end
+        return false
+    end
+    self.exitBaseline = self:readDraft()
+    if self.exitOwnerRoot then self.exitOwnerRoot = self.trustSettings:getSettings() end
+    MenuPreferences.saved()
+    return true
+end
+
+function ConfigEditor:resignFocus()
+    if self:hasFocus() and not self:commitOnExit() then return end
+    FFXIWindow.resignFocus(self)
 end
 
 function ConfigEditor:onResetClick()
@@ -444,7 +580,7 @@ end
 
 function ConfigEditor:onSelectMenuItemAtIndexPath(textItem, indexPath)
     if L{ 'Confirm', 'Save', 'Search' }:contains(textItem:getText()) then
-        self:onConfirmClick()
+        return self:onConfirmClick()
     elseif textItem:getText() == 'Reset' then
         self:onResetClick()
     end

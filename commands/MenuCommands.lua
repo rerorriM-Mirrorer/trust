@@ -11,8 +11,20 @@ function MenuTrustCommands.new(trust, action_queue, hud)
     self.hud = hud
 
     self:add_command('default', self.handle_toggle_menu, 'Show and hide the Trust menu')
+    self:add_command('close', self.handle_close, 'Save eligible options and close all Trust menus')
+    self:add_command('discard', self.handle_discard, 'Close menus without applying the pending editor draft')
 
     return self
+end
+
+function MenuTrustCommands:handle_close()
+    local success = self.hud.trustMenu:closeAll()
+    return success ~= false, success == false and 'Correct the editor or use //trust menu discard.' or nil
+end
+
+function MenuTrustCommands:handle_discard()
+    self.hud.trustMenu:closeAll(true)
+    return true
 end
 
 function MenuTrustCommands:get_command_name()

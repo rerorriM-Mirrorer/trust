@@ -83,7 +83,10 @@ function ViewStack:present(view)
     end
 
     self.currentView = view
-    if self.startPosition then
+    if self.positionResolver then
+        local x, y = self.positionResolver(view)
+        self.currentView:setPosition(x, y)
+    elseif self.startPosition then
         self.currentView:setPosition(self.startPosition.x, self.startPosition.y)
     else
         self.currentView:setPosition((windower.get_windower_settings().ui_x_res - view:getSize().width) / 2, (windower.get_windower_settings().ui_y_res - view:getSize().height) / 2)
@@ -109,6 +112,10 @@ function ViewStack:dismiss()
 
     if self:getNumViews() > 0 then
         self.currentView = self.stack[self.stack:length()]
+        if self.positionResolver then
+            local x, y = self.positionResolver(self.currentView)
+            self.currentView:setPosition(x, y)
+        end
         self.currentView:setVisible(true)
         self.currentView:layoutIfNeeded()
     else

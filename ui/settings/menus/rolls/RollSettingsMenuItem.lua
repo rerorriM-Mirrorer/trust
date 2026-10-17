@@ -46,7 +46,9 @@ function RollSettingsMenuItem.new(trustSettings, trustSettingsMode, trustModeSet
             BooleanConfigItem.new('PrioritizeElevens', "XI Streak"),
         }
 
-        local rollConfigEditor = ConfigEditor.new(self.trustSettings, rollSettings, configItems)
+        local rollConfigEditor = ConfigEditor.new(self.trustSettings, rollSettings, configItems, nil, function(values)
+            return values.Roll1 ~= values.Roll2, 'Choose two different rolls.'
+        end)
 
         self.dispose_bag:add(rollConfigEditor:onConfigChanged():addAction(function(newSettings, _)
             if newSettings.Roll1 ~= newSettings.Roll2 then

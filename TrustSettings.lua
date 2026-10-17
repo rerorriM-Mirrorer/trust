@@ -125,9 +125,11 @@ end
 function TrustSettings:saveSettings(saveToFile)
     if saveToFile then
         local filePath = self.settingsFolder..self.jobNameShort..'_'..self.playerName..'.lua'
-        local _ = coroutine.resume(self:saveToFile(filePath, self.settings))
+        local success, err = coroutine.resume(self:saveToFile(filePath, self.settings))
+        if not success then return false, err end
     end
     self:onSettingsChanged():trigger(self.settings)
+    return true
 end
 
 function TrustSettings:copySettings(override)

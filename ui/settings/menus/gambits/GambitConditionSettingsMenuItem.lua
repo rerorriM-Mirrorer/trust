@@ -138,6 +138,7 @@ function GambitConditionSettingsMenuItem:getEditConditionMenuItem()
             selectedCondition = selectedCondition.conditions[1]
         end
         local conditionConfigEditor = ConfigEditor.new(self.trustSettings, selectedCondition, selectedCondition:get_config_items(), infoView, nil, showMenu)
+        conditionConfigEditor:setSaveOnExit(false)
         return conditionConfigEditor
     end, "Conditions", "Edit the selected condition.", false, function()
         local selectedCondition = self:getSelectedCondition():getCondition()

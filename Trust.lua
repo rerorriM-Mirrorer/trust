@@ -614,7 +614,7 @@ local function addon_command(cmd, ...)
     -- paths, items and forwarded commands in ... must retain their casing.
     local cmd = type(cmd) == 'string' and cmd:lower() or 'help'
 	
-	if hud.trustMenu:isVisible() and not S{ 'assist', 'send', 'sendall', 'widget'}:contains(cmd) then
+	if hud.trustMenu:isVisible() and not S{ 'assist', 'send', 'sendall', 'widget', 'menu'}:contains(cmd) then
 		addon_system_error("Unable to execute commands while the menu is open.")
 		return
 	end

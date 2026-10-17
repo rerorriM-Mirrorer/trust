@@ -14,6 +14,8 @@ local TrustInfoBar = require('ui/TrustInfoBar')
 local Menu = require('cylibs/ui/menu/menu')
 local ViewStack = require('cylibs/ui/views/view_stack')
 local View = require('cylibs/ui/views/view')
+local MenuPreferences = require('cylibs/ui/menu/menu_preferences')
+local MenuLayout = require('cylibs/ui/menu/menu_layout')
 
 local TrustHud = setmetatable({}, {__index = View })
 TrustHud.__index = TrustHud
@@ -56,6 +58,27 @@ function TrustHud.new(player, action_queue, addon_settings, trustModeSettings, a
     self.infoViewContainer:layoutIfNeeded()
 
     self.trustMenu = Menu.new(self.viewStack, self.menuViewStack, self.infoBar, self.mediaPlayer, self.soundTheme)
+
+    MenuPreferences.configure(addon_settings, function()
+        self.infoBar:setDescription('Saved.')
+    end)
+    self.menuViewStack.positionResolver = function()
+        return math.max(8, windower.get_windower_settings().ui_x_res - 128), 52
+    end
+    self.viewStack.positionResolver = function(view)
+        local screen = windower.get_windower_settings()
+        local size = view:getSize()
+        return MenuLayout.positions(screen.ui_x_res, screen.ui_y_res,
+            size.width, size.height, MenuPreferences.get('adjacent'))
+    end
+    self:getDisposeBag():add(addon_settings:onSettingsChanged():addAction(function()
+        local view = self.viewStack:getCurrentView()
+        if view then
+            local x, y = self.viewStack.positionResolver(view)
+            view:setPosition(x, y)
+            view:layoutIfNeeded()
+        end
+    end), addon_settings:onSettingsChanged())
 
     self.backgroundImageView = self:getBackgroundImageView()
 
@@ -129,7 +152,7 @@ function TrustHud:toggleMenu()
     -- so we can distinguish a first-open hitch from every-open rendering.
     local profiling = windower.trust and windower.trust.menu_perf_enabled
     local started = profiling and os.clock()
-    self.trustMenu:closeAll()
+    if self.trustMenu:closeAll() == false then return end
     local closed = profiling and os.clock()
 
     local coldOpen = self.mainMenuItem == nil
@@ -151,7 +174,7 @@ function TrustHud:toggleMenu()
 end
 
 function TrustHud:closeAllMenus()
-    self.trustMenu:closeAll()
+    return self.trustMenu:closeAll()
 end
 
 function TrustHud:openMenu(menuItem)

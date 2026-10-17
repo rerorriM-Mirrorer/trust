@@ -90,6 +90,8 @@ function WidgetSettingsMenuItem:getLayoutMenuItem()
             end, "Alignment"),
         }
         local configEditor = ConfigEditor.new(nil, layoutSettings, configItems)
+        -- The existing onConfigChanged handler persists the widget positions.
+        configEditor:setSaveOnExit(true, function() end)
 
         self.disposeBag:add(configEditor:onConfigChanged():addAction(function(newSettings, _)
             local yPos = windower.get_windower_settings().ui_y_res / 2 - 75

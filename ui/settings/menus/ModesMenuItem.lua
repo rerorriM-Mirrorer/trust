@@ -32,6 +32,27 @@ function ModesMenuItem.new(trustModeSettings, description, modeNames, showModeNa
     self.contentViewConstructor = function(_, infoView)
         local modesView = ModesView.new(modeNames, infoView, state, showModeName)
         modesView:setShouldRequestFocus(true)
+        local setName = state.TrustMode.value
+        local openingModes = {}
+        for name in modeNames:it() do openingModes[name] = state[name].value end
+        modesView:onConfigChanged():addAction(function()
+            -- Refresh after this editor applies its own changes (including
+            -- explicit Confirm), so the next edit isn't mistaken for IPC.
+            for name in modeNames:it() do openingModes[name] = state[name].value end
+        end)
+        modesView:setSaveOnExit(self.trustModeSettings ~= nil, function()
+            -- Apply the edited modes first, then persist the set that was
+            -- selected when the editor opened, never a newly selected profile.
+            if self.trustModeSettings then self.trustModeSettings:saveSettings(setName) end
+        end, function(draft)
+            for name, original in pairs(openingModes) do
+                if state[name].value ~= original and draft[name:lower()] ~= state[name].value then
+                    return false, 'A mode changed outside this editor. Discard and reopen it before saving.'
+                end
+            end
+            return state.TrustMode.value == setName and (draft.trustmode == nil or draft.trustmode == setName),
+                'Use Confirm to switch profiles. Ordinary mode options can save on exit.'
+        end)
         modesView:getDelegate():didMoveCursorToItemAtIndexPath():addAction(function(cursorIndexPath)
             self.selectedModeName = modeNames[cursorIndexPath.section]
         end)

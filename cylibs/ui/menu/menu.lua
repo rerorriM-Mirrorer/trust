@@ -73,6 +73,10 @@ function Menu:destroy()
 end
 
 function Menu:showMenu(menuItem)
+    -- Keep-view child pickers are part of the same edit. Other navigation is
+    -- an intentional departure and must finish a valid options draft first.
+    if self.menuView and self.menuView:getItem() ~= menuItem and not menuItem.keepViews
+            and not self:commitCurrentEditor() then return false end
     if self.menuItemStack:contains(menuItem) then
         while self.menuItemStack:length() > 0 and self.menuItemStack[self.menuItemStack:length()]:getUUID() ~= menuItem:getUUID() do
             self.menuItemStack:remove(self.menuItemStack:length())
@@ -88,9 +92,14 @@ function Menu:showMenu(menuItem)
 
             local textItem = self.menuView:getDataSource():itemAtIndexPath(indexPath):getTextItem()
 
+            -- Mouse activation can skip the keyboard focus-return path.
+            -- Explicit Confirm/Save retain their original action semantics.
+            if not L{'Confirm', 'Save', 'Reset', 'Clear', 'Clear All', 'Delete', 'Import'}:contains(textItem:getText())
+                    and not self:commitCurrentEditor() then return end
+
             local currentView = self.contentViewStack:getCurrentView()
             if currentView and type(currentView.onSelectMenuItemAtIndexPath) == 'function' then
-                currentView:onSelectMenuItemAtIndexPath(textItem, indexPath)
+                if currentView:onSelectMenuItemAtIndexPath(textItem, indexPath) == false then return end
             end
 
             local childMenuItem = self.menuView:getItem():getChildMenuItem(textItem:getText())
@@ -147,6 +156,15 @@ function Menu:showMenu(menuItem)
     self:requestFocus()
 end
 
+function Menu:commitCurrentEditor()
+    local view = self.contentViewStack:getCurrentView()
+    if view and view.commitOnExit and not view:commitOnExit() then
+        view:requestFocus()
+        return false
+    end
+    return true
+end
+
 function Menu:updateInfoView(menuItem, parentMenuItem)
     local parentTitleText = parentMenuItem:getTitleText() or ""
     local parentDescriptionText = parentMenuItem:getDescriptionText() or ""
@@ -196,11 +214,12 @@ function Menu:onKeyboardEvent(key, pressed, flags, blocked)
         elseif keyName == 'Right' then
             local currentView = self.contentViewStack:getCurrentView()
             if currentView and currentView:hasFocus() then
-                currentView:resignFocus()
+                if self:commitCurrentEditor() then currentView:resignFocus() end
             else
                 self.menuView:pageRight()
             end
         elseif keyName == 'Escape' then
+            if not self:commitCurrentEditor() then return true end
             if self.menuItemStack:length() > 1 then
                 local removed = self.menuItemStack:remove(self.menuItemStack:length())
                 self.menuView:setItem(self.menuItemStack[self.menuItemStack:length()])
@@ -223,7 +242,8 @@ function Menu:onKeyboardEvent(key, pressed, flags, blocked)
     return L{1,203,205}:contains(key)
 end
 
-function Menu:closeAll()
+function Menu:closeAll(discardDrafts)
+    if not discardDrafts and not self:commitCurrentEditor() then return false end
     local isMenuShown = self:isVisible()
 
     if self.menuView then
@@ -236,6 +256,7 @@ function Menu:closeAll()
     if isMenuShown then
         FocusManager.shared():resignAllFocus()
     end
+    return true
 end
 
 function Menu:isVisible()

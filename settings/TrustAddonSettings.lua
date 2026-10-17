@@ -35,6 +35,11 @@ default.logging.enabled = false
 default.logging.logtofile = false
 default.logging.filter_pattern = ''
 default.menu_key = '%^numpad+'
+-- Testing defaults; each option can be restored independently in Config > Menu.
+default.menu = {}
+default.menu.save_on_exit = true
+default.menu.adjacent = true
+default.menu.ijkl = true
 default.autocomplete = {}
 default.autocomplete.visible = true
 default.remote_commands = {} -- can't get rid of because of migration_v27
@@ -88,6 +93,10 @@ end
 
 function TrustAddonSettings:loadSettings()
     local _, settings = coroutine.resume(self:loadFile())
+    settings.menu = settings.menu or {}
+    for key, value in pairs(default.menu) do
+        if settings.menu[key] == nil then settings.menu[key] = value end
+    end
     self.settings = settings
     self:onSettingsChanged():trigger(self.settings)
     return self.settings

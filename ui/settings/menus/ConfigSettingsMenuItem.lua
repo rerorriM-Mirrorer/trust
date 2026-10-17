@@ -15,6 +15,7 @@ ConfigSettingsMenuItem.__index = ConfigSettingsMenuItem
 function ConfigSettingsMenuItem.new(addonSettings, trustSettings, trustSettingsMode, mediaPlayer)
     local self = setmetatable(MenuItem.new(L{
         ButtonItem.default('Widgets', 18),
+        ButtonItem.default('Menu', 18),
         ButtonItem.default('GearSwap', 18),
         ButtonItem.default('Remote', 18),
         ButtonItem.default('Shortcuts', 18),
@@ -36,6 +37,17 @@ function ConfigSettingsMenuItem:destroy()
 end
 
 function ConfigSettingsMenuItem:reloadSettings(addonSettings, trustSettings, trustSettingsMode)
+    self:setChildMenuItem('Menu', MenuItem.new(L{
+        ButtonItem.default('Save'),
+    }, {}, function(_, infoView)
+        local values = addonSettings:getSettings().menu
+        local configItems = L{
+            BooleanConfigItem.new('save_on_exit', 'Save options on exit'),
+            BooleanConfigItem.new('adjacent', 'Place editor beside menu'),
+            BooleanConfigItem.new('ijkl', 'I/J/K/L navigate menus'),
+        }
+        return ConfigEditor.new(addonSettings, values, configItems, infoView)
+    end, 'Menu', 'Save options when leaving an editor; place panels together. If autosave is off, use Save to enable it again.'))
     self:setChildMenuItem("Widgets", WidgetSettingsMenuItem.new())
     self:setChildMenuItem("GearSwap", self:getGearSwapMenuItem(trustSettings, trustSettingsMode))
     self:setChildMenuItem("Logging", self:getLoggingMenuItem(addonSettings))
@@ -117,7 +129,11 @@ function ConfigSettingsMenuItem:getSoundSettingsMenuItem(addonSettings)
         local configItems = L{
             BooleanConfigItem.new('disabled', "Disable sound effects"),
         }
-        return ConfigEditor.new(addonSettings, addonSettings:getSettings().sounds.sound_effects, configItems)
+        local editor = ConfigEditor.new(addonSettings, addonSettings:getSettings().sounds.sound_effects, configItems)
+        editor:onConfigChanged():addAction(function()
+            self.mediaPlayer:setEnabled(not addonSettings:getSettings().sounds.sound_effects.disabled)
+        end)
+        return editor
     end, "Sounds", "Configure sound settings.")
     return languageMenuItem
 end
@@ -149,6 +165,9 @@ function ConfigSettingsMenuItem:getLanguageSettingsMenuItem(addonSettings)
             end),
         }
         local languageConfigEditor = ConfigEditor.new(addonSettings, languageSettings, configItems)
+        -- This action reloads the addon and rebuilds the menu tree; keep its
+        -- explicit Save rather than restarting during a navigation callback.
+        languageConfigEditor:setSaveOnExit(false)
 
         self.disposeBag:add(languageConfigEditor:onConfigChanged():addAction(function(newConfigSettings, _)
             addonSettings:getSettings().locales.default = newConfigSettings.Language
