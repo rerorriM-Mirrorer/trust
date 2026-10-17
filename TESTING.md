@@ -1,3 +1,117 @@
+# Menu options Test 1 — 2026-10-17 (America/Chicago)
+
+**Author:** Awake. **Repository:** `rerorriM-Mirrorer/trust`.
+**Working branch:** `test/menu-exit-save-20261017`, based on the cumulative
+quiet/UI candidate `9c7134166f36d99fb0fd21ab35f9eb41e534c210`.
+**Original compatible runtime:** Trust 17.7.3 at
+`575bf583ef41e0018f05b922c6673ab89b54af95`.
+**Package:** `Trust-MenuOptions-Test1-Cumulative.zip`; exact delivery source SHA
+and manifest are recorded in its `trust/BUILD.txt` and `trust/INSTALL-MENU-TEST1.txt`.
+It is an overlay for an existing compatible install, not a complete upstream addon.
+No character data, settings, paths or profiles are shipped or replaced.
+
+## Request and implemented scope
+
+The user selected menu work first: optional automatic confirm/save when leaving
+ordinary options editors, an editor panel immediately left of the main menu,
+and I/J/K/L directional input in Lua.
+
+- Config > Menu supplies `save_on_exit`, `adjacent`, and `ijkl`. New defaults are
+  On; existing explicit values are preserved. With autosave disabled, use Save
+  to re-enable it. Confirm/Save buttons remain available; menu-entry removal is deferred.
+- Ordinary toggles, sliders, single-choice options, scalar groups and mixed
+  options/text panels validate before applying. Editor-to-command focus return,
+  Back, page departure and explicit close commit once when changed. Callback
+  requests for the same owner's save are coalesced into one final write.
+- Mode edits use the named set selected when opening the editor; external mode,
+  profile, root-settings and conflicting option changes block stale saves.
+  Widget position/layout retain their existing persistence. Sound application
+  runs from its change handler as well as the existing explicit Save action.
+- Profile creation/renaming/selection, structural gambit/condition/action edits,
+  command forms, language reload and nested multi-select pickers remain explicit.
+  Opening chat or changing Windows focus is not treated as finishing an editor.
+  A field's first Escape retains its existing deselect/finish behavior; departure
+  from the enclosing editor is the save boundary. Reset/Clear/Delete/Import
+  actions do not implicitly save the pending draft before running.
+- Editor placement uses actual view width with an 8px gap to the command menu,
+  clamped to client bounds. Presentation and parent restoration recalculate the
+  position; reopen after resolution changes. Oversized custom views are not scaled.
+- I/J/K/L feed Up/Left/Down/Right scan codes to focused Trust UI only. Text cells
+  and chat keep letters; Shift is preserved, other modified letters are untouched.
+  Owned releases return to their original recipient or are dropped if it was
+  destroyed. No OS key injection or permanent IJKL bindings are added.
+- `//trust menu close`, `discard`, and `status` work while the menu is visible.
+  Discard closes without applying the pending editor draft; it does not undo
+  already saved changes or runtime changes applied before an I/O failure.
+  Other existing command restrictions are unchanged.
+
+## Verification performed here
+
+- **PASS:** 84 assertions executing edited Lua methods with Windower, UI rendering,
+  I/O and hardware mocked: dirty/no-op saves, combined option commit, validation,
+  write/callback failure and retry, owner save restoration/coalescing, settings/profile
+  conflicts, actual Modes adapter, keyboard event routing, text/chat/modifier
+  exclusions, held release after close, menu action guards and explicit discard.
+- **PASS:** existing 24 Trust quiet-movement integration assertions.
+- **PASS:** 21 changed/new Lua files compile with the available Lua 5.3 parser;
+  upstream Windower quoted-literal method syntax is parenthesized for this check
+  only. New code uses Lua 5.1-compatible constructs, but **no Lua 5.1/Windower
+  execution is claimed**. Available runner: `luatex --luaonly`.
+- **PASS:** whitespace/diff review. Main and older test branches are unchanged.
+- Package manifest/source-byte and ZIP CRC verification are recorded at delivery.
+- **PENDING:** all actual Windows/Windower/FFXI acceptance for this batch. Earlier
+  positive compact UI/movement reports do not certify these new menu behaviors.
+
+## Installation, rollback and live acceptance
+
+1. Back up the complete existing compatible `Windower/addons/trust` folder,
+   including its settings/data. Unload Trust on participating clients before
+   extracting. Copy this ZIP's `trust` contents into the existing `addons/trust`
+   folder, preserving paths; do not create `trust/trust`. No AHK/wrapper update.
+2. Load/reload one client first. `//trust menu status` must identify Menu options
+   Test 1 and report all three preferences. Check prior compact visuals and quiet
+   handoff before adding more clients.
+3. In Config > Menu, change adjacent placement Off/On and leave the editor.
+   Reopen and confirm persistence. Check small and 4K resolutions, keyboard/mouse/
+   controller focus, selected row/scroll state, and reopening after resolution change.
+4. In widget position or combat Config, change 2–3 options. Finish the selected
+   field, leave the editor using Back/Right, close and reload Trust. Check that
+   **all** edited values persisted without selecting Confirm/Save. Repeat with
+   a mouse menu action and `//trust menu close`; unchanged exits should be quiet.
+5. In Modes, edit ordinary modes, leave and reload. Verify the selected named
+   set. Switch profiles separately and confirm no cross-profile writes. Check
+   an external conflicting mode change yields a clear error; use discard/reopen.
+6. Test I/J/K/L against arrows on command lists, option lists, sliders and pickers;
+   Shift+J/L should retain the picker's faster stepping. Type words containing
+   ijkl in chat and a text editor. Test modifier shortcuts and release after close.
+7. Turn autosave Off and confirm the original explicit workflow. Turn it back On
+   using Save. Test an invalid ordinary text value and confirm it blocks save.
+   `//trust menu discard` must close it without executing an unrelated action.
+8. Enter command forms, nested multi-selects, profile/gambit creation and language
+   settings without confirming. Back out and verify none executed/saved/reloaded
+   merely from leaving. Check Reset remains explicit and ordinary menus still work.
+9. Repeat accepted cases across multiple clients. Verify current book/crystal/name
+   placement, follow/assist quiet behavior and startup IPC guard remain unchanged.
+
+**Rollback:** unload Trust, restore the pre-install complete folder backup, then
+load again. Alternatively overwrite source files from the pinned pre-test snapshot
+using the manifest; restore user settings only if deliberately reverting values.
+The test writes preferences and any settings the user intentionally saves in-game.
+
+**Live observations:** all rows above pending; record character, client count,
+resolution, steps and actual result. No in-game test performed by the assistant.
+
+## Guidance reconciliation and historical corrections
+
+Adopted main's current AGENTS.md and WORKFLOW.md, verified against the canonical
+NPCMirror workflow. This branch previously lacked AGENTS.md. Historical package-
+root statements below are superseded: put WORKFLOW.md and TESTING.md **inside the
+installable addon folder**, alongside README/code. Retired DESIGN/AGATHOS references
+below remain historical; the current WORKFLOW.md contains the consolidated text.
+Earlier local-only/publication notes remain intact as delivery-time history.
+
+---
+
 # Publication record — 2026-10-15
 
 Source, tests and documentation are published on `test/movement-quiet-20261015`.

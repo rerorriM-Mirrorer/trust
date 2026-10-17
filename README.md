@@ -1,5 +1,50 @@
 # Trust
 
+## Menu options test 1 — 2026-10-17
+
+This testing overlay targets an existing compatible **Trust 17.7.3** install.
+Use the included `INSTALL-MENU-TEST1.txt`; the upstream installer instructions
+below are retained as historical/general documentation, not this test's update path.
+
+Open **Config > Menu** to control three saved preferences (new defaults are On):
+
+- **Save options on exit:** ordinary toggle, slider and single-choice editors
+  apply/save when returning focus to the command menu, backing out, navigating
+  to another page or closing the menu. Mixed options/text panels validate the
+  completed text too. Modes save to the selected named mode set; widget position
+  and layout editors retain their existing storage. Unchanged exits do not save.
+- **Place editor beside menu:** the content panel opens immediately left of the
+  right-hand command menu, with an 8px gap where the client window has room.
+  Off restores the original separated placement. Bounds are checked on presentation;
+  reopen after changing resolution. Oversized custom panels are not automatically scaled.
+- **I/J/K/L navigate menus:** I = Up, J = Left, K = Down, L = Right in focused
+  Trust UI. Existing arrows still work. Chat and focused text fields retain
+  letters; Shift is preserved, other modified letter shortcuts are not remapped.
+  No Windows key injection or permanent IJKL bindings are installed.
+
+Escape first leaves an actively selected field using its original behavior;
+leaving the enclosing options editor saves its valid draft. A brief `Saved.`
+appears in the menu information bar. Confirm/Save buttons remain available.
+If automatic saving is Off, use the explicit Save button to turn it back On.
+
+Profile creation/renaming/selection, structural gambit editors, nested multi-select
+pickers, command argument forms and language changes that reload Trust retain
+their explicit actions. In particular, exiting the command browser never executes
+a command. Automatic saving detects conflicting profile/root/option changes rather
+than overwriting a stale draft. A write/callback error retains the dirty editor;
+runtime values may already have applied before a failed write, so no success is claimed.
+
+`//trust menu close` saves eligible options and closes the menu immediately.
+`//trust menu discard` closes without committing the pending editor draft;
+it does not undo earlier saves or already applied runtime changes.
+Both commands are permitted while the menu is open. Other existing command
+restrictions remain in effect. Autosave does not run merely because chat opens
+or Windows focus changes. New ordinary menu behavior does not implement Manual Override.
+`//trust menu status` identifies this menu test build and its three saved options.
+
+Source/mocked regression checks pass; **Windows/Windower/FFXI acceptance is pending**.
+See `TESTING.md` for the exact live checklist, compatible baseline and rollback.
+
 ## Summary
 
 Trust is a Windower 4 addon for FFXI that turns your character into a Trust. It works for all [22 jobs](https://github.com/cyritegamestudios/trust/wiki/Trusts) and can attack, nuke, pull, skillchain, follow, roll, sing, and more, consolidating the functionality of EasyFarm, Cure Please, Rollbot, FastFollow and [many others](https://github.com/cyritegamestudios/trust/wiki#why-use-trust) into a single add-on. これは日本語でも機能します!
@@ -187,3 +232,12 @@ TrustMovement's source is maintained with the controller transport in the
 the shared AHK wrapper. At installation, `trustmovement`, `xivcrossbar` and
 `trust` are sibling folders under `Windower/addons`. Trust owns the optional
 quiet follow/assist API; the companion owns movement-triggered invocation.
+
+## Fork development changelog
+
+- **2026-10-17 — Menu options test 1:** optional save-on-exit with validation,
+  named-set/conflict guards and one owner write per changed departure; adjacent
+  editor placement; text-aware IJKL directional input; menu close/discard;
+  cumulative overlay retains earlier compact UI and quiet handoff support.
+- **2026-10-15 — Quiet movement API:** opt-in quiet follow/assist flags across IPC;
+  preserve ordinary command feedback and meaningful errors (details above).

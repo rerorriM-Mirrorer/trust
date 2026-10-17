@@ -1,4 +1,5 @@
 local TrustCommands = require('cylibs/trust/commands/trust_commands')
+local MenuPreferences = require('cylibs/ui/menu/menu_preferences')
 local MenuTrustCommands = setmetatable({}, {__index = TrustCommands })
 MenuTrustCommands.__index = MenuTrustCommands
 MenuTrustCommands.__class = "MenuTrustCommands"
@@ -13,6 +14,7 @@ function MenuTrustCommands.new(trust, action_queue, hud)
     self:add_command('default', self.handle_toggle_menu, 'Show and hide the Trust menu')
     self:add_command('close', self.handle_close, 'Save eligible options and close all Trust menus')
     self:add_command('discard', self.handle_discard, 'Close menus without applying the pending editor draft')
+    self:add_command('status', self.handle_status, 'Show menu test build and saved preferences')
 
     return self
 end
@@ -25,6 +27,12 @@ end
 function MenuTrustCommands:handle_discard()
     self.hud.trustMenu:closeAll(true)
     return true
+end
+
+function MenuTrustCommands:handle_status()
+    return true, string.format('Menu options Test 1 (20261017) | save on exit: %s | adjacent: %s | IJKL: %s',
+        tostring(MenuPreferences.get('save_on_exit')), tostring(MenuPreferences.get('adjacent')),
+        tostring(MenuPreferences.get('ijkl')))
 end
 
 function MenuTrustCommands:get_command_name()
