@@ -1,3 +1,12 @@
+# Current Development Status — 2026-10-18 (attribution normalization)
+
+- **Branch / starting source:** `test/movement-quiet-20261015` / `9c7134166f36d99fb0fd21ab35f9eb41e534c210`.
+- **Change:** Standardize one collaborative source-comment credit as **A**; preserve the movement logic and cumulative testing record.
+- **Verification:** Text-only diff and exact-word search; no new FFXI live testing.
+- **Next:** Retain the documented movement-feedback checks and confirm the remote branch head.
+
+---
+
 # Publication record — 2026-10-15
 
 Source, tests and documentation are published on `test/movement-quiet-20261015`.
