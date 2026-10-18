@@ -1,3 +1,99 @@
+# Menu options Test 3 — October 17, 2026 (America/Chicago)
+
+Author: Awake. Repository: rerorriM-Mirrorer/trust.
+Branch: `test/menu-exit-save-20261017`, based on Test 2 delivery `e6576f3b39739926499d0f0f149e5f7e10d8babe`.
+Package: `Trust-MenuOptions-Test3-Full.zip`, one full Trust folder assembled from
+this fork's source snapshot, retaining its pinned Trust 17.7.3 baseline and all
+cumulative changes. Source identity is in `trust/BUILD.txt`. No personal profiles,
+character settings, trace output or user data are included. Windower dependencies
+remain external. Previous packages were overlays; use this package's install guide.
+
+## Request and observed controller mapping
+
+The user selected save tracing and useful command access while menus are open,
+and asked whether R1 + Square could close all menus from any level.
+
+Current `xivcrossbar/development/directlink` source was read directly: the AHK
+R1 layer explicitly maps normalized buttons 5/7/8 to Enter/Escape/Ctrl+NumpadAdd;
+it has no dedicated Square/button-6 action. Square can continue into the ordinary
+active-window transport. The requested close binding needs to consume Square and
+send `//trust menu close`, avoiding ordinary Square and a later bare-R1 action.
+No controller file is changed here because that shared AHK file is being developed
+in the XIVCrossbar conversation. The concrete handoff is included in this package.
+Close means all Trust menu levels; NPC dialogue and other addon menus are separate.
+Invalid drafts still keep Trust open with feedback; discard remains explicit.
+
+## Implemented
+
+- `//trust menu trace [on|off|status|dump|clear]`: Off by default, prints labeled
+  meaningful events when On, retains the last 120, exports on explicit dump to
+  `data/logs/menu-save-<character>.log`. No background file writes. Export includes
+  bounded option summaries and settings destinations; no general chat/input capture.
+  Dump before reload; reload resets the in-memory session and disables tracing.
+- Trace includes editor construction/policy, field completion, departure reason,
+  changed scalar values, current named sets, explicit Modes destination, skips,
+  conflicts, validation errors, applying, save returns and failures. Job/Modes
+  writers record requested paths and return boundaries. A return is not readback
+  verification of persisted bytes. No speculative autosave algorithm fix is claimed.
+- Root menu command policy distinguishes immediate controls/read-only/UI commands,
+  reviewed tactical verbs requiring an eligible pending-edit check, and profile/
+  reload/unreviewed structural operations still blocked during menu editing.
+  Stop/stopall are always accessible even with invalid drafts, using their existing
+  behavior; this does not establish all-movement Manual Override. Assist/follow,
+  attack controls, ordinary mode set/cycle, basic heal/pull/MB/nuke and target
+  controls are available. Existing send/sendall remain; recipients enforce guards.
+- `//trust combat [auto|mirror|off]` provides an explicit CombatMode shorthand;
+  bare invocation reports mode. Unsupported values leave the mode unchanged.
+- Clean Modes editors refresh after reviewed tactical commands and refresh their
+  conflict snapshot. Immediate/read-only commands do not rebuild the editor;
+  dirty drafts are never replaced by that refresh. The expanded test uncovered
+  uncached-row removal/reload errors; cache lookups now tolerate unrendered rows.
+
+## Verification
+
+PASS: 93 existing menu/save/layout/input assertions, 15 expanded Modes flow
+assertions (including actual trace events and sparse cache refresh), 43 trace/
+command assertions (including the actual root dispatcher extracted from Trust.lua),
+and 24 quiet-movement assertions: **175 total simulated assertions**.
+OS, rendering, live mode state and persistence are mocked where documented.
+
+PASS: 14 changed/test Lua files compile with the available Lua 5.3 runner after
+normalizing Windower quoted-literal method syntax. No native Lua 5.1/Windower
+execution is claimed. Diff/whitespace review passed. Source/package checksums and
+full archive verification are in the Test 3 delivery record.
+
+PENDING: all actual Windows/Windower/FFXI acceptance. The user's Modes revert
+and end-to-end AHK IJKL/gameplay suppression remain unresolved until live testing.
+R1 + Square is a ready-to-wire controller handoff, not an installed binding here.
+
+## Short next in-game test
+
+1. Back up the complete existing addon folder/data. Unload Trust. Merge this full
+   package's `trust` contents into the existing compatible addon folder; preserve
+   your `data` directory. Test one client first. Status must identify **Test 3**.
+2. Run `//trust menu trace on`. Change one ordinary mode in the long Modes page,
+   finish the selected field, back out, reopen and check the value. Run
+   `//trust menu trace dump`, then `off`. Preserve the trace if the value reverts.
+   Reload only after dumping; check disk persistence separately.
+3. With a menu visible, try `//trust status`, `//trust stop`, `//trust start`,
+   `//trust assist <party member>`, `//trust combat mirror`, and ordinary mode
+   controls. A pending valid edit should save before tactical changes. Status
+   and stop should work even when an edit cannot validate. Test stopall with
+   other participating clients upgraded, respecting existing IPC scope settings.
+4. Profile selection/reload/structural commands should explain that the menu
+   must be closed. A failed validation must preserve the draft. Check a clean
+   Modes page updates after commands without losing cursor/scroll usability.
+5. Use `//trust menu close` deep in a submenu. Test physical IJKL, arrows, chat,
+   text, held keys during close and resumed gameplay. Independently updated AHK
+   input and the proposed R1 + Square chord need their own live acceptance.
+6. Recheck compact widgets, adjacent layout, manual Save/Confirm and quiet handoff.
+
+Rollback: unload and restore the backed-up complete folder/data. Do not rely on
+an older overlay to remove new modules. Main and XIVCrossbar are unchanged.
+Earlier testing history below is preserved and remains subject to later reports.
+
+---
+
 # Test 2 publication and package verification — 2026-10-17
 
 Published source: `8b087f5329c40d2462cea54bba4de162bf007d4a`.

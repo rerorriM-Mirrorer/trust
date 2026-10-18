@@ -1,9 +1,10 @@
 # Trust
 
-## Menu options test 2 — 2026-10-17
+## Menu options test 3 — 2026-10-17
 
-This testing overlay targets an existing compatible **Trust 17.7.3** install.
-Use the included `INSTALL-MENU-TEST2.txt`; the upstream installer instructions
+This full testing folder targets the pinned **Trust 17.7.3** runtime with our
+cumulative changes. Back up your existing folder/data and follow
+`INSTALL-MENU-TEST3.txt`; the upstream installer instructions
 below are retained as historical/general documentation, not this test's update path.
 
 Open **Config > Menu** to control three saved preferences (new defaults are On):
@@ -44,6 +45,28 @@ Both commands are permitted while the menu is open. Other existing command
 restrictions remain in effect. Autosave does not run merely because chat opens
 or Windows focus changes. New ordinary menu behavior does not implement Manual Override.
 `//trust menu status` identifies this menu test build and its three saved options.
+
+For save diagnosis, `//trust menu trace on` enables a quiet-by-default diagnostic
+session: each meaningful editor/save event prints a `[menu trace]` chat line.
+The last 120 events remain in memory. Reproduce the edit/exit/reopen problem,
+then `//trust menu trace dump` writes `data/logs/menu-save-<character>.log`.
+`off` stops collection, `clear` clears the retained session, and `status` reports
+its state. Tracing resets Off on reload; dump before reloading. Trace values are
+bounded summaries; write-return events report handler completion, not disk readback.
+
+Menus now permit help/status/version, start/stop/startall/stopall/toggle, and
+existing UI commands without requiring a valid draft. Assist/follow, ordinary
+`set`/`cycle`, attack controls, basic heal/pull/MB/nuke modes, and target controls
+check eligible pending edits before dispatch. Clean Modes editors then refresh
+from live state. Profile selection/reload and unreviewed structural commands still
+require leaving the editor first. Remote recipients apply their own menu guard.
+`//trust combat [auto|mirror|off]` reads or changes combat positioning; bare
+`//trust combat` reports its mode. It does not implement full Manual Override.
+
+The reported Modes save-on-exit revert remains unresolved pending an in-game trace.
+R1 + Square has no dedicated action in the inspected controller source; the
+controller handoff is in `docs/R1-SQUARE-TRUST-CLOSE.md`. This package changes
+Trust only and does not install that AHK binding.
 
 Source/mocked regression checks pass; **Windows/Windower/FFXI acceptance is pending**.
 See `TESTING.md` for the exact live checklist, compatible baseline and rollback.
@@ -238,6 +261,10 @@ quiet follow/assist API; the companion owns movement-triggered invocation.
 
 ## Fork development changelog
 
+- **2026-10-17 — Menu options test 3:** bounded opt-in save trace and export;
+  menu-aware runtime command policy; combat positioning shorthand; clean Modes
+  refresh after tactical commands; guard removal/reload of uncached list rows.
+  Full source folder package; original autosave failure awaits live trace.
 - **2026-10-17 — Menu options test 2:** scope native IJKL blocking to open menus,
   alongside arrows; restore menu bindings after text entry; add durable save
   feedback and editor draft state to menu status. Reported Modes save-on-exit
