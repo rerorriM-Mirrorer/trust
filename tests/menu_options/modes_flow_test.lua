@@ -135,7 +135,11 @@ check(not menu:commitCurrentEditor() and writes==1 and state.AutoRaiseMode.value
 locked=false
 check(menu:commitCurrentEditor() and writes==2 and disk.autoraisemode=='Off','unlock allows retry')
 state.AutoRaiseMode.value='Auto'
+local fieldReleased=false
+view:getDataSource().cellCache[1]={ [1]={hasFocus=function() return true end,
+    setShouldResignFocus=function() end,resignFocus=function() fieldReleased=true end,destroy=function() end} }
 menu:refreshAfterCommand()
+check(fieldReleased,'selected mode field is released before its cached cell is replaced')
 check(row~=view:getDataSource():itemAtIndexPath({section=1,row=1}) and
     view:getDataSource():itemAtIndexPath({section=1,row=1}):getCurrentValue()=='Auto','clean Modes view follows runtime commands')
 row=view:getDataSource():itemAtIndexPath({section=1,row=1});row:setCurrentValue('Off')

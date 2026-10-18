@@ -60,6 +60,7 @@ function ModeConfigEditor.new(modeNames, infoView, modes, showModeName)
 end
 
 function ModeConfigEditor:refreshRuntimeModes()
+    self:resignFirstResponder()
     for modeName in self.modeNames:it() do
         self.configSettings[modeName:lower()]=self.modes[modeName].value
     end

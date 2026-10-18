@@ -51,10 +51,10 @@ Invalid drafts still keep Trust open with feedback; discard remains explicit.
 
 ## Verification
 
-PASS: 93 existing menu/save/layout/input assertions, 15 expanded Modes flow
+PASS: 93 existing menu/save/layout/input assertions, 16 expanded Modes flow
 assertions (including actual trace events and sparse cache refresh), 43 trace/
 command assertions (including the actual root dispatcher extracted from Trust.lua),
-and 24 quiet-movement assertions: **175 total simulated assertions**.
+and 24 quiet-movement assertions: **176 total simulated assertions**.
 OS, rendering, live mode state and persistence are mocked where documented.
 
 PASS: 14 changed/test Lua files compile with the available Lua 5.3 runner after
