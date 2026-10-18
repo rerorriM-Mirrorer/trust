@@ -1,3 +1,13 @@
+# Test 5 publication and full-package verification — 2026-10-18
+
+Published/fetched source: `b98b8a20905e09d74854f9294daef4d087a49ab7`.
+The full ZIP passed CRC, SHA manifest and all 1,474 member-byte comparisons
+against that snapshot/generated metadata. See [the delivery record](docs/MENU-OPTIONS-TEST5-DELIVERY.md).
+The concurrent explicit Open addition is included. All new live acceptance is
+pending. This publication note is later than the package pin.
+
+---
+
 # Menu options Test 5 — October 18, 2026
 
 Author: Awake. Repository: rerorriM-Mirrorer/trust.
