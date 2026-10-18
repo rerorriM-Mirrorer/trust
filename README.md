@@ -1,23 +1,10 @@
 # Trust
 
-## DirectLink explicit Open addendum — 2026-10-18
-
-For the R1 controller shortcuts, this source addendum adds `//trust menu open`.
-It opens the main menu when closed and preserves an already open submenu/cursor/
-draft. `//trust menu close` retains eligible save/validation; invalid edits can
-keep the menu open. Menu status includes `explicit open: true`.
-
-Over an existing compatible Menu options Test 4 install, update only
-`commands/MenuCommands.lua` and reload Trust. Existing Test 4 BUILD/install
-records remain pinned to their original ZIP. This is a source addendum, not a
-new full package. The matching XIVCrossbar/Controls 9.8 update supplies R1+Triangle
-Open and R1+Square Close. Windows/FFXI acceptance remains pending.
-
-## Menu options test 4 — 2026-10-18
+## Menu options test 5 — 2026-10-18
 
 This full testing folder targets the pinned **Trust 17.7.3** runtime with our
 cumulative changes. Back up your existing folder/data and follow
-`INSTALL-MENU-TEST4.txt`; the upstream installer instructions
+`INSTALL-MENU-TEST5.txt`; the upstream installer instructions
 below are retained as historical/general documentation, not this test's update path.
 
 Open **Config > Menu** to control three saved preferences (new defaults are On):
@@ -27,6 +14,10 @@ Open **Config > Menu** to control three saved preferences (new defaults are On):
   to another page or closing the menu. Mixed options/text panels validate the
   completed text too. Modes save to the selected named mode set; widget position
   and layout editors retain their existing storage. Unchanged exits do not save.
+  When On, successful slash-command changes to loaded job/addon settings and
+  ordinary modes also save, and new eligible options panes open with list focus
+  (not an activated field). Off preserves original entry focus and command-specific
+  save behavior; it does not disable commands that already save explicitly.
 - **Place editor beside menu:** the content panel opens immediately left of the
   right-hand command menu, with an 8px gap where the client window has room.
   Off restores the original separated placement. Bounds are checked on presentation;
@@ -70,8 +61,11 @@ bounded summaries; write-return events report handler completion, not disk readb
 Menus now permit help/status/version, start/stop/startall/stopall/toggle, and
 existing UI commands without requiring a valid draft. Assist/follow, ordinary
 `set`/`cycle`, attack controls, basic heal/pull/MB/nuke modes, and target controls
-check eligible pending edits before dispatch. Clean Modes editors then refresh
-from live state. Profile selection/reload and unreviewed structural commands still
+check eligible pending edits before dispatch. Heal alliance and buff/debuff auto/off
+are also permitted. Clean Modes and ordinary scalar options editors then refresh
+from live state, retaining cursor/scroll position and never replacing dirty drafts.
+Grouped/structural editors and replaced settings roots require reopening.
+Profile selection/reload and unreviewed structural commands still
 require leaving the editor first. Remote recipients apply their own menu guard.
 `//trust combat [auto|mirror|off]` reads or changes combat positioning; bare
 `//trust combat` reports its mode. It does not implement full Manual Override.
@@ -87,17 +81,45 @@ Modes loaded for the current character also accept direct commands:
 - Ambiguous aliases are rejected. Invalid values list available options. Modes
   absent from the current job are not invented. Autocomplete includes valid forms.
 - Aliases route through existing set/cycle handlers, so mode locks, menu draft
-  checks and profile-switch restrictions remain in force. They change runtime
-  modes; they do not silently save that change into a named set. A pending valid
-  menu draft may save before a tactical command, as in Test 3.
+  checks and profile-switch restrictions remain in force. With Save options on exit
+  On, the modes actually changed by a successful command save into the current
+  named mode set without resetting it or including unrelated temporary mode values.
+  With Off, aliases remain runtime-only. A pending valid menu draft may save first.
+
+Command autosaves report `Saved command changes.` (quiet follow/assist stay quiet).
+No-op and unsuccessful commands do not trigger new writes. Existing successful
+explicit writes are not repeated unless the command changes settings again afterward.
+Follow distance (0–50) participates; follow/assist targets and paused-follow state
+remain session controls. Profile/scenario loading, lifecycle/UI commands and remote
+relays retain their own behavior; receiving clients save their own successful changes.
+Failures identify the affected settings owner; other owners may already have saved.
+There is no automatic retry or rollback of live actions. The opt-in trace also records
+command-save completion/failure. Writer completion is not disk readback verification.
 
 The reported Modes save-on-exit revert remains unresolved pending an in-game trace.
-R1 + Square has no dedicated action in the inspected controller source; the
-controller handoff is in `docs/R1-SQUARE-TRUST-CLOSE.md`. This package changes
-Trust only and does not install that AHK binding.
+This package also includes the controller conversation's idempotent `//trust menu open`
+and existing `//trust menu close`. Matching DirectLink Controls 9.8 provides the
+R1+Triangle/R1+Square bindings separately; this package does not install Lua/AHK
+controller files. The earlier handoff remains in `docs/R1-SQUARE-TRUST-CLOSE.md`.
 
 Source/mocked regression checks pass; **Windows/Windower/FFXI acceptance is pending**.
 See `TESTING.md` for the exact live checklist, compatible baseline and rollback.
+
+Test 5 includes the DirectLink Open addendum below; do not overlay an older
+Test 4 MenuCommands.lua onto Test 5. Controller Lua/AHK delivery remains separate.
+
+## DirectLink explicit Open addendum — 2026-10-18
+
+For the R1 controller shortcuts, this source addendum adds `//trust menu open`.
+It opens the main menu when closed and preserves an already open submenu/cursor/
+draft. `//trust menu close` retains eligible save/validation; invalid edits can
+keep the menu open. Menu status includes `explicit open: true`.
+
+Over an existing compatible Menu options Test 4 install, update only
+`commands/MenuCommands.lua` and reload Trust. Existing Test 4 BUILD/install
+records remain pinned to their original ZIP. This is a source addendum, not a
+new full package. The matching XIVCrossbar/Controls 9.8 update supplies R1+Triangle
+Open and R1+Square Close. Windows/FFXI acceptance remains pending.
 
 ## Summary
 
@@ -289,6 +311,10 @@ quiet follow/assist API; the companion owns movement-triggered invocation.
 
 ## Fork development changelog
 
+- **2026-10-18 — Menu options test 5:** successful command settings/mode autosaves
+  under the existing preference, named-set/runtime preservation, duplicate-write
+  avoidance and quiet feedback; clean scalar editor refresh and options-list entry
+  focus; preserve explicit structural/profile actions and manual drafts.
 - **2026-10-18 — Menu options test 4:** full and suffix-free mode aliases with
   existing-command precedence, option validation and autocomplete. Preserve
   set/cycle locks, menu/profile guards and runtime persistence semantics.

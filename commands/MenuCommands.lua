@@ -44,7 +44,7 @@ end
 function MenuTrustCommands:handle_status()
     local view = self.hud:getViewStack():getCurrentView()
     local editorStatus = view and view.exitSaveStatus and view:exitSaveStatus() or 'no eligible editor'
-    return true, string.format('Menu options Test 4 (20261018) | explicit open: true | save on exit: %s | adjacent: %s | IJKL: %s | editor: %s',
+    return true, string.format('Menu options Test 5 (20261018) | explicit open: true | save on exit: %s | adjacent: %s | IJKL: %s | editor: %s',
         tostring(MenuPreferences.get('save_on_exit')), tostring(MenuPreferences.get('adjacent')),
         tostring(MenuPreferences.get('ijkl')), editorStatus)
 end

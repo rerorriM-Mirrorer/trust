@@ -1,3 +1,108 @@
+# Menu options Test 5 — October 18, 2026
+
+Author: Awake. Repository: rerorriM-Mirrorer/trust.
+Branch: `test/menu-exit-save-20261017`, based on Test 4 delivery
+`31245d39fce64847db755e7c900d6bf111624c07`. Main is unchanged.
+Also incorporates controller Open addendum `17d0f9cc1e8dd400c70ae8411e4ff805d9868129`
+published concurrently; its original records are preserved below. Test 5 includes
+both Open and Close Trust handlers, not the separately delivered controller files.
+Package: `Trust-MenuOptions-Test5-Full.zip`, full cumulative Trust 17.7.3 folder.
+BUILD.txt pins its exact published source. Preserve existing data; no personal
+settings/logs or controller files are shipped.
+
+## Implemented request
+
+1. With Config > Menu > Save options on exit On, successful slash-command changes
+   to loaded main/sub/weapon/addon settings persist. Ordinary mode deltas merge
+   into the selected named mode set, not a snapshot of unrelated temporary modes.
+   This path does not reload/reset TrustMode. In-memory inheritance follows the
+   resulting file semantics. Existing explicit writes are recorded and not repeated
+   unless there is a later mutation. The first handled return remains compatible;
+   root dispatch now also receives the actual success return from command handlers.
+2. No-op/failed commands do not trigger new writes. Existing explicit save behavior
+   is retained when autosave is Off. Follow distance updates its existing addon
+   option only when On (valid range 0-50; missing/invalid input is rejected).
+   Targets and role-local paused-follow state remain transient. Profile/scenario,
+   lifecycle/UI and remote relay commands retain their own behavior. Each receiving
+   client handles persistence. Selector/root replacement prevents stale implicit saves.
+3. Clean Modes and ordinary scalar option editors refresh after permitted tactical
+   commands. Refresh does not write, preserves cached ordinary controls and cursor/
+   scroll, and works with autosave Off. Dirty drafts remain untouched; normal
+   conflict checks still apply. Grouped/structural editors and replaced roots are
+   intentionally not rebuilt; reopen them. Heal alliance and buff/debuff auto/off
+   are additional reviewed menu-safe verbs; structural verbs remain guarded.
+4. With autosave On, newly entered eligible options panes focus the settings list,
+   not its field. Off retains original entry focus. Chat, command browsers, profile
+   forms and structural editors are excluded. Returning to existing parent menu
+   levels does not deliberately steal focus back into their options.
+
+Command-save successes use a short chat notice; quiet follow/assist do not gain
+success chatter. Failures identify the affected owner and distinguish applied
+runtime values from persistence. Writes are per owner, not atomic across files:
+partial success is possible. No blind retry or action rollback is added. Trace has
+command completion/failure events; writer returns are not disk readback verification.
+Ordinary command handlers are not wrapped in pcall, preserving their yield behavior.
+
+## Verification
+
+PASS: **291 simulated assertions**: 103 menu/input/layout/save, 17 Modes flow,
+43 trace/command policy, 71 mode aliases, 33 new command persistence and 24 quiet
+movement. New tests use the actual root dispatcher, command base, TrustSettings,
+TrustAddonSettings and TrustModeSettings writers with game/filesystem mocked.
+They cover successful/invalid/no-op/failed commands, named-set deltas, duplicate
+writes, mutation after explicit save, notification-only save, Off behavior,
+root/selector replacement, save-failure feedback, quiet saves, Default inheritance,
+write failure retaining stored model, follow distance, clean/dirty scalar refresh,
+focus exclusions and scroll retention.
+PASS: the incoming menu_open_test.lua also runs on Lua 5.3 against the combined
+command base/MenuCommands/HUD paths, covering idempotent Open and guarded Close.
+Its assertions are additional to the 291 counted checks above.
+
+PASS: 16 changed/new Lua files compile with Lua 5.3 and Windower literal-method
+normalization; diff/whitespace review passed. Final package-byte checks are recorded
+at delivery. These checks do not establish Lua 5.1/Windows/Windower compatibility.
+All new in-game acceptance is PENDING. The original Modes save-on-exit revert and
+real controller IJKL capture remain unresolved; adjacent placement has positive
+user feedback from Test 4. No AHK/R1+Square patch is installed by this package.
+
+## Live checklist (one client first)
+
+1. Back up/unload Trust, merge this full folder without replacing personal data,
+   reload and check `//trust menu status` identifies Test 5.
+2. With autosave On, open Modes and ordinary Combat/Follow/Config options pages:
+   list should already have focus, no value should change merely by opening.
+   Confirm/Save, Escape/back, right-to-command-menu and full close remain usable.
+   Check command browser/profile/structural forms keep original navigation.
+3. With a clean Modes page open, issue `//trust autoraise <valid displayed value>`
+   or `//trust set AutoRaiseMode <value>` if that mode exists. Display should follow;
+   reopening and reload should retain the value in the same named mode set.
+   Check `//trust combat` still reports rather than cycling. Test non-Default too.
+4. Try `//trust follow distance 3` and an existing attack-distance command; view
+   should update, reopening/reload should retain values, and unchanged repetition
+   should not add a new autosave notice/write. Restore original distances afterward.
+   Follow/assist targets and pause remain session controls, not saved identities.
+5. Turn autosave Off using explicit Save. Clean display refresh should still work;
+   fresh panes should use original focus. Command-only mode/follow-distance changes
+   should not auto-persist. Existing explicitly-saving commands still save. Pending
+   manual drafts must not disappear when commands run; conflicted saves should warn.
+6. Re-enable with explicit Save. Test invalid values and mode locks, quiet movement,
+   stop/start, heal alliance and buff/debuff modes where available. Confirm failures
+   never claim Saved. Watch for repeated notices or changed focus/scroll positions.
+7. Trace the original menu edit/exit/reopen revert: `//trust menu trace on`, reproduce,
+   `//trust menu trace dump`, then `//trust menu trace off`. Dump before reload.
+   Dumps still replace the same character log; share it explicitly if desired.
+8. Recheck compact widgets, adjacent placement, physical/controller IJKL versus
+   gameplay bleed-through, literal chat/text and full close. Controller binding is
+   separate. To roll back, unload and restore the full backed-up folder and data.
+   Also test Open from closed, repeated Open in a submenu without losing its draft,
+   and valid/invalid Close using the separately updated R1 controller shortcuts.
+
+Earlier entries below are preserved as cumulative history. Test 4's runtime-only
+alias description documents that earlier build; Test 5 intentionally changes it
+when Save options on exit is On.
+
+---
+
 # Explicit menu Open for DirectLink — October 18, 2026
 
 Author A. Branch test/menu-exit-save-20261017; base
