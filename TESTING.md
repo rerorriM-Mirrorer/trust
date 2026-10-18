@@ -1,3 +1,13 @@
+# Test 3 publication and full-package verification — 2026-10-17
+
+Source `43645774f780848b77821034f21aaebd3dd833dc` is published and fetched.
+The 1,472-member full-folder ZIP passed CRC and exact member-byte checks.
+See [the delivery record](docs/MENU-OPTIONS-TEST3-DELIVERY.md) for checksum and scope.
+All live acceptance remains pending; source-only success does not resolve the
+reported Modes revert. This note is later than the embedded package snapshot.
+
+---
+
 # Menu options Test 3 — October 17, 2026 (America/Chicago)
 
 Author: Awake. Repository: rerorriM-Mirrorer/trust.
