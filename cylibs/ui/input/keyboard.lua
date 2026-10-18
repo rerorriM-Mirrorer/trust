@@ -55,11 +55,13 @@ function Keyboard.new()
     self.key_pressed = Event.newEvent()
     self.events = {}
     self.directionKeys = {}
+    self.menuBindings = {}
 
     self.events.keyboard = windower.register_event('keyboard', function(key, pressed, flags, blocked)
         if not pressed then
             self.chat_open:setValue(windower.ffxi.get_info().chat_open)
         end
+        self:refreshMenuBindings()
 
         self:on_key_pressed():trigger(key, pressed, flags, blocked)
 
@@ -102,7 +104,7 @@ end
 
 function Keyboard:directionKey(key, flags, blocked)
     local focused = FocusManager.shared():getFocusable()
-    if blocked or windower.ffxi.get_info().chat_open or not focused
+    if blocked or not self.menuNavigationActive or windower.ffxi.get_info().chat_open or not focused
             or not focused.onKeyboardEvent or not MenuPreferences.get('ijkl')
             or (flags ~= 0 and flags ~= 1)
             or (focused.acceptsTextInput and focused:acceptsTextInput()) then
@@ -125,6 +127,8 @@ function Keyboard:setupKeybinds()
 end
 
 function Keyboard:destroy()
+    self:setMenuNavigationActive(false)
+    self:setActive(false)
     self.keybinds = T{}
     if self.events then
         for _,event in pairs(self.events) do
@@ -252,6 +256,43 @@ function Keyboard:setActive(active)
             end
         end
     end
+    -- Text editing removes its broad bindings on departure. Restore the
+    -- menu's narrower bindings, including arrows, before returning to it.
+    if not active then self:refreshMenuBindings(true) end
+end
+
+function Keyboard:setMenuNavigationActive(active)
+    self.menuNavigationActive = active
+    self:refreshMenuBindings()
+end
+
+function Keyboard:refreshMenuBindings(force)
+    -- Text cells already block the whole keyboard and need literal letters.
+    -- Never remove part of that broader block while the text cell owns it.
+    if self.active then return end
+    local wanted = {}
+    if self.menuNavigationActive and not windower.ffxi.get_info().chat_open then
+        for _, key in ipairs({'up','down','left','right','enter','numpadenter'}) do
+            wanted['%'..key] = true
+        end
+        if MenuPreferences.get('ijkl') then
+            for _, key in ipairs({'i','j','k','l'}) do
+                wanted['%'..key] = true
+                wanted['~%'..key] = true
+            end
+        end
+    end
+    -- Chat-closed bindings are a second guard if chat opens between events.
+    -- Like Trust's original arrow bindings, these exist only during menus.
+    for key in pairs(self.menuBindings) do
+        if not wanted[key] then windower.send_command('unbind '..key) end
+    end
+    for key in pairs(wanted) do
+        if force or not self.menuBindings[key] then
+            windower.send_command('bind '..key..' block')
+        end
+    end
+    self.menuBindings = wanted
 end
 
 function Keyboard.input()

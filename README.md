@@ -1,9 +1,9 @@
 # Trust
 
-## Menu options test 1 — 2026-10-17
+## Menu options test 2 — 2026-10-17
 
 This testing overlay targets an existing compatible **Trust 17.7.3** install.
-Use the included `INSTALL-MENU-TEST1.txt`; the upstream installer instructions
+Use the included `INSTALL-MENU-TEST2.txt`; the upstream installer instructions
 below are retained as historical/general documentation, not this test's update path.
 
 Open **Config > Menu** to control three saved preferences (new defaults are On):
@@ -18,13 +18,16 @@ Open **Config > Menu** to control three saved preferences (new defaults are On):
   Off restores the original separated placement. Bounds are checked on presentation;
   reopen after changing resolution. Oversized custom panels are not automatically scaled.
 - **I/J/K/L navigate menus:** I = Up, J = Left, K = Down, L = Right in focused
-  Trust UI. Existing arrows still work. Chat and focused text fields retain
+  Trust menus. Existing arrows still work. Chat and focused text fields retain
   letters; Shift is preserved, other modified letter shortcuts are not remapped.
-  No Windows key injection or permanent IJKL bindings are installed.
+  Temporary chat-closed native bindings block IJKL from gameplay while a menu
+  is open. Text editing keeps literal letters. Bindings are removed when the
+  menu closes; no Windows key injection or permanent IJKL bindings are installed.
 
 Escape first leaves an actively selected field using its original behavior;
 leaving the enclosing options editor saves its valid draft. A brief `Saved.`
-appears in the menu information bar. Confirm/Save buttons remain available.
+appears in the menu information bar and `Saved menu options.` appears in chat.
+Confirm/Save buttons remain available.
 If automatic saving is Off, use the explicit Save button to turn it back On.
 
 Profile creation/renaming/selection, structural gambit editors, nested multi-select
@@ -235,6 +238,10 @@ quiet follow/assist API; the companion owns movement-triggered invocation.
 
 ## Fork development changelog
 
+- **2026-10-17 — Menu options test 2:** scope native IJKL blocking to open menus,
+  alongside arrows; restore menu bindings after text entry; add durable save
+  feedback and editor draft state to menu status. Reported Modes save-on-exit
+  failure remains under investigation; real AHK controller delivery is unverified.
 - **2026-10-17 — Menu options test 1:** optional save-on-exit with validation,
   named-set/conflict guards and one owner write per changed departure; adjacent
   editor placement; text-aware IJKL directional input; menu close/discard;

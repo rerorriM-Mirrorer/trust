@@ -499,6 +499,13 @@ function ConfigEditor:setSaveOnExit(enabled, writer, guard)
     self.exitGuard = guard
 end
 
+function ConfigEditor:exitSaveStatus()
+    if not MenuPreferences.get('save_on_exit') then return 'disabled' end
+    if not self:canSaveOnExit() then return 'explicit save required' end
+    if self.openingChildPicker then return 'nested picker' end
+    return EditorValues.equal(self:readDraft(), self.exitBaseline) and 'unchanged' or 'pending changes'
+end
+
 function ConfigEditor:commitOnExit()
     if self.committingExit or self.openingChildPicker or not MenuPreferences.get('save_on_exit')
             or not self:canSaveOnExit() then return true end

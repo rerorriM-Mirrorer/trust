@@ -144,6 +144,7 @@ local received={}
 local target={onKeyboardEvent=function(_,k,p,f,b) received[#received+1]={key=k,pressed=p,flags=f,blocked=b}; return false end}
 focus.focusStack=L{target}
 local keyboard=Keyboard.new()
+keyboard:setMenuNavigationActive(true)
 Keyboard.input=function() return keyboard end
 package.loaded['cylibs/ui/input/keyboard']=Keyboard
 for _,pair in ipairs({{0x17,200},{0x24,203},{0x25,208},{0x26,205}}) do
@@ -168,6 +169,36 @@ focus.focusStack=L{target}
 check(not keyboard:directionKey(0x17,0,true),'blocked input not mapped')
 callbacks.keyboard(0x17,true,0,false); focus.focusStack=L{}
 check(callbacks.keyboard(0x17,false,0,false)==true,'release consumed after close')
+-- Scoped native bindings: arrows and IJKL share the menu lifetime. The OS
+-- binding implementation itself and AHK delivery are not simulated here.
+local commands={}
+windower.send_command=function(c) commands[#commands+1]=c end
+keyboard:setMenuNavigationActive(false)
+check(next(keyboard.menuBindings)==nil,'menu close removes native menu bindings')
+keyboard:setMenuNavigationActive(true)
+check(keyboard.menuBindings['%up'] and keyboard.menuBindings['%i'] and keyboard.menuBindings['~%l'],
+    'menu owns chat-closed arrows and unmodified/Shift IJKL')
+local count=#commands; keyboard:refreshMenuBindings()
+check(#commands==count,'unchanged keyboard events do not reissue bindings')
+settings.menu.ijkl=false; keyboard:refreshMenuBindings()
+check(keyboard.menuBindings['%up'] and not keyboard.menuBindings['%i'],'IJKL preference leaves arrows blocked')
+settings.menu.ijkl=true
+windower.ffxi.get_info=function() return {chat_open=true} end
+keyboard:refreshMenuBindings()
+check(next(keyboard.menuBindings)==nil,'chat suspends native menu bindings')
+windower.ffxi.get_info=function() return {chat_open=false} end
+keyboard:refreshMenuBindings()
+check(keyboard.menuBindings['%i'],'chat close restores menu bindings')
+Keyboard.allKeys=function() return L{'I','J','K','L','Up','Down','Left','Right','Enter','NumpadEnter'} end
+keyboard:setActive(true); count=#commands; keyboard:refreshMenuBindings()
+check(#commands==count,'menu refresh leaves broad text-input bindings alone')
+keyboard:setActive(false)
+check(commands[#commands]:match('^bind ') and keyboard.menuBindings['%i'] and keyboard.menuBindings['%up'],
+    'text departure restores native letters and arrows after broad unbind')
+keyboard:setMenuNavigationActive(false); focus.focusStack=L{target}
+check(not keyboard:directionKey(0x17,0,false),'IJKL never maps outside menu even if a widget has focus')
+keyboard:setMenuNavigationActive(true)
+focus.focusStack=L{}
 -- Actual complete-close guard, mocked view rendering.
 package.preload['cylibs/events/dispose_bag']=function() return {new=function() return {add=function() end,addAny=function() end} end} end
 package.preload['cylibs/sounds/sound_theme']=function() return {UI={Menu={Escape='escape',Cursor='cursor',Enter='enter'}}} end

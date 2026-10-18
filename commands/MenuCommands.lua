@@ -30,9 +30,11 @@ function MenuTrustCommands:handle_discard()
 end
 
 function MenuTrustCommands:handle_status()
-    return true, string.format('Menu options Test 1 (20261017) | save on exit: %s | adjacent: %s | IJKL: %s',
+    local view = self.hud:getViewStack():getCurrentView()
+    local editorStatus = view and view.exitSaveStatus and view:exitSaveStatus() or 'no eligible editor'
+    return true, string.format('Menu options Test 2 (20261017) | save on exit: %s | adjacent: %s | IJKL: %s | editor: %s',
         tostring(MenuPreferences.get('save_on_exit')), tostring(MenuPreferences.get('adjacent')),
-        tostring(MenuPreferences.get('ijkl')))
+        tostring(MenuPreferences.get('ijkl')), editorStatus)
 end
 
 function MenuTrustCommands:get_command_name()

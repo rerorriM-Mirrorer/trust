@@ -1,3 +1,86 @@
+# Menu options Test 2 — 2026-10-17 (America/Chicago)
+
+Author: Awake. Repository: `rerorriM-Mirrorer/trust`.
+Branch: `test/menu-exit-save-20261017`; previous published head `1a0cdab89092a096e56f2429e18d32210db28151`.
+Package: `Trust-MenuOptions-Test2-Cumulative.zip`, an overlay for the same compatible
+Trust 17.7.3 baseline as Test 1. No profile/data files included. Source SHA is in
+`trust/BUILD.txt` inside the ZIP. Main remains unchanged.
+
+## User observations and unresolved issues
+
+- The user reports XIVCrossbar-generated IJKL neither navigates Trust's menu nor
+  prevents native targeting behind it. Source inspection of XIVCrossbar
+  `development/directlink` at `a9b2486937ec3bbeacd545ec505d9920e0381f75`
+  shows ordinary gameplay D-pad IJKL is issued by Lua via `setkey`; R1+D-pad
+  arrows use AHK SendEvent. Test 1 tested the receiving Lua callback only, not
+  this actual producer-to-consumer path. It did not add native IJKL binds.
+- The user reports editing the first entry in the long Modes list (believed
+  AutoRaiseMode, Off to On; exact displayed value not confirmed), backing out,
+  seeing no saved message, and finding Off again when reopening. This is a
+  live failure report, not a passing acceptance. Exact installed files/build,
+  exit sequence and save preference have not yet been observed.
+- Expanded simulation using the real ModeConfigEditor and ConfigEditor
+  constructors, picker model, data source, Luvent and menu departure hook
+  applies, saves and reopens a mode successfully. Rendering, live mode state,
+  persistence and the OS are still mocked. This does not reproduce or resolve
+  the user's report. No speculative mode-save algorithm change is shipped.
+
+## Changes in Test 2
+
+- Arrows/Enter retain scoped native menu blocking. IJKL adds unmodified and
+  Shift variants when its preference is On. Native binds explicitly require
+  closed chat (`%`); they are suspended for chat and removed on menu close.
+  Event translation now also requires an active menu, so focused widgets alone
+  cannot turn gameplay letters into directions.
+- Text fields retain literal letters and their existing broad keyboard block.
+  Leaving text entry restores menu arrow/IJKL binds after broad text unbinding.
+  Preference changes refresh active menu bindings. Unchanged keyboard events
+  do not issue repeated bind commands.
+- Successful changed-editor saves emit `Saved menu options.` in chat as well as
+  `Saved.` in the info bar; navigation can immediately replace the info-bar text.
+  `//trust menu status` identifies Test 2 and reports editor state: pending
+  changes, unchanged, disabled, nested picker, or explicit save required.
+- XIVCrossbar and AHK are unchanged here. See
+  [the keyboard handoff](docs/KEYBOARD-HANDOFF-20261017.md) for coordination.
+  Real AHK IJKL navigation plus gameplay suppression remains unverified.
+
+## Verification and next live checks
+
+- PASS: 93 mocked menu/save/layout/input assertions, including native bind
+  lifetime, preference/chat transitions, text departure and non-menu focus.
+- PASS: 10 expanded Modes flow assertions with real editor constructors,
+  data source, picker model, event dispatch and menu exit; state/storage/rendering
+  mocked. This supplements the previous adapter-only tests.
+- PASS: 24 existing quiet-movement integration assertions.
+- Syntax/diff/package results are recorded in the delivery record. Available
+  interpreter is Lua 5.3 via `luatex --luaonly`; no native Lua 5.1/Windower run.
+- PENDING: Windows/FFXI testing of ALL Test 2 changes. Autosave failure unresolved.
+
+When next at the PC, back up/unload Trust and merge this cumulative overlay into
+its existing compatible folder, then reload one client. `//trust menu status`
+must say **Test 2**. Keep other clients on their previous version until checked.
+
+1. Before AHK changes, try physical IJKL and arrows in Trust menu lists, selected
+   pickers and sliders. Check gameplay targeting stays still, letters type in
+   chat/text fields, and gameplay keys return when Trust's menu closes.
+2. In the long Modes editor, change one ordinary mode and finish its selected
+   field. While the editor is still displayed, `//trust menu status` should
+   say `save on exit: true` and `editor: pending changes`. Back out of the
+   enclosing editor, check chat for `Saved menu options.`, and reopen it.
+   Test `//trust menu close` separately, then reload to check disk persistence.
+   Preserve the exact status and any error if it reverts. Do not toggle AutoRaise
+   merely for diagnosis if a different ordinary mode is easier to inspect.
+3. With the independently updated AHK route, repeat controller tests including
+   held directions, text entry, closing menus while held and returning to gameplay.
+   This package alone makes no promise about Lua `setkey` interception.
+4. Recheck compact widgets, menu placement, manual Confirm/Save, named profile
+   switching, validation failures and quiet movement handoff.
+
+The earlier entries below are preserved as the historical delivery record. Their
+pending live acceptance is qualified by these subsequent failure reports.
+
+---
+
 # Publication and package verification — 2026-10-17
 
 Menu options Test 1 source is published at `73aaa3839b66ae698bc692cdf9ac721add354565`.

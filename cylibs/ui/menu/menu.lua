@@ -27,18 +27,14 @@ function Menu.new(contentViewStack, viewStack, infoView, mediaPlayer, soundTheme
 
     self.disposeBag:add(viewStack:onStackSizeChanged():addAction(function(stackSize)
         if stackSize > 0 then
-            for key in L{'up','down','left','right','enter','numpadenter'}:it() do
-                windower.send_command('bind %s block':format(key))
-            end
+            Keyboard.input():setMenuNavigationActive(true)
             self.infoView:setVisible(true)
             self.infoView:layoutIfNeeded()
         end
     end), viewStack:onStackSizeChanged())
 
     self.disposeBag:add(viewStack:onEmpty():addAction(function(_)
-        for key in L{'up','down','left','right','enter','numpadenter'}:it() do
-            windower.send_command('unbind %s':format(key))
-        end
+        Keyboard.input():setMenuNavigationActive(false)
         self.infoView:setVisible(false)
         self.infoView:layoutIfNeeded()
     end
@@ -50,25 +46,14 @@ function Menu.new(contentViewStack, viewStack, infoView, mediaPlayer, soundTheme
         end
         self.isChatOpen = isChatOpen
 
-        if isChatOpen then
-            if self:isVisible() then
-                for key in L{'up','down','left','right','enter','numpadenter'}:it() do
-                    windower.send_command('unbind %s':format(key))
-                end
-            end
-        else
-            if self:isVisible() then
-                for key in L{'up','down','left','right','enter','numpadenter'}:it() do
-                    windower.send_command('bind %s block':format(key))
-                end
-            end
-        end
+        Keyboard.input():refreshMenuBindings()
     end)
 
     return self
 end
 
 function Menu:destroy()
+    Keyboard.input():setMenuNavigationActive(false)
     self.disposeBag:destroy()
 end
 

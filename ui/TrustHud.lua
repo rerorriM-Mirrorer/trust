@@ -16,6 +16,7 @@ local ViewStack = require('cylibs/ui/views/view_stack')
 local View = require('cylibs/ui/views/view')
 local MenuPreferences = require('cylibs/ui/menu/menu_preferences')
 local MenuLayout = require('cylibs/ui/menu/menu_layout')
+local Keyboard = require('cylibs/ui/input/keyboard')
 
 local TrustHud = setmetatable({}, {__index = View })
 TrustHud.__index = TrustHud
@@ -61,6 +62,9 @@ function TrustHud.new(player, action_queue, addon_settings, trustModeSettings, a
 
     MenuPreferences.configure(addon_settings, function()
         self.infoBar:setDescription('Saved.')
+        -- Navigation immediately replaces the info-bar description. Keep a
+        -- quiet, durable acknowledgement for actual changed-option saves.
+        addon_system_message('Saved menu options.')
     end)
     self.menuViewStack.positionResolver = function()
         return math.max(8, windower.get_windower_settings().ui_x_res - 128), 52
@@ -72,6 +76,7 @@ function TrustHud.new(player, action_queue, addon_settings, trustModeSettings, a
             size.width, size.height, MenuPreferences.get('adjacent'))
     end
     self:getDisposeBag():add(addon_settings:onSettingsChanged():addAction(function()
+        Keyboard.input():refreshMenuBindings()
         local view = self.viewStack:getCurrentView()
         if view then
             local x, y = self.viewStack.positionResolver(view)
