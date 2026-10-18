@@ -1,6 +1,6 @@
 # Menu options Test 1 — delivery record
 
-Author: Awake. Date: October 17, 2026 (America/Chicago).
+Author: A. Date: October 17, 2026 (America/Chicago).
 
 - Repository/branch: rerorriM-Mirrorer/trust, `test/menu-exit-save-20261017`.
 - Exact packaged source snapshot: `73aaa3839b66ae698bc692cdf9ac721add354565`.

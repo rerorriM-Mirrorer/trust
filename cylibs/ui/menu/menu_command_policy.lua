@@ -1,4 +1,4 @@
--- Awake: allow known command effects while a menu is visible. A spelling in
+-- A: allow known command effects while a menu is visible. A spelling in
 -- a runtime group is not permission for every structural editor subcommand.
 local Policy = {}
 local immediate={help=true,version=true,status=true,debug=true,menuperf=true,

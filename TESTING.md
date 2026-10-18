@@ -1,3 +1,13 @@
+# Current Development Status — 2026-10-18 (attribution normalization)
+
+- **Repository / branch:** `rerorriM-Mirrorer/trust` / `test/menu-exit-save-20261017`; starting source `e784e6eccea9b0bf3c53dbca8c392712400d7945`.
+- **Change:** Normalize collaborative author references to the agreed name **A** in comments, source headers, delivery notes, and the cumulative testing record. Original upstream contributors and all testing observations remain intact.
+- **Verification:** All 18 prior references removed; exact-word search, strict substitution-only diff review, and Git whitespace check passed. No runtime logic, defaults, data files, or packaged test artifacts are changed.
+- **Live FFXI status:** No new in-game testing; Test 5 acceptance remains pending as documented below.
+- **Next:** Retain the existing Test 5 live checks; verify the published branch head after the attribution-only commit.
+
+---
+
 # Test 5 publication and full-package verification — 2026-10-18
 
 Published/fetched source: `b98b8a20905e09d74854f9294daef4d087a49ab7`.
@@ -10,7 +20,7 @@ pending. This publication note is later than the package pin.
 
 # Menu options Test 5 — October 18, 2026
 
-Author: Awake. Repository: rerorriM-Mirrorer/trust.
+Author: A. Repository: rerorriM-Mirrorer/trust.
 Branch: `test/menu-exit-save-20261017`, based on Test 4 delivery
 `31245d39fce64847db755e7c900d6bf111624c07`. Main is unchanged.
 Also incorporates controller Open addendum `17d0f9cc1e8dd400c70ae8411e4ff805d9868129`
@@ -163,7 +173,7 @@ All new live acceptance remains pending. This note is later than the package pin
 
 # Menu options Test 4 — October 18, 2026 (America/Chicago)
 
-Author: Awake. Repository: rerorriM-Mirrorer/trust.
+Author: A. Repository: rerorriM-Mirrorer/trust.
 Branch: `test/menu-exit-save-20261017`, based on `88fbe2b3013fa60ef32a9e6cd1956946a4afd471`.
 Package: `Trust-MenuOptions-Test4-Full.zip`, full cumulative Trust 17.7.3 folder.
 Exact published source is pinned in BUILD.txt; no personal settings/data/logs shipped.
@@ -197,7 +207,7 @@ The user positively reported adjacent menu placement as more fluid. This is live
 feedback about that layout, not acceptance of all menu/save/input changes.
 Repeated trace dumps still replace `data/logs/menu-save-<character>.log` in this
 build; unique timestamped snapshots have not been implemented. Trace dump is not
-an upload and does not automatically share logs with Awake.
+an upload and does not automatically share logs with A.
 
 ## Verification
 
@@ -248,7 +258,7 @@ reported Modes revert. This note is later than the embedded package snapshot.
 
 # Menu options Test 3 — October 17, 2026 (America/Chicago)
 
-Author: Awake. Repository: rerorriM-Mirrorer/trust.
+Author: A. Repository: rerorriM-Mirrorer/trust.
 Branch: `test/menu-exit-save-20261017`, based on Test 2 delivery `e6576f3b39739926499d0f0f149e5f7e10d8babe`.
 Package: `Trust-MenuOptions-Test3-Full.zip`, one full Trust folder assembled from
 this fork's source snapshot, retaining its pinned Trust 17.7.3 baseline and all
@@ -354,7 +364,7 @@ The embedded TESTING is pinned to the source snapshot before this publication no
 
 # Menu options Test 2 — 2026-10-17 (America/Chicago)
 
-Author: Awake. Repository: `rerorriM-Mirrorer/trust`.
+Author: A. Repository: `rerorriM-Mirrorer/trust`.
 Branch: `test/menu-exit-save-20261017`; previous published head `1a0cdab89092a096e56f2429e18d32210db28151`.
 Package: `Trust-MenuOptions-Test2-Cumulative.zip`, an overlay for the same compatible
 Trust 17.7.3 baseline as Test 1. No profile/data files included. Source SHA is in
@@ -448,7 +458,7 @@ entry is a later documentation addition. Main was not changed or merged.
 
 # Menu options Test 1 — 2026-10-17 (America/Chicago)
 
-**Author:** Awake. **Repository:** `rerorriM-Mirrorer/trust`.
+**Author:** A. **Repository:** `rerorriM-Mirrorer/trust`.
 **Working branch:** `test/menu-exit-save-20261017`, based on the cumulative
 quiet/UI candidate `9c7134166f36d99fb0fd21ab35f9eb41e534c210`.
 **Original compatible runtime:** Trust 17.7.3 at

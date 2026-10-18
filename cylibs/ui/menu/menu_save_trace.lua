@@ -1,4 +1,4 @@
--- Awake: opt-in, bounded diagnostics. Does not change save decisions or values.
+-- A: opt-in, bounded diagnostics. Does not change save decisions or values.
 -- Chat output survives menu dismissal; dump writes the retained session to data.
 local Trace = {enabled=false, entries={}, limit=120, sequence=0}
 

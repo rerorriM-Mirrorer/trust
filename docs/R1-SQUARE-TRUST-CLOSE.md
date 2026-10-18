@@ -1,6 +1,6 @@
 # R1 + Square — controller handoff for Trust close
 
-Awake, October 17, 2026. Trust command available: `//trust menu close`.
+A, October 17, 2026. Trust command available: `//trust menu close`.
 It closes all Trust menu levels after committing eligible valid edits. Invalid
 edits retain the menu with an error. `//trust menu discard` is a separate explicit
 choice and should not be silently substituted for a normal close.

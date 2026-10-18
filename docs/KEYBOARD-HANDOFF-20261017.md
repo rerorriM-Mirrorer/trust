@@ -1,6 +1,6 @@
 # Trust / XIVCrossbar keyboard handoff — October 17, 2026
 
-Author: Awake. Intended split agreed with the user: XIVCrossbar/AHK owns producing
+Author: A. Intended split agreed with the user: XIVCrossbar/AHK owns producing
 real key events in the appropriate controller context; Trust owns receiving them
 as menu directions and blocking native gameplay input while its menus are open.
 The end-to-end path must still be tested on Windows/FFXI.

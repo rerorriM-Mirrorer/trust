@@ -1,6 +1,6 @@
 # Menu options Test 2 delivery — October 17, 2026
 
-Author: Awake. Repository: rerorriM-Mirrorer/trust.
+Author: A. Repository: rerorriM-Mirrorer/trust.
 Branch: `test/menu-exit-save-20261017`; main unchanged.
 
 - Published source: `8b087f5329c40d2462cea54bba4de162bf007d4a`.

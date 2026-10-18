@@ -1,6 +1,6 @@
 # Menu options Test 4 full-folder delivery — October 18, 2026
 
-Author: Awake. Repository: rerorriM-Mirrorer/trust.
+Author: A. Repository: rerorriM-Mirrorer/trust.
 Branch: `test/menu-exit-save-20261017`; main unchanged.
 
 - Exact published packaged source: `6d0b4713089edd370020fc78300c07233fb01c33`.

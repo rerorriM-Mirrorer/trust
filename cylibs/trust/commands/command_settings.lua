@@ -1,4 +1,4 @@
--- Awake: synchronize persistent command effects without wrapping command handlers
+-- A: synchronize persistent command effects without wrapping command handlers
 -- in pcall (some handlers yield). Targets and role-local session state are not owners.
 local Preferences = require('cylibs/ui/menu/menu_preferences')
 local Trace = require('cylibs/ui/menu/menu_save_trace')

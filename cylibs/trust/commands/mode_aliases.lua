@@ -1,4 +1,4 @@
--- Awake: derive direct mode commands from the modes loaded for this job.
+-- A: derive direct mode commands from the modes loaded for this job.
 -- Registered commands win. Exact mode names win over shortened names; ambiguous
 -- shortened names are never guessed. Dispatch still uses the original set/cycle.
 local Aliases = {}

@@ -1,4 +1,4 @@
--- Awake: narrowly scoped success-feedback suppression for automated commands.
+-- A: narrowly scoped success-feedback suppression for automated commands.
 -- Nothing is filtered by text or delayed by a timer. Errors still use their
 -- ordinary path, and nested callbacks restore the prior scope even on failure.
 local feedback = {}
