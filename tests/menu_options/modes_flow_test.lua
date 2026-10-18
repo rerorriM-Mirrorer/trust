@@ -115,6 +115,12 @@ state.TrustMode.get_description=function() return '' end
 local view=item.contentViewConstructor(nil,{setDescription=function() end})
 view:getDataSource().cellForItem=function() return {setVisible=function() end,setClipsToBounds=function() end,destroy=function() end,hasFocus=function() return false end} end
 local row=view:getDataSource():itemAtIndexPath({section=1,row=1})
+view.offset={x=0,y=-96}
+view.getContentOffset=function(self) return self.offset end
+view.setContentOffset=function(self,x,y) self.offset={x=x,y=y} end
+view:reloadSettings()
+check(view.offset.y==-96,'mode row rebuild preserves scroll offset')
+row=view:getDataSource():itemAtIndexPath({section=1,row=1})
 check(view:exitSaveStatus()=='unchanged','new mode editor is clean')
 row:setCurrentValue('Auto')
 check(view:exitSaveStatus()=='pending changes','actual picker exposes pending mode change')

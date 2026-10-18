@@ -264,6 +264,41 @@ dispatchMenu:showMenu(retained)
 check(root==retained,'retained nested child opens without editor commit')
 check(values.equal(setmetatable({x=1},{__class='Table'}),setmetatable({x=1},{__class='Table'})),'Windower Table values compare without duplicate saves')
 
+-- Clean ordinary controls refresh in place; dirty/manual drafts remain intact.
+e,items,current,owner=editor()
+e.resignFirstResponder=function() end
+local data=e:getDataSource()
+data.cellCache={[1]={[1]={setItem=function() changed=changed+1 end}}}
+e.getDataSource=function() return data end
+items[1].setCurrentValue=function(s,v) s.value=v end
+items[2].setEnabled=function(s,v) s.value=v end
+items[3].setCurrentValue=function(s,v) s.value=v end
+e.configItems[3].setInitialValue=function(s,v) s.initial=v end
+current.distance=13;current.enabled=true;current.choice='Red'
+before=saves
+check(e:refreshFromSettings(),'clean ordinary controls can refresh')
+check(items[1].value==13 and items[2].value and items[3].value=='Red','slider, toggle and picker show live settings')
+check(e:isDraftClean() and saves==before and e.configItems[3].initial=='Red','refresh updates baseline without saving')
+items[1].value=14;current.distance=15
+check(not e:refreshFromSettings() and items[1].value==14,'dirty draft survives external command change')
+items[1].value=13
+settings.menu.save_on_exit=false
+check(e:refreshFromSettings() and items[1].value==15,'autosave Off does not disable clean display refresh')
+settings.menu.save_on_exit=true;e:setSaveOnExit(false);current.distance=16
+check(not e:refreshFromSettings() and items[1].value==15,'structural exclusions also protect refresh')
+
+local focusCount=0
+activeEditor={canSaveOnExit=function() return true end,shouldRequestFocus=function() return true end,
+    getDelegate=function() return {getCursorIndexPath=function() return {section=1,row=1} end} end,
+    requestFocus=function() focusCount=focusCount+1 end}
+check(dispatchMenu:focusOptionsEditor() and focusCount==1,'ordinary options enter with list focus')
+settings.menu.save_on_exit=false
+check(not dispatchMenu:focusOptionsEditor() and focusCount==1,'autosave Off preserves original entry focus')
+settings.menu.save_on_exit=true;dispatchMenu.isChatOpen=true
+check(not dispatchMenu:focusOptionsEditor() and focusCount==1,'chat keeps focus while options open')
+dispatchMenu.isChatOpen=false;activeEditor.canSaveOnExit=function() return false end
+check(not dispatchMenu:focusOptionsEditor() and focusCount==1,'command/profile/structural forms keep original focus')
+
 -- Exercise the actual Modes menu adapter: selected set and live-mode conflicts.
 package.loaded['ui/settings/editors/config/ConfigEditor']=ConfigEditor
 package.preload['cylibs/ui/collection_view/items/button_item']=function()

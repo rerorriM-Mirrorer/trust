@@ -47,7 +47,7 @@ function ConfigSettingsMenuItem:reloadSettings(addonSettings, trustSettings, tru
             BooleanConfigItem.new('ijkl', 'I/J/K/L navigate menus'),
         }
         return ConfigEditor.new(addonSettings, values, configItems, infoView)
-    end, 'Menu', 'Save options when leaving an editor; place panels together. If autosave is off, use Save to enable it again.'))
+    end, 'Menu', 'Save on exit also saves successful command changes and focuses options lists. If off, use Save to enable it again.'))
     self:setChildMenuItem("Widgets", WidgetSettingsMenuItem.new())
     self:setChildMenuItem("GearSwap", self:getGearSwapMenuItem(trustSettings, trustSettingsMode))
     self:setChildMenuItem("Logging", self:getLoggingMenuItem(addonSettings))

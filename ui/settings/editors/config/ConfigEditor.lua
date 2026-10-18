@@ -262,6 +262,8 @@ end
 
 function ConfigEditor:reloadSettings()
     local previousCursorIndexPath = self:getDelegate():getCursorIndexPath()
+    local offset = self.getContentOffset and self:getContentOffset()
+    local offsetX, offsetY = offset and offset.x, offset and offset.y
 
     self:getDataSource():removeAllItems()
 
@@ -307,6 +309,7 @@ function ConfigEditor:reloadSettings()
     elseif self:getDataSource():numberOfItemsInSection(1) > 0 then
         self:getDelegate():setCursorIndexPath(IndexPath.new(1, 1))
     end
+    if offsetX then self:setContentOffset(offsetX, offsetY) end
 end
 
 function ConfigEditor:getCellItemForConfigItem(configItem)
@@ -512,6 +515,47 @@ function ConfigEditor:exitSaveStatus()
     if not self:canSaveOnExit() then return 'explicit save required' end
     if self.openingChildPicker then return 'nested picker' end
     return EditorValues.equal(self:readDraft(), self.exitBaseline) and 'unchanged' or 'pending changes'
+end
+
+function ConfigEditor:isDraftClean()
+    return EditorValues.equal(self:readDraft(), self.exitBaseline)
+end
+
+-- Refresh only ordinary, clean, still-owned scalar controls. Keep cached cells,
+-- text input state, cursor and scroll offset; do not rebuild structural editors.
+function ConfigEditor:refreshFromSettings()
+    if not self:canSaveOnExit() or not self:isDraftClean() then return false end
+    if self.exitOwnerRoot and self.trustSettings:getSettings() ~= self.exitOwnerRoot then return false end
+    for name, value in pairs(self.exitModeScope or {}) do
+        if state[name] and state[name].value ~= value then return false end
+    end
+    for configItem in self.configItems:it() do
+        if configItem.__type == GroupConfigItem.__type then return false end
+    end
+    self:resignFirstResponder()
+    local source = self:getDataSource()
+    for section, configItem in ipairs(self.configItems) do
+        local item = source:itemAtIndexPath(IndexPath.new(section, 1))
+        local value = self.configSettings[configItem:getKey()]
+        if item then
+            if configItem.__type == PickerConfigItem.__type then
+                configItem:setInitialValue(value)
+                item:setCurrentValue(value)
+            elseif configItem.__type == BooleanConfigItem.__type then
+                item:setEnabled(value)
+            elseif configItem.__type == ConfigItem.__type then
+                item:setCurrentValue(value)
+            elseif configItem.__type == TextInputConfigItem.__type and type(value)=='string' then
+                item:getTextItem():setText(value)
+            end
+            local cell = source.cellCache and source.cellCache[section] and source.cellCache[section][1]
+            if cell then cell:setItem(item) end
+        end
+    end
+    self.exitBaseline = self:readDraft()
+    self.exitSourceValues = EditorValues.copy(self.configSettings)
+    SaveTrace.editor(self, 'command-view-refreshed')
+    return true
 end
 
 function ConfigEditor:commitOnExit(reason)

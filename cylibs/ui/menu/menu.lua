@@ -4,6 +4,7 @@ local SoundTheme = require('cylibs/sounds/sound_theme')
 local FocusManager = require('cylibs/ui/focus/focus_manager')
 local MenuView = require('cylibs/ui/menu/menu_view')
 local SaveTrace = require('cylibs/ui/menu/menu_save_trace')
+local MenuPreferences = require('cylibs/ui/menu/menu_preferences')
 
 local Menu =  {}
 Menu.__index = Menu
@@ -59,6 +60,7 @@ function Menu:destroy()
 end
 
 function Menu:showMenu(menuItem)
+    local opening = not self.menuItemStack:contains(menuItem)
     -- Keep-view child pickers are part of the same edit. Other navigation is
     -- an intentional departure and must finish a valid options draft first.
     if self.menuView and self.menuView:getItem() ~= menuItem and not menuItem.keepViews
@@ -116,6 +118,7 @@ function Menu:showMenu(menuItem)
                     if contentView then
                         self.menuView.views:append(contentView)
                         self.contentViewStack:present(contentView)
+                        self:focusOptionsEditor()
                         if contentView:hasFocus() then
                             self.menuView:setHasFocus(false)
                         end
@@ -140,6 +143,21 @@ function Menu:showMenu(menuItem)
     end
 
     self:requestFocus()
+    if opening then self:focusOptionsEditor() end
+end
+
+function Menu:focusOptionsEditor()
+    if not MenuPreferences.get('save_on_exit') or self.isChatOpen
+            or windower.ffxi.get_info().chat_open then return false end
+    local view = self.contentViewStack:getCurrentView()
+    if view and view.canSaveOnExit and view:canSaveOnExit() and view:shouldRequestFocus()
+            and view:getDelegate():getCursorIndexPath() then
+        -- Focus the list, not its field: opening must never toggle an option.
+        view:requestFocus()
+        SaveTrace.editor(view, 'options-list-focused')
+        return true
+    end
+    return false
 end
 
 function Menu:commitCurrentEditor(reason)
@@ -153,10 +171,10 @@ end
 
 function Menu:refreshAfterCommand()
     local view=self.contentViewStack:getCurrentView()
-    -- Emergency stops never have to commit a draft. Preserve that draft and
-    -- its conflict guard; only clean Modes views follow runtime command changes.
-    if view and view.refreshRuntimeModes and view:exitSaveStatus()=='unchanged' then
-        view:refreshRuntimeModes()
+    -- Autosave Off still allows display refresh, but never loses a manual draft.
+    if view and view.isDraftClean and view:isDraftClean() then
+        if view.refreshRuntimeModes then view:refreshRuntimeModes()
+        elseif view.refreshFromSettings then view:refreshFromSettings() end
     end
 end
 
