@@ -35,6 +35,9 @@ function ModesMenuItem.new(trustModeSettings, description, modeNames, showModeNa
         local setName = state.TrustMode.value
         local openingModes = {}
         for name in modeNames:it() do openingModes[name] = state[name].value end
+        modesView.onRuntimeModesRefreshed=function()
+            for name in modeNames:it() do openingModes[name]=state[name].value end
+        end
         modesView:onConfigChanged():addAction(function()
             -- Refresh after this editor applies its own changes (including
             -- explicit Confirm), so the next edit isn't mistaken for IPC.
@@ -52,7 +55,8 @@ function ModesMenuItem.new(trustModeSettings, description, modeNames, showModeNa
             end
             return state.TrustMode.value == setName and (draft.trustmode == nil or draft.trustmode == setName),
                 'Use Confirm to switch profiles. Ordinary mode options can save on exit.'
-        end)
+        end, {kind='modes',set=setName,path=self.trustModeSettings and
+            ('data/modes/'..tostring(self.trustModeSettings.jobNameShort)..'_'..tostring(self.trustModeSettings.playerName)..'.lua') or 'unavailable'})
         modesView:getDelegate():didMoveCursorToItemAtIndexPath():addAction(function(cursorIndexPath)
             self.selectedModeName = modeNames[cursorIndexPath.section]
         end)

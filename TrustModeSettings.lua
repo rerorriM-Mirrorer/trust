@@ -110,6 +110,7 @@ function TrustModeSettings:saveSettings(setName, trust_modes, skip_set_mode)
         'data/modes/'..self.jobNameShort..'_'..self.playerName..'.lua',
     }
     for file_path in file_paths:it() do
+        require('cylibs/ui/menu/menu_save_trace').record('modes-write-request',{path=file_path,set=setName})
         local trust_modes_file = files.new(file_path)
         if not trust_modes_file:exists() then
             addon_message(207, 'Created trust modes override '..file_path)
@@ -119,6 +120,7 @@ function TrustModeSettings:saveSettings(setName, trust_modes, skip_set_mode)
         self.settings[setName] = trust_modes
 
         trust_modes_file:write('-- Modes file for '..self.jobNameShort ..'\nreturn ' .. newSettings:tovstring())
+        require('cylibs/ui/menu/menu_save_trace').record('modes-write-return',{path=file_path,set=setName})
     end
 
     self.settings[setName] = trust_modes

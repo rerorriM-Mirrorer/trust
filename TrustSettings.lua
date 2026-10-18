@@ -125,7 +125,9 @@ end
 function TrustSettings:saveSettings(saveToFile)
     if saveToFile then
         local filePath = self.settingsFolder..self.jobNameShort..'_'..self.playerName..'.lua'
+        require('cylibs/ui/menu/menu_save_trace').record('settings-write-request',{path=filePath})
         local success, err = coroutine.resume(self:saveToFile(filePath, self.settings))
+        require('cylibs/ui/menu/menu_save_trace').record('settings-write-return',{path=filePath,success=success,error=err})
         if not success then return false, err end
     end
     self:onSettingsChanged():trigger(self.settings)

@@ -27,6 +27,7 @@ local ToggleButtonCollectionViewCell = require('cylibs/ui/collection_view/cells/
 local VerticalFlowLayout = require('cylibs/ui/collection_view/layouts/vertical_flow_layout')
 local MenuPreferences = require('cylibs/ui/menu/menu_preferences')
 local EditorValues = require('cylibs/ui/menu/editor_values')
+local SaveTrace = require('cylibs/ui/menu/menu_save_trace')
 
 local ModelSettings = {}
 ModelSettings.__index = ModelSettings
@@ -185,6 +186,7 @@ function ConfigEditor.new(trustSettings, configSettings, configItems, infoView, 
         local item = self:getDataSource():itemAtIndexPath(indexPath)
         if (item.getCurrentValue and configItem.getInitialValue) then
             self:onConfigItemChanged():trigger(configItem:getKey(), item:getCurrentValue(), configItem:getInitialValue())
+            SaveTrace.editor(self,'field-finished',configItem:getKey(),SaveTrace.enabled and self:readDraft() or nil)
             --if item:getCurrentValue() ~= configItem:getInitialValue() then
             if configItem.getDependencies then
                 for dependency in configItem:getDependencies():it() do
@@ -205,10 +207,12 @@ function ConfigEditor.new(trustSettings, configSettings, configItems, infoView, 
 
     self.exitBaseline = self:readDraft()
     self.exitSourceValues = EditorValues.copy(self.configSettings)
+    SaveTrace.editor(self,'editor-opened')
     return self
 end
 
 function ConfigEditor:destroy()
+    SaveTrace.editor(self,'editor-destroyed')
     FFXIWindow.destroy(self)
 
     self.configChanged:removeAllActions()
@@ -444,12 +448,14 @@ function ConfigEditor:onConfirmClick(skipSave, quiet)
         end
     end
     if not isValid then
+        SaveTrace.editor(self,'validation-failed',errorMessage,draft)
         self:onConfigValidationError():trigger(errorMessage)
         if quiet then addon_system_error(errorMessage or 'Correct the highlighted options before leaving.') end
         return false
     end
 
     for key, value in pairs(draft) do self.configSettings[key] = value end
+    SaveTrace.editor(self,'applying',quiet and 'automatic' or 'explicit',draft)
 
     self:onConfigConfirm():trigger(self.configSettings, originalSettings)
 
@@ -493,10 +499,12 @@ function ConfigEditor:canSaveOnExit()
     return hasOptions
 end
 
-function ConfigEditor:setSaveOnExit(enabled, writer, guard)
+function ConfigEditor:setSaveOnExit(enabled, writer, guard, traceContext)
     self.saveOnExit = enabled
     self.exitWriter = writer
     self.exitGuard = guard
+    self.exitTraceContext = traceContext
+    SaveTrace.editor(self,'editor-save-policy',enabled and 'enabled' or 'explicit')
 end
 
 function ConfigEditor:exitSaveStatus()
@@ -506,28 +514,40 @@ function ConfigEditor:exitSaveStatus()
     return EditorValues.equal(self:readDraft(), self.exitBaseline) and 'unchanged' or 'pending changes'
 end
 
-function ConfigEditor:commitOnExit()
+function ConfigEditor:commitOnExit(reason)
     if self.committingExit or self.openingChildPicker or not MenuPreferences.get('save_on_exit')
-            or not self:canSaveOnExit() then return true end
+            or not self:canSaveOnExit() then
+        if SaveTrace.enabled then
+            SaveTrace.editor(self,'exit-skipped',self.committingExit and 'already committing' or self:exitSaveStatus())
+        end
+        return true
+    end
     local draft = self:readDraft()
-    if EditorValues.equal(draft, self.exitBaseline) then return true end
+    SaveTrace.editor(self,'exit-request',reason or 'unspecified',draft)
+    if EditorValues.equal(draft, self.exitBaseline) then
+        SaveTrace.editor(self,'exit-unchanged',reason)
+        return true
+    end
     if self.exitSourceValues then
         for configItem in self.configItems:it() do
             local key = configItem:getKey()
             if not EditorValues.equal(self.configSettings[key], self.exitSourceValues[key])
                     and not EditorValues.equal(self.configSettings[key], draft[key]) then
                 addon_system_error('An option changed outside this editor. Discard and reopen it before saving.')
+                SaveTrace.editor(self,'exit-blocked','external option change',draft)
                 return false
             end
         end
     end
     if self.exitOwnerRoot and self.trustSettings:getSettings() ~= self.exitOwnerRoot then
         addon_system_error('This settings set was reloaded. Reopen the editor before saving.')
+        SaveTrace.editor(self,'exit-blocked','settings reloaded',draft)
         return false
     end
     for name, value in pairs(self.exitModeScope or {}) do
         if state[name] and state[name].value ~= value then
             addon_system_error('The profile changed. Reopen this editor before saving.')
+            SaveTrace.editor(self,'exit-blocked','profile changed',draft)
             return false
         end
     end
@@ -535,6 +555,7 @@ function ConfigEditor:commitOnExit()
         local valid, message = self.exitGuard(draft)
         if not valid then
             addon_system_error(message or 'Settings changed outside this editor. Reopen it before saving.')
+            SaveTrace.editor(self,'exit-blocked',message,draft)
             return false
         end
     end
@@ -565,8 +586,10 @@ function ConfigEditor:commitOnExit()
         self.exitBaseline = baseline
         self.exitSourceValues = sourceValues
         if not ok then addon_system_error('Settings were not saved: '..tostring(result)) end
+        SaveTrace.editor(self,'save-failed',ok and 'validation failed' or tostring(result),draft)
         return false
     end
+    SaveTrace.editor(self,'save-returned',reason,draft)
     self.exitBaseline = self:readDraft()
     if self.exitOwnerRoot then self.exitOwnerRoot = self.trustSettings:getSettings() end
     MenuPreferences.saved()
@@ -574,7 +597,7 @@ function ConfigEditor:commitOnExit()
 end
 
 function ConfigEditor:resignFocus()
-    if self:hasFocus() and not self:commitOnExit() then return end
+    if self:hasFocus() and not self:commitOnExit('editor-focus-exit') then return end
     FFXIWindow.resignFocus(self)
 end
 
