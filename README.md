@@ -1,10 +1,10 @@
 # Trust
 
-## Menu options test 3 — 2026-10-17
+## Menu options test 4 — 2026-10-18
 
 This full testing folder targets the pinned **Trust 17.7.3** runtime with our
 cumulative changes. Back up your existing folder/data and follow
-`INSTALL-MENU-TEST3.txt`; the upstream installer instructions
+`INSTALL-MENU-TEST4.txt`; the upstream installer instructions
 below are retained as historical/general documentation, not this test's update path.
 
 Open **Config > Menu** to control three saved preferences (new defaults are On):
@@ -62,6 +62,21 @@ from live state. Profile selection/reload and unreviewed structural commands sti
 require leaving the editor first. Remote recipients apply their own menu guard.
 `//trust combat [auto|mirror|off]` reads or changes combat positioning; bare
 `//trust combat` reports its mode. It does not implement full Manual Override.
+
+Modes loaded for the current character also accept direct commands:
+
+- `//trust autoraise` and `//trust AutoRaiseMode` cycle AutoRaiseMode.
+- `//trust autoraise Auto` and `//trust AutoRaiseMode Off` set its value.
+- Mode names and listed values are case-insensitive. Multi-word listed options
+  resolve to their canonical spelling; free-form string-mode text retains case.
+- Registered commands take priority. `//trust combat` keeps its reporting behavior;
+  `//trust CombatMode` cycles. No additional fuzzy abbreviations are guessed.
+- Ambiguous aliases are rejected. Invalid values list available options. Modes
+  absent from the current job are not invented. Autocomplete includes valid forms.
+- Aliases route through existing set/cycle handlers, so mode locks, menu draft
+  checks and profile-switch restrictions remain in force. They change runtime
+  modes; they do not silently save that change into a named set. A pending valid
+  menu draft may save before a tactical command, as in Test 3.
 
 The reported Modes save-on-exit revert remains unresolved pending an in-game trace.
 R1 + Square has no dedicated action in the inspected controller source; the
@@ -261,6 +276,9 @@ quiet follow/assist API; the companion owns movement-triggered invocation.
 
 ## Fork development changelog
 
+- **2026-10-18 — Menu options test 4:** full and suffix-free mode aliases with
+  existing-command precedence, option validation and autocomplete. Preserve
+  set/cycle locks, menu/profile guards and runtime persistence semantics.
 - **2026-10-17 — Menu options test 3:** bounded opt-in save trace and export;
   menu-aware runtime command policy; combat positioning shorthand; clean Modes
   refresh after tactical commands; guard removal/reload of uncached list rows.

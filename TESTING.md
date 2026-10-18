@@ -1,3 +1,78 @@
+# Menu options Test 4 — October 18, 2026 (America/Chicago)
+
+Author: Awake. Repository: rerorriM-Mirrorer/trust.
+Branch: `test/menu-exit-save-20261017`, based on `88fbe2b3013fa60ef32a9e6cd1956946a4afd471`.
+Package: `Trust-MenuOptions-Test4-Full.zip`, full cumulative Trust 17.7.3 folder.
+Exact published source is pinned in BUILD.txt; no personal settings/data/logs shipped.
+
+## Request and implemented behavior
+
+The user requested systematic direct mode commands and dropping the `Mode` suffix
+where it does not conflict with existing commands. Both forms are now resolved
+from the loaded mode registry: `//trust AutoRaiseMode` or `//trust autoraise`
+cycles; adding a value delegates to existing `set`. Registered command groups and
+default command words win. Exact mode names win over shortened mode names.
+Ambiguous identifiers or case-folded options are rejected instead of guessed.
+The existing `//trust combat` reports its mode; `//trust CombatMode` cycles it.
+
+Listed values are validated before menu preflight and matched case-insensitively
+while retaining canonical spelling. Multi-word option tokens are joined only
+after resolving a mode. Boolean mode values use existing on/off/true/false
+spellings. Free-form string modes require a value and retain text case. Modes
+not loaded for the character are unavailable. No broader abbreviations or stripping
+of the `Auto` prefix is added. Autocomplete includes valid full/short forms and
+options without advertising aliases that conflict with existing commands.
+
+The root rewrites aliases to existing `set`/`cycle` before the menu command policy.
+Existing mode locks remain in those original handlers. Named settings/profile
+selectors retain their menu restrictions through both full/short spellings.
+Invalid alias values do not commit pending edits. Aliases remain runtime changes;
+they do not introduce implicit profile persistence. Earlier eligible menu drafts
+may save during tactical-command preflight, retaining Test 3 behavior.
+
+The user positively reported adjacent menu placement as more fluid. This is live
+feedback about that layout, not acceptance of all menu/save/input changes.
+Repeated trace dumps still replace `data/logs/menu-save-<character>.log` in this
+build; unique timestamped snapshots have not been implemented. Trace dump is not
+an upload and does not automatically share logs with Awake.
+
+## Verification
+
+PASS: 71 new assertions use the real Modes library, state lock/set/cycle handlers,
+alias resolver, autocomplete generator and root dispatcher. UI/OS are mocked.
+Coverage includes conflicts, exact-name precedence, invalid/ambiguous values,
+multi-word options, boolean/string modes, job absence, mode locks, menu draft
+rejection, profile guards and existing commands. PASS: 176 prior assertions
+(93 menu/input, 43 trace/commands, 16 Modes flow, 24 movement): **247 total**.
+
+PASS: four changed/new Lua files compile via Lua 5.3 with documented Windower
+literal-method normalization. No Lua 5.1 or Windows/Windower execution is claimed.
+Diff/whitespace review passed. Package verification is recorded in delivery docs.
+
+PENDING: all Test 4 live FFXI acceptance, original Modes save-on-exit revert and
+actual controller IJKL capture. R1 + Square remains a controller-conversation
+handoff; no AHK/XIVCrossbar file changes here. Main remains unchanged.
+
+## Next live checks
+
+1. Back up and unload Trust; merge this full folder preserving existing data.
+   Reload one client; `//trust menu status` must say Test 4.
+2. Confirm the mode exists with status, then try `//trust autoraise`, the full
+   `//trust AutoRaiseMode`, and a valid value displayed for that mode. Test mixed
+   casing, invalid values and autocomplete. Do not assume every job loads every mode.
+3. Verify `//trust combat` reports while `//trust CombatMode` cycles. Check ordinary
+   stop/start/assist commands retain their meaning. Check mode locks still reject
+   forbidden changes and direct/short profile selectors remain guarded in menus.
+4. With a menu edit pending, a valid tactical alias should check it first; an invalid
+   alias value should leave the draft alone. Recheck mode view refresh.
+5. Trace the unresolved save-on-exit revert using Test 3's on/reproduce/dump/off
+   procedure; dump before reload. Recheck adjacent layout, compact widgets,
+   physical IJKL/chat/text and quiet handoff. Full rollback restores the backup.
+
+Earlier entries below are retained as cumulative history.
+
+---
+
 # Test 3 publication and full-package verification — 2026-10-17
 
 Source `43645774f780848b77821034f21aaebd3dd833dc` is published and fetched.
