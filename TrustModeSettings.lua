@@ -85,7 +85,7 @@ function TrustModeSettings:getSettingsFilePath()
     return nil
 end
 
-function TrustModeSettings:saveSettings(setName, trust_modes, skip_set_mode)
+function TrustModeSettings:saveSettings(setName, trust_modes, skip_set_mode, preserveRuntime)
     local setName = setName or self.trustMode.value
 
     if not trust_modes then
@@ -117,21 +117,41 @@ function TrustModeSettings:saveSettings(setName, trust_modes, skip_set_mode)
         else
             --addon_message(207, 'Updated trust modes for '..setName..' '..file_path)
         end
-        self.settings[setName] = trust_modes
-
         trust_modes_file:write('-- Modes file for '..self.jobNameShort ..'\nreturn ' .. newSettings:tovstring())
         require('cylibs/ui/menu/menu_save_trace').record('modes-write-return',{path=file_path,set=setName})
     end
 
     self.settings[setName] = trust_modes
 
-    self:reloadSettings()
+    -- Command autosaves must not reset TrustMode or reapply unrelated runtime
+    -- values. Explicit Save keeps its established reload behavior.
+    if preserveRuntime then
+        -- Match the effective inheritance a reload would produce, without
+        -- resetting the live mode selector or reapplying unrelated tactics.
+        for name, modeSet in pairs(newSettings) do
+            if name ~= 'Default' then
+                self.settings[name] = table.merge(T(newSettings.Default), modeSet)
+            end
+        end
+    else
+        self:reloadSettings()
+    end
 
     if not skip_set_mode and setName ~= self.trustMode.value then
         self.trustMode:set(setName)
     end
 
     self:onSettingsChanged():trigger(self:getSettings())
+    return true
+end
+
+function TrustModeSettings:saveModeChanges(setName, changes)
+    setName = setName or self.trustMode.value
+    if not self.settings[setName] then return false, 'The selected mode set no longer exists.' end
+    local updated = {}
+    for key, value in pairs(self.settings[setName]) do updated[key]=value end
+    for key, value in pairs(changes) do updated[key]=value end
+    return self:saveSettings(setName, updated, true, true)
 end
 
 function TrustModeSettings:deleteSettings(setName)

@@ -90,14 +90,18 @@ function FollowTrustCommands:handle_set_follow_distance(_, distance)
     local success
     local message
 
-    if distance:match("^%d+$") then
+    if type(distance)=='string' and distance:match("^%d+$") and tonumber(distance)<=50 then
         distance = tonumber(distance)
         self:get_follower():set_distance(distance)
+        -- Follow targets/pause are session-only; distance is an existing option.
+        if require('cylibs/ui/menu/menu_preferences').get('save_on_exit') then
+            addon_settings:getSettings().follow.distance = distance
+        end
         success = true
         message = 'Follow distance set to '..distance
     else
         success = false
-        message = 'Invalid distance '..distance
+        message = 'Invalid distance '..tostring(distance)..' (expected 0-50)'
     end
 
     return success, message

@@ -7,7 +7,8 @@ local profiles={trustmode=true,maintrustsettingsmode=true,subtrustsettingsmode=t
 local runtime={
     attack={['']=true,off=true,mirror=true,engage=true,distance=true},
     follow={['*']=true}, assist={['*']=true},
-    heal={['']=true,auto=true,off=true,emergency=true},
+    heal={['']=true,auto=true,off=true,emergency=true,alliance=true},
+    buff={auto=true,off=true}, debuff={auto=true,off=true},
     pull={['']=true,auto=true,aggroed=true,all=true,off=true},
     mb={['']=true,auto=true,off=true,earth=true,lightning=true,water=true,fire=true,ice=true,wind=true,light=true,dark=true},
     nuke={off=true,earth=true,lightning=true,water=true,fire=true,ice=true,wind=true,light=true,dark=true,cleave=true},

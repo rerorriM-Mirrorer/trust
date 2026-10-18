@@ -634,13 +634,18 @@ local function addon_command(cmd, ...)
         if menuEffect=='commit' and not hud.trustMenu:commitCurrentEditor('command:'..cmd) then return end
     end
 
+    local commandSettings=require('cylibs/trust/commands/command_settings')
+    local pending=commandSettings.capture(cmd, {main=main_trust_settings, sub=sub_trust_settings,
+        weapons=weapon_skill_settings, addon=addon_settings}, state, trust_mode_settings, arguments)
+    local handled, success
     if shortcuts[cmd] then
-        shortcuts[cmd]:handle_command(unpack(arguments))
+        handled, success=shortcuts[cmd]:handle_command(unpack(arguments))
 	elseif shortcuts['default']:is_valid_command(cmd, ...) then
-		shortcuts['default']:handle_command(cmd, unpack(arguments))
+		handled, success=shortcuts['default']:handle_command(cmd, unpack(arguments))
 	else
 		error("Unknown command %s":format(cmd))
     end
+    commandSettings.finish(pending, success, state)
     if menuEffect=='commit' then hud.trustMenu:refreshAfterCommand() end
 end
 

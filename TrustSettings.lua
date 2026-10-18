@@ -129,6 +129,7 @@ function TrustSettings:saveSettings(saveToFile)
         local success, err = coroutine.resume(self:saveToFile(filePath, self.settings))
         require('cylibs/ui/menu/menu_save_trace').record('settings-write-return',{path=filePath,success=success,error=err})
         if not success then return false, err end
+        require('cylibs/trust/commands/command_settings').recordSaved(self)
     end
     self:onSettingsChanged():trigger(self.settings)
     return true

@@ -77,7 +77,7 @@ function TrustCommands:handle_command(...)
         else
             addon_system_error(message..".")
         end
-        return true
+        return true, success
     end
     return false
 end

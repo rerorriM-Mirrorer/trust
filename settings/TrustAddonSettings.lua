@@ -108,6 +108,7 @@ end
 
 function TrustAddonSettings:saveSettings(saveToFile)
     config.save(self.settings)
+    require('cylibs/trust/commands/command_settings').recordSaved(self)
     self:onSettingsChanged():trigger(self.settings)
 end
 
