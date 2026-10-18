@@ -32,7 +32,7 @@ for name in s:gmatch("require%('([^']+)'%)") do
     package.preload[name]=function() return {__type=kind,new=function() return {} end} end
 end
 package.preload['cylibs/events/Luvent']=function() return Event end
-for _,name in ipairs({'cylibs/ui/menu/menu_preferences','cylibs/ui/menu/editor_values',
+for _,name in ipairs({'cylibs/ui/menu/menu_preferences','cylibs/ui/menu/editor_values','cylibs/ui/menu/menu_save_trace',
     'ui/settings/editors/config/PickerConfigItem','cylibs/ui/collection_view/items/picker_item',
     'cylibs/ui/collection_view/index_path','cylibs/ui/collection_view/indexed_item',
     'cylibs/ui/collection_view/collection_view_data_source'}) do
@@ -102,15 +102,18 @@ state={TrustMode={value='Default'},AutoRaiseMode={value='Off',description='Auto 
     options=function() return {'Off','Auto'} end,get_description=function() return '' end}}
 handle_set=function(name,value) state[name].value=value end
 local disk
-local owner={saveSettings=function(_,setName)
+local owner={jobNameShort='WHM',playerName='Test',saveSettings=function(_,setName)
     writes=writes+1; disk={setName=setName,autoraisemode=state.AutoRaiseMode.value}
 end}
+local trace=require('cylibs/ui/menu/menu_save_trace')
+addon_system_message=function() end
+trace.setEnabled(true)
 local item=Modes.new(owner,'',L{'AutoRaiseMode','TrustMode'},true)
 -- The profile selector is a picker too, matching the long Modes page.
 state.TrustMode.options=function() return {'Default','Other'} end
 state.TrustMode.get_description=function() return '' end
 local view=item.contentViewConstructor(nil,{setDescription=function() end})
-view:getDataSource().cellForItem=function() return {setVisible=function() end,setClipsToBounds=function() end,hasFocus=function() return false end} end
+view:getDataSource().cellForItem=function() return {setVisible=function() end,setClipsToBounds=function() end,destroy=function() end,hasFocus=function() return false end} end
 local row=view:getDataSource():itemAtIndexPath({section=1,row=1})
 check(view:exitSaveStatus()=='unchanged','new mode editor is clean')
 row:setCurrentValue('Auto')
@@ -125,10 +128,26 @@ check(menu:commitCurrentEditor() and writes==1,'repeat exit does not save again'
 local reopened=item.contentViewConstructor(nil,{setDescription=function() end})
 check(reopened:getDataSource():itemAtIndexPath({section=1,row=1}):getCurrentValue()=='Auto','reopened editor retains change')
 view=reopened
-view:getDataSource().cellForItem=function() return {setVisible=function() end,setClipsToBounds=function() end,hasFocus=function() return false end} end
+view:getDataSource().cellForItem=function() return {setVisible=function() end,setClipsToBounds=function() end,destroy=function() end,hasFocus=function() return false end} end
 row=view:getDataSource():itemAtIndexPath({section=1,row=1}); row:setCurrentValue('Off')
 locked=true
 check(not menu:commitCurrentEditor() and writes==1 and state.AutoRaiseMode.value=='Auto','locked modes cannot falsely save')
 locked=false
 check(menu:commitCurrentEditor() and writes==2 and disk.autoraisemode=='Off','unlock allows retry')
+state.AutoRaiseMode.value='Auto'
+menu:refreshAfterCommand()
+check(row~=view:getDataSource():itemAtIndexPath({section=1,row=1}) and
+    view:getDataSource():itemAtIndexPath({section=1,row=1}):getCurrentValue()=='Auto','clean Modes view follows runtime commands')
+row=view:getDataSource():itemAtIndexPath({section=1,row=1});row:setCurrentValue('Off')
+state.AutoRaiseMode.value='Off'
+menu:refreshAfterCommand()
+check(view:getDataSource():itemAtIndexPath({section=1,row=1})==row and view:exitSaveStatus()=='pending changes',
+    'emergency command refresh never overwrites a pending draft')
+check(menu:commitCurrentEditor() and writes==3,'refreshed mode conflict snapshot permits later valid edit')
+local joined=table.concat(trace.entries,'\n')
+check(joined:find('path=data/modes/WHM_Test.lua',1,true) and joined:find('autoraisemode:Off->Auto',1,true),
+    'real Modes trace includes changed value and selected destination')
+check(joined:find('save-returned',1,true) and joined:find('validation-failed',1,true),
+    'real commit and rejected commit both leave diagnostic events')
+trace.setEnabled(false)
 print('PASS: '..checks..' Modes flow checks (rendering, state and persistence mocked)')

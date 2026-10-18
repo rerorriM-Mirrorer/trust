@@ -1,5 +1,7 @@
 local ConfigEditor = require('ui/settings/editors/config/ConfigEditor')
 local PickerConfigItem = require('ui/settings/editors/config/PickerConfigItem')
+local EditorValues = require('cylibs/ui/menu/editor_values')
+local SaveTrace = require('cylibs/ui/menu/menu_save_trace')
 
 local ModeConfigEditor = setmetatable({}, {__index = ConfigEditor })
 ModeConfigEditor.__index = ModeConfigEditor
@@ -55,6 +57,18 @@ function ModeConfigEditor.new(modeNames, infoView, modes, showModeName)
     end)
 
     return self
+end
+
+function ModeConfigEditor:refreshRuntimeModes()
+    for modeName in self.modeNames:it() do
+        self.configSettings[modeName:lower()]=self.modes[modeName].value
+    end
+    for item in self.configItems:it() do item:setInitialValue(self.configSettings[item:getKey()]) end
+    self:reloadSettings()
+    self.exitBaseline=self:readDraft()
+    self.exitSourceValues=EditorValues.copy(self.configSettings)
+    if self.onRuntimeModesRefreshed then self.onRuntimeModesRefreshed() end
+    SaveTrace.editor(self,'runtime-modes-refreshed')
 end
 
 function ModeConfigEditor:setHasFocus(focus)

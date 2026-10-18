@@ -133,7 +133,8 @@ function CollectionViewDataSource:removeItem(indexPath)
     self.itemsWillChange:trigger(diff.added, diff.removed, diff.updated)
 
     for _, indexPath in pairs(diff.removed) do
-        local cachedCell = self.cellCache[indexPath.section][indexPath.row]
+        -- Long/scrolled editors can contain rows that never created a cell.
+        local cachedCell = self.cellCache[indexPath.section] and self.cellCache[indexPath.section][indexPath.row]
         if cachedCell then
             cachedCell:destroy()
             self.cellCache[indexPath.section][indexPath.row] = nil
@@ -157,7 +158,8 @@ function CollectionViewDataSource:removeItems(indexPaths)
     self.itemsWillChange:trigger(diff.added, diff.removed, diff.updated)
 
     for _, indexPath in pairs(diff.removed) do
-        local cachedCell = self.cellCache[indexPath.section][indexPath.row]
+        -- A removed row may never have been rendered/cached.
+        local cachedCell = self.cellCache[indexPath.section] and self.cellCache[indexPath.section][indexPath.row]
         if cachedCell then
             cachedCell:destroy()
             self.cellCache[indexPath.section][indexPath.row] = nil
@@ -195,7 +197,7 @@ function CollectionViewDataSource:removeAllItems()
     self.itemsWillChange:trigger(diff.added, diff.removed, diff.updated)
 
     for _, indexPath in pairs(diff.removed) do
-        local cachedCell = self.cellCache[indexPath.section][indexPath.row]
+        local cachedCell = self.cellCache[indexPath.section] and self.cellCache[indexPath.section][indexPath.row]
         if cachedCell then
             cachedCell:destroy()
             self.cellCache[indexPath.section][indexPath.row] = nil

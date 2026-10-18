@@ -3,6 +3,7 @@ local Keyboard = require('cylibs/ui/input/keyboard')
 local SoundTheme = require('cylibs/sounds/sound_theme')
 local FocusManager = require('cylibs/ui/focus/focus_manager')
 local MenuView = require('cylibs/ui/menu/menu_view')
+local SaveTrace = require('cylibs/ui/menu/menu_save_trace')
 
 local Menu =  {}
 Menu.__index = Menu
@@ -61,7 +62,7 @@ function Menu:showMenu(menuItem)
     -- Keep-view child pickers are part of the same edit. Other navigation is
     -- an intentional departure and must finish a valid options draft first.
     if self.menuView and self.menuView:getItem() ~= menuItem and not menuItem.keepViews
-            and not self:commitCurrentEditor() then return false end
+            and not self:commitCurrentEditor('menu-navigation') then return false end
     if self.menuItemStack:contains(menuItem) then
         while self.menuItemStack:length() > 0 and self.menuItemStack[self.menuItemStack:length()]:getUUID() ~= menuItem:getUUID() do
             self.menuItemStack:remove(self.menuItemStack:length())
@@ -80,7 +81,7 @@ function Menu:showMenu(menuItem)
             -- Mouse activation can skip the keyboard focus-return path.
             -- Explicit Confirm/Save retain their original action semantics.
             if not L{'Confirm', 'Save', 'Reset', 'Clear', 'Clear All', 'Delete', 'Import'}:contains(textItem:getText())
-                    and not self:commitCurrentEditor() then return end
+                    and not self:commitCurrentEditor('menu-action:'..textItem:getText()) then return end
 
             local currentView = self.contentViewStack:getCurrentView()
             if currentView and type(currentView.onSelectMenuItemAtIndexPath) == 'function' then
@@ -141,13 +142,22 @@ function Menu:showMenu(menuItem)
     self:requestFocus()
 end
 
-function Menu:commitCurrentEditor()
+function Menu:commitCurrentEditor(reason)
     local view = self.contentViewStack:getCurrentView()
-    if view and view.commitOnExit and not view:commitOnExit() then
+    if view and view.commitOnExit and not view:commitOnExit(reason) then
         view:requestFocus()
         return false
     end
     return true
+end
+
+function Menu:refreshAfterCommand()
+    local view=self.contentViewStack:getCurrentView()
+    -- Emergency stops never have to commit a draft. Preserve that draft and
+    -- its conflict guard; only clean Modes views follow runtime command changes.
+    if view and view.refreshRuntimeModes and view:exitSaveStatus()=='unchanged' then
+        view:refreshRuntimeModes()
+    end
 end
 
 function Menu:updateInfoView(menuItem, parentMenuItem)
@@ -199,12 +209,12 @@ function Menu:onKeyboardEvent(key, pressed, flags, blocked)
         elseif keyName == 'Right' then
             local currentView = self.contentViewStack:getCurrentView()
             if currentView and currentView:hasFocus() then
-                if self:commitCurrentEditor() then currentView:resignFocus() end
+                if self:commitCurrentEditor('return-to-command-menu') then currentView:resignFocus() end
             else
                 self.menuView:pageRight()
             end
         elseif keyName == 'Escape' then
-            if not self:commitCurrentEditor() then return true end
+            if not self:commitCurrentEditor('menu-back') then return true end
             if self.menuItemStack:length() > 1 then
                 local removed = self.menuItemStack:remove(self.menuItemStack:length())
                 self.menuView:setItem(self.menuItemStack[self.menuItemStack:length()])
@@ -228,7 +238,8 @@ function Menu:onKeyboardEvent(key, pressed, flags, blocked)
 end
 
 function Menu:closeAll(discardDrafts)
-    if not discardDrafts and not self:commitCurrentEditor() then return false end
+    if not discardDrafts and not self:commitCurrentEditor('menu-close') then return false end
+    SaveTrace.record('menu-close',{discard=discardDrafts==true})
     local isMenuShown = self:isVisible()
 
     if self.menuView then

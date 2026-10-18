@@ -33,6 +33,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('toggle', self.handle_toggle, 'Toggle Trust On and Off')
     self:add_command('reload', self.handle_reload, 'Reload job settings files')
     self:add_command('status', self.handle_status, 'View Trust status')
+    self:add_command('combat', self.handle_combat, 'Show or set combat positioning: //trust combat [auto|mirror|off]')
     self:add_command('widget', self.handle_widget, 'Set widget appearance: // trust widget [full|compact|toggle] [all|trust|party|target]')
     self:add_command('menuperf', self.handle_menuperf, 'Measure CPU time opening Trust menu: // trust menuperf [on|off]')
 
@@ -43,6 +44,15 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('save', self.handle_save_set, 'Save changes to the current mode set or new set, // trust save mode_set_name (optional)')
 
     return self
+end
+
+function GeneralTrustCommands:handle_combat(_, mode)
+    if not state.CombatMode then return false,'CombatMode is unavailable' end
+    if mode==nil then return true,'CombatMode: '..state.CombatMode.value end
+    local selected=type(mode)=='string' and ({auto='Auto',mirror='Mirror',off='Off'})[mode:lower()]
+    if not selected then return false,'Usage: //trust combat [auto|mirror|off]' end
+    handle_set('CombatMode',selected)
+    return true,'CombatMode: '..state.CombatMode.value
 end
 
 function GeneralTrustCommands:get_command_name()
