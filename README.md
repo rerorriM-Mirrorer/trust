@@ -1,5 +1,18 @@
 # Trust
 
+## DirectLink explicit Open addendum — 2026-10-18
+
+For the R1 controller shortcuts, this source addendum adds `//trust menu open`.
+It opens the main menu when closed and preserves an already open submenu/cursor/
+draft. `//trust menu close` retains eligible save/validation; invalid edits can
+keep the menu open. Menu status includes `explicit open: true`.
+
+Over an existing compatible Menu options Test 4 install, update only
+`commands/MenuCommands.lua` and reload Trust. Existing Test 4 BUILD/install
+records remain pinned to their original ZIP. This is a source addendum, not a
+new full package. The matching XIVCrossbar/Controls 9.8 update supplies R1+Triangle
+Open and R1+Square Close. Windows/FFXI acceptance remains pending.
+
 ## Menu options test 4 — 2026-10-18
 
 This full testing folder targets the pinned **Trust 17.7.3** runtime with our
@@ -293,3 +306,5 @@ quiet follow/assist API; the companion owns movement-triggered invocation.
   cumulative overlay retains earlier compact UI and quiet handoff support.
 - **2026-10-15 — Quiet movement API:** opt-in quiet follow/assist flags across IPC;
   preserve ordinary command feedback and meaningful errors (details above).
+
+- **2026-10-18 — DirectLink explicit Open:** add idempotent menu open for controller callers; preserve visible editors and existing close validation. Source addendum; native tests pending.

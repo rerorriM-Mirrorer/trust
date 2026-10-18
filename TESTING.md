@@ -1,3 +1,42 @@
+# Explicit menu Open for DirectLink — October 18, 2026
+
+Author A. Branch test/menu-exit-save-20261017; base
+31245d39fce64847db755e7c900d6bf111624c07. Small source addendum over the compatible
+Menu options Test 4 install. This entry is later than the existing Test 4 ZIP/
+BUILD pin; no new full Trust ZIP is claimed by this controller conversation.
+
+The user requested R1+Triangle -> trust menu open and R1+Square -> trust menu close.
+Close already exists. Open was not registered and fell through to the default
+menu handler. Add an explicit idempotent open using the existing HUD openMenu
+method, leaving a visible submenu/cursor/draft intact. It executes immediately;
+the old bare menu handler retains its existing schedule and behavior. Close/save/
+validation/discard, menu preferences and mode persistence are unchanged.
+
+Only commands/MenuCommands.lua changes at runtime. Copy that file into the
+compatible existing Test 4 Trust folder and reload Trust. //trust menu status
+now includes explicit open: true. Existing BUILD.txt/Test 4 installer files still
+identify their original full-package snapshot. This addendum is coordinated with
+XIVCrossbar development/directlink Controls=9.8-r1-menus; Lua and AHK must both be
+updated on that side. It does not install or edit AHK from the Trust folder.
+
+PASS: new tests/menu_options/menu_open_test.lua executes the actual command class,
+the actual HUD open method and actual base command dispatcher (including case
+folding). It checks closed->open once, repeated Open preserving the current
+submenu/draft, Close behavior, rejected close with invalid draft, reopening after
+close and capability status. UI/state/services are controlled doubles. Syntax and
+execution use Lua 5.4 through the controller project's documented runner; no
+native Lua 5.1/Windower result is claimed. The broad prior 247-assertion Trust
+suite was not rerun from this minimal source addendum; its prior result remains
+historical below. No changes to those source paths are made.
+
+PENDING live: Open from closed; repeated Open deep in an editor; Close with valid
+and invalid drafts; both controller release orders; native menus alongside Trust;
+focus/chat/text guards. Confirm that no ordinary face key or unused R1-release R
+leaks from the matching controller build. Close covers Trust menus only.
+Main remains unchanged. Historical records follow unchanged.
+
+---
+
 # Test 4 publication and full-package verification — 2026-10-18
 
 Published/fetched source: `6d0b4713089edd370020fc78300c07233fb01c33`.

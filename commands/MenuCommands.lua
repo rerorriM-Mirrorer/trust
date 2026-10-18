@@ -13,12 +13,22 @@ function MenuTrustCommands.new(trust, action_queue, hud)
     self.hud = hud
 
     self:add_command('default', self.handle_toggle_menu, 'Show and hide the Trust menu')
+    self:add_command('open', self.handle_open, 'Open Trust menus; preserve an already open menu')
     self:add_command('close', self.handle_close, 'Save eligible options and close all Trust menus')
     self:add_command('discard', self.handle_discard, 'Close menus without applying the pending editor draft')
     self:add_command('status', self.handle_status, 'Show menu test build and saved preferences')
     self:add_command('trace', self.handle_trace, 'Trace menu saves: //trust menu trace [on|off|status|dump|clear]')
 
     return self
+end
+
+-- A: controller callers need an idempotent open. Preserve the current submenu,
+-- cursor and pending draft if already visible; direct input needs no key delay.
+function MenuTrustCommands:handle_open()
+    if not self.hud.trustMenu:isVisible() then
+        self.hud:openMenu(self.hud:getMainMenuItem())
+    end
+    return true
 end
 
 function MenuTrustCommands:handle_close()
@@ -34,7 +44,7 @@ end
 function MenuTrustCommands:handle_status()
     local view = self.hud:getViewStack():getCurrentView()
     local editorStatus = view and view.exitSaveStatus and view:exitSaveStatus() or 'no eligible editor'
-    return true, string.format('Menu options Test 4 (20261018) | save on exit: %s | adjacent: %s | IJKL: %s | editor: %s',
+    return true, string.format('Menu options Test 4 (20261018) | explicit open: true | save on exit: %s | adjacent: %s | IJKL: %s | editor: %s',
         tostring(MenuPreferences.get('save_on_exit')), tostring(MenuPreferences.get('adjacent')),
         tostring(MenuPreferences.get('ijkl')), editorStatus)
 end
@@ -75,3 +85,4 @@ function MenuTrustCommands:handle_toggle_menu(configKey)
 end
 
 return MenuTrustCommands
+
