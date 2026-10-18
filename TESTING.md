@@ -1,3 +1,12 @@
+# Test 4 publication and full-package verification — 2026-10-18
+
+Published/fetched source: `6d0b4713089edd370020fc78300c07233fb01c33`.
+The full ZIP passed CRC and all 1,473 member-byte comparisons against its source
+snapshot. See [the delivery record](docs/MENU-OPTIONS-TEST4-DELIVERY.md).
+All new live acceptance remains pending. This note is later than the package pin.
+
+---
+
 # Menu options Test 4 — October 18, 2026 (America/Chicago)
 
 Author: Awake. Repository: rerorriM-Mirrorer/trust.
