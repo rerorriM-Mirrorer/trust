@@ -1,3 +1,13 @@
+# Test 2 publication and package verification — 2026-10-17
+
+Published source: `8b087f5329c40d2462cea54bba4de162bf007d4a`.
+The cumulative ZIP passed CRC and source/doc byte comparison against the fetched
+published tree. See [the delivery record](docs/MENU-OPTIONS-TEST2-DELIVERY.md).
+All live Test 2 checks are pending; the reported Modes revert remains unresolved.
+The embedded TESTING is pinned to the source snapshot before this publication note.
+
+---
+
 # Menu options Test 2 — 2026-10-17 (America/Chicago)
 
 Author: Awake. Repository: `rerorriM-Mirrorer/trust`.
