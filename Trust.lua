@@ -312,10 +312,14 @@ function load_trust_commands(job_name_short, main_job_trust, sub_job_name_short,
 		local state_var = get_state(state_name)
 		if state_var then
 			all_commands:append('// trust cycle '..state_name)
-			for option in state_var:options():it() do
+			for _,option in ipairs(require('cylibs/trust/commands/mode_aliases').options(state_var) or {}) do
 				all_commands:append('// trust set '..state_name..' '..option)
 			end
 		end
+	end
+
+	for _,command in ipairs(require('cylibs/trust/commands/mode_aliases').commands(state,shortcuts)) do
+		all_commands:append(command)
 	end
 
 	all_commands:sort()
@@ -613,11 +617,16 @@ local function addon_command(cmd, ...)
     -- Only the command category is normalized. Names of players, profiles,
     -- paths, items and forwarded commands in ... must retain their casing.
     local cmd = type(cmd) == 'string' and cmd:lower() or 'help'
+
+    local arguments={...}
+    local alias,aliasError=require('cylibs/trust/commands/mode_aliases').resolve(cmd,arguments,shortcuts,state)
+    if aliasError then addon_system_error(aliasError);return end
+    if alias then cmd,arguments=alias.command,alias.arguments end
 	
     local menuVisible=hud.trustMenu:isVisible()
     local menuEffect
     if menuVisible then
-        menuEffect=require('cylibs/ui/menu/menu_command_policy').effect(cmd,{...})
+        menuEffect=require('cylibs/ui/menu/menu_command_policy').effect(cmd,arguments)
         if menuEffect=='blocked' then
             addon_system_error('Close the menu before changing profiles, reloading, or editing settings with this command. Use //trust menu close.')
             return
@@ -626,9 +635,9 @@ local function addon_command(cmd, ...)
     end
 
     if shortcuts[cmd] then
-		shortcuts[cmd]:handle_command(...)
+        shortcuts[cmd]:handle_command(unpack(arguments))
 	elseif shortcuts['default']:is_valid_command(cmd, ...) then
-		shortcuts['default']:handle_command(cmd, ...)
+		shortcuts['default']:handle_command(cmd, unpack(arguments))
 	else
 		error("Unknown command %s":format(cmd))
     end
