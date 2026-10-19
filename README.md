@@ -1,5 +1,24 @@
 # Trust
 
+## Party song gambits test 1 — 2026-10-19
+
+The gambit ability picker now includes beneficial Bard songs under **Add > Self**
+when they are in the current job's known spell list. Singing on Self uses the
+song's normal party area. Enemy songs such as Requiem retain their target choices.
+
+Add an inverted **Has one or more songs** condition for the selected song, place
+song rules ahead of unconditional enemy actions, and avoid scheduling more songs
+than your current capacity. For custom-gambit testing, turn AutoSongMode Off to
+avoid competition with the dedicated Singer set; keep AutoGambitMode Auto.
+See [the song gambit guide](docs/PARTY-SONG-GAMBITS.md) for exact steps, installation
+and the alternative dedicated Songs setup. Uploaded character settings were
+inspected as context and are kept separate from this runtime package.
+
+One runtime file changes in this batch: GambitEditorStyle.lua. Compatible Test 5
+users may copy only that file; the full folder also retains cumulative changes.
+The menu status still identifies Menu options Test 5. BUILD.txt identifies this
+song batch. Source/static verification does not replace live Windower/FFXI testing.
+
 ## Menu options test 5 — 2026-10-18
 
 This full testing folder targets the pinned **Trust 17.7.3** runtime with our
@@ -311,6 +330,9 @@ quiet follow/assist API; the companion owns movement-triggered invocation.
 
 ## Fork development changelog
 
+- **2026-10-19 — Party song gambits test 1:** remove the inherited beneficial-song
+  exclusion from the ordinary gambit picker; use existing job spell/target filters.
+  Add setup guidance for self-area singing, song conditions and gambit priority.
 - **2026-10-18 — Menu options test 5:** successful command settings/mode autosaves
   under the existing preference, named-set/runtime preservation, duplicate-write
   avoidance and quiet feedback; clean scalar editor refresh and options-list entry

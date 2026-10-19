@@ -1,3 +1,44 @@
+# Current Development Status — 2026-10-19 (party song gambits test 1)
+
+- **Repository / branch:** `rerorriM-Mirrorer/trust` /
+  `test/menu-exit-save-20261017`; starting source
+  `a1df85b8fd080dbd86d718047da15dc3b8f655fb`.
+- **Request:** Myrr can select Foe Requiem as a custom gambit, but beneficial party
+  songs are absent. Make those songs available for user-authored gambits.
+- **Cause:** inherited GambitEditorStyle.getAbilitiesForTargets explicitly returns
+  false for every BardSong whose resource targets contain Self. The same exclusion
+  is present in the pinned Trust 17.7.3 source. Enemy Requiem bypasses that exclusion.
+- **Change:** remove that exception. Existing job spell/level and target matching
+  then list beneficial Self songs alongside ordinary spells. No target-mask expansion,
+  changes to cast/condition logic or automatic song-set selection are introduced.
+- **User materials:** supplied data-trust.zip inspected in place. BRD profile has
+  the reported Requiem gambit; active SongSet is NewSet with Honor March, Blade
+  Madrigal and Minuets III/IV/V, NumSongs 4, AutoSongMode Auto and AutoGambitMode Auto.
+  The archive does not establish learned spells, current levels or equipment.
+  Character data remains user-owned and is not included in the public source/package.
+- **Setup:** use Gambits > Add > Self; add an inverted Self HasSongs condition for
+  the selected learned song. Put it ahead of unconditional enemy actions. For a
+  custom-gambit trial, disable AutoSongMode to avoid competing song lists and use
+  a pair that fits current capacity. Detailed steps: docs/PARTY-SONG-GAMBITS.md.
+- **Verification:** source review confirms existing spell-list and target filters
+  are retained, along with the Trust-summon exclusion and Geomancy handling.
+  PASS: the changed runtime file compiles via the available Lua 5.3 runner;
+  Git whitespace/diff review passes. No Lua 5.1/Windows/Windower run is claimed.
+  Package verification is recorded at delivery.
+  Previous 291-check suite results remain historical; no new live result is claimed.
+- **Live FFXI status:** PENDING song visibility, actual casts, party-area effects,
+  condition/recast behavior, order and expiry. Exact song tracking after reload or
+  zoning may need checking for custom songs outside the dedicated song set.
+  The earlier Modes save-on-exit failure remains unresolved; adjacent menu placement
+  has the user's positive report. User also reports progression with ranged attacks,
+  Requiem and Carbuncle; no broader live acceptance is inferred.
+- **Next:** install on one Bard client and check the new song choices, then a
+  guarded song pair. Main remains the live-accepted branch.
+
+Earlier status and testing entries follow unchanged.
+
+---
+
 # Current Development Status — 2026-10-18 (attribution normalization)
 
 - **Repository / branch:** `rerorriM-Mirrorer/trust` / `test/menu-exit-save-20261017`; starting source `e784e6eccea9b0bf3c53dbca8c392712400d7945`.
