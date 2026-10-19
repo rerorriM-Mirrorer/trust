@@ -1,3 +1,14 @@
+# Party song gambits Test 1 publication and package verification — 2026-10-19
+
+Published/fetched source: `1e42f3589b8805185a1966a3c8f5748a70e83e0f`.
+Full package: Trust-PartySongGambits-Test1-Full.zip, 1,475 members. CRC, every
+member byte, SHA manifest and user-data exclusion checks passed. See
+[the delivery record](docs/PARTY-SONG-GAMBITS-TEST1-DELIVERY.md).
+One runtime file changes; native Windower/FFXI checks remain pending.
+This note is later than the package pin. Historical records follow.
+
+---
+
 # Current Development Status — 2026-10-19 (party song gambits test 1)
 
 - **Repository / branch:** `rerorriM-Mirrorer/trust` /
