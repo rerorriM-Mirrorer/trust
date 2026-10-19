@@ -93,9 +93,9 @@ function GambitEditorStyle:getAbilitiesForTargets(targets, trust)
                 if spell.type == 'Geomancy' and spellTargets:length() == 1 and spellTargets[1] == 'Self' then
                     spellTargets:append('Party')
                 end
-                if spell.type == 'BardSong' and spellTargets:contains('Self') then
-                    return false
-                end
+                -- A: beneficial songs belong in Self gambits too. The game
+                -- applies their song area to nearby party members; the gambit
+                -- conditions or dedicated Singer role control when to re-sing.
                 return not S{ 'Trust' }:contains(spell.type) and S(spellTargets):intersection(targets):length() > 0
             end
             return false
