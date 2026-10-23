@@ -44,9 +44,11 @@ end
 function MenuTrustCommands:handle_status()
     local view = self.hud:getViewStack():getCurrentView()
     local editorStatus = view and view.exitSaveStatus and view:exitSaveStatus() or 'no eligible editor'
-    return true, string.format('Menu options Test 5 (20261018) | explicit open: true | save on exit: %s | adjacent: %s | IJKL: %s | editor: %s',
+    local controller=windower and windower.trust and windower.trust.controller_menu
+    local controllerStatus=controller and string.format('%s, accepted %d, rejected %d',controller.mode or 'closed',controller.accepted,controller.rejected) or 'unavailable'
+    return true, string.format('Menu controller Test 1 | explicit open: true | save on exit: %s | adjacent: %s | IJKL: %s | editor: %s | controller: %s',
         tostring(MenuPreferences.get('save_on_exit')), tostring(MenuPreferences.get('adjacent')),
-        tostring(MenuPreferences.get('ijkl')), editorStatus)
+        tostring(MenuPreferences.get('ijkl')), editorStatus,controllerStatus)
 end
 
 function MenuTrustCommands:handle_trace(_, action)

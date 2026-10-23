@@ -8,6 +8,7 @@ _addon.start_time = os.time()
 _addon.timeout = nil
 
 windower.trust = {}
+local controller_menu
 windower.trust.get_temp_dir = function(file_name)
 	if file_name then
 		return string.format("%s/temp/%s", windower.addon_path..'data', file_name)
@@ -416,6 +417,26 @@ function load_ui()
 	widgets:setUserInteractionEnabled(true)
 
 	hud = TrustHud.new(player, action_queue, addon_settings, trust_mode_settings, addon_enabled, 500, 500, mediaPlayer, soundTheme)
+    if controller_menu then controller_menu:close() end
+    controller_menu=require('cylibs/ui/input/controller_menu').new({
+        clock=require('socket').gettime,open=io.open,remove=os.remove,
+        path=function(id) return windower.addon_path..'data/controller-menu-'..tostring(windower.ffxi.get_info().server)..'-'..id..'.txt' end,
+        keyName=function(key) return require('cylibs/ui/input/keyboard').input():getKey(key,0) end,
+        context=function()
+            local character=windower.ffxi.get_player()
+            local menu=hud and hud.trustMenu
+            local focus=require('cylibs/ui/focus/focus_manager').shared():getFocusable()
+            local info=windower.ffxi.get_info()
+            local mode='closed'
+            if menu and menu:isVisible() then
+                mode='navigation'
+                if not windower.has_focus() or info.chat_open or not info.logged_in or not character
+                        or character.status==4 or not focus or focus.destroyed then mode='paused'
+                elseif focus.acceptsTextInput and focus:acceptsTextInput() then mode='text' end
+            end
+            return menu,focus,mode,character and character.id
+        end})
+    windower.trust.controller_menu=controller_menu
 
 	hud:addSubview(widgets)
 
@@ -614,6 +635,11 @@ end
 -- Setup
 
 local function addon_command(cmd, ...)
+    -- Internal direct input never traverses tactical command/autosave dispatch.
+    if cmd=='__controller' then
+        if controller_menu then controller_menu:accept(...) end
+        return
+    end
     -- Only the command category is normalized. Names of players, profiles,
     -- paths, items and forwarded commands in ... must retain their casing.
     local cmd = type(cmd) == 'string' and cmd:lower() or 'help'
@@ -673,6 +699,8 @@ function unload_chunk_event()
 end
 
 function unloaded()
+    if controller_menu then controller_menu:close();controller_menu=nil end
+    windower.trust.controller_menu=nil
     if user_events then
         for _,event in pairs(user_events) do
             windower.unregister_event(event)
@@ -778,6 +806,9 @@ function loaded()
 end
 
 windower.register_event('addon command', addon_command)
+windower.register_event('prerender', function()
+    if controller_menu then controller_menu:tick() end
+end)
 windower.register_event('load', loaded)
 windower.register_event('unload', unloaded)
 windower.register_event('logout', function() windower.send_command('lua unload trust') end)
