@@ -1,0 +1,34 @@
+{
+  "bytes": 5835471,
+  "members": 1605,
+  "counts": {
+    "trust": 1487,
+    "xivcrossbar": 118
+  },
+  "sha256": "a50143e50d9c4ea1d6b11ec4ab5076d603fe0f5d9a904d2021426e3bca04ff96",
+  "sources": {
+    "trust": {
+      "sha": "b4cca1b3202520f56c829f24f170ad5e89c87b59",
+      "tree": "6cd03b71f5b6dbfda6e2ef1288f2de9eda09e05a",
+      "branch": "test/controller-menu-20261022"
+    },
+    "xivcrossbar": {
+      "sha": "68e10d4f249288f5fdaa8b3afcc5ec8a6e16da14",
+      "tree": "31fe3b6551bd362ce49f289560c33c69b1f6988b",
+      "branch": "test/trust-menu-20261022"
+    }
+  },
+  "filename": "Trust-ControllerMenu-Test1-Paired-20261022.zip",
+  "author": "A",
+  "native_acceptance": "pending",
+  "note": "Delivery record added after the pinned source commits. ZIP source pins are unchanged.",
+  "verification": [
+    "ZIP CRC and every member byte verified",
+    "Per-addon SHA-256 manifests verified",
+    "No installed data, test fixtures or nested ZIPs",
+    "xivcrossbar 63 Lua suites, 146 parsed sources, seven JS suites, AHK/layout checks",
+    "Trust seven menu suites; changed-source parsing; focused/root controller checks",
+    "Windows CRLF lease regression"
+  ]
+}
+
