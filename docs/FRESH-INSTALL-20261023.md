@@ -1,3 +1,13 @@
+## Database Fix 1 addendum
+
+The first fresh-install ZIP omitted the empty data directory and could fail to
+open SQLite on load. Use the Fix1 ZIP instead. If already installed, unload Trust
+and merge the corrected trust folder into the new installation; keep any settings
+it has already generated. Do not restore the old backup data. This package includes
+empty data, temp, modes and settings directories, and startup creates data before
+nested directories. Database failures now report their path rather than continuing
+with a nil connection. Native acceptance of this fix remains pending.
+
 # Fresh installation for Killala and Franklet — October 23, 2026
 
 This complete cumulative Trust folder includes the current menu autosave,

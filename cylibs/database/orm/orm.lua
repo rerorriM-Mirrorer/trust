@@ -12,8 +12,7 @@ function ORM.copy_file(source_path, target_path)
     -- Open the source file for reading
     local src_file = io.open(source_path, "rb")  -- "rb" for read in binary mode
     if not src_file then
-        addon_system_error(string.format("Failed to open %s.", src_file))
-        return
+        return false, string.format("Failed to open database source %s.", source_path)
     end
 
     -- Open the destination file for writing
@@ -22,9 +21,8 @@ function ORM.copy_file(source_path, target_path)
     end
     local dest_file = io.open(target_path, "wb")  -- "wb" for write in binary mode
     if not dest_file then
-        addon_system_error(string.format("Failed to open %s.", target_path))
         src_file:close()
-        return
+        return false, string.format("Failed to open database copy %s.", target_path)
     end
 
     -- Define a buffer size (in bytes) for reading in chunks
@@ -37,12 +35,21 @@ function ORM.copy_file(source_path, target_path)
         if not bytes_read then
             break  -- End of file reached
         end
-        dest_file:write(bytes_read)  -- Write the chunk to the destination
+        local ok, err = dest_file:write(bytes_read)
+        if not ok then
+            src_file:close()
+            dest_file:close()
+            return false, string.format("Failed to write database copy %s: %s", target_path, tostring(err))
+        end
     end
 
     -- Close the files
     src_file:close()
-    dest_file:close()
+    local ok, err = dest_file:close()
+    if not ok then
+        return false, string.format("Failed to close database copy %s: %s", target_path, tostring(err))
+    end
+    return true
 end
 
 function ORM.new(parent_path, db_name, readonly)
@@ -55,19 +62,31 @@ function ORM.new(parent_path, db_name, readonly)
         local target_file_path = string.format("%s/%s", temp_dir, db_name)
         local source_file_path = db_path
 
-        ORM.copy_file(source_file_path, target_file_path)
+        local copied, copy_error = ORM.copy_file(source_file_path, target_file_path)
+        if not copied then
+            error(copy_error)
+        end
 
         db_path = target_file_path
 
         self.temp_file_path = db_path
     end
-    self.db = sqlite3.open(db_path)
+    -- SQLite can create a file, but cannot create its containing directory.
+    if not readonly and not windower.dir_exists(parent_path) then
+        windower.create_dir(parent_path)
+    end
+    local db, code, message = sqlite3.open(db_path)
+    if not db then
+        error(string.format("Unable to open Trust database %s: %s (code %s)",
+            db_path, tostring(message or 'check folder existence and write access'), tostring(code)))
+    end
+    self.db = db
     self.tables = {}
     return self
 end
 
 function ORM:destroy()
-    self.db:close()
+    self:close()
 
     if self.temp_file_path then
         os.remove(self.temp_file_path)
@@ -186,7 +205,10 @@ function ORM:delete(table_name, conditions)
 end
 
 function ORM:close()
-    self.db:close()
+    if self.db then
+        self.db:close()
+        self.db = nil
+    end
 end
 
 -- Row Object with Save/Delete functionality

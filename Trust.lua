@@ -741,6 +741,7 @@ function loaded()
 	require('lists')
 
 	local temp_dirs = L{
+		windower.addon_path..'data',
 		windower.trust.get_temp_dir(),
 		windower.trust.get_temp_dir(windower.ffxi.get_player().name),
 	}

@@ -1,3 +1,12 @@
+# Fresh installation database fix — October 23, 2026
+
+- User reports orm.lua lines 70/78 attempting to index nil db on fresh load. Previous ZIP omitted the data directory completely. SQLite cannot create a missing parent directory; reproduced with real SQLite. Nested Windower directory creation had depended on the old root data folder existing. Exact native failing path is not supplied, so the directory failure is supported by the package/code audit rather than a native path capture.
+- Corrected startup creates data before data/temp and its character subdirectory. ORM also ensures the writable database parent exists, reports path/open errors immediately, stops after a failed resource copy, and tolerates repeated close/destroy calls. Resource seed resources/resources.db is included and passes SQLite quick_check.
+- Full corrected package explicitly includes empty data/, data/temp/, data/modes/ and data/settings/ directories, without personal settings or databases. Merge this corrected package into the new fresh installation; do not restore old data. Existing new settings need not be deleted. Earlier fresh-install instructions remain valid.
+- Ten menu/database regression scripts pass using Lua 5.4 with mocked APIs; actual ORM missing-parent creation, failed-open path diagnostics, missing resource source and repeated cleanup tested. Changed Lua syntax and whitespace checks pass. Resource seed integrity uses real SQLite; native Windower/FFXI loading remains pending. The previous fresh-install delivery is superseded by Fix 1. Prior records preserved below.
+
+---
+
 # Fresh installation batch — October 23, 2026
 
 - Complete cumulative Trust installation requested for Killala and Franklet; no existing personal data included. See docs/FRESH-INSTALL-20261023.md. Rename the old addon folder for a reversible clean baseline; do not merge its data back for this test. Shared-install scope is explicit in the guide.

@@ -1,3 +1,5 @@
+Fresh installation database Fix 1 (October 23, 2026): corrected empty data-directory packaging and startup creation order. SQLite open/copy failures now report the failing path. Use the corrected full package; existing new settings can remain.
+
 Fresh installation batch (October 23, 2026): see [the clean-install guide](docs/FRESH-INSTALL-20261023.md) for Killala and Franklet. Includes all cumulative runtime changes and a reversible folder-backup procedure. Explicit defaults registration and startup mouse guards are included; native acceptance pending.
 
 > Starter defaults Test 1: [setup and behavior](docs/STARTER-DEFAULTS-TEST1.md). Existing profiles adopt explicitly with `//trust defaults apply`; controller update retained. See TESTING.md for current status.
@@ -378,3 +380,10 @@ Consistent factory modes, SMN Carbuncle, empty factory hunting lists, explicit c
 
 - Require the starter command explicitly during registration; tolerate an incomplete HUD or missing command overlay in mouse routing.
 - Provide complete cumulative fresh-install instructions, preserving the old folder as a rollback backup.
+
+
+### October 23, 2026 — fresh installation database Fix 1
+
+- Create the writable data directory before opening databases and nested temporary directories.
+- Stop on failed database copies/opens with path diagnostics; make database cleanup idempotent.
+- Include empty runtime data directories in the complete ZIP without personal data.
