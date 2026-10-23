@@ -29,7 +29,7 @@ function M.new(options)
         if self.mode=='closed' and self.published==self.token then return end
         if not force and self.next_write and now<self.next_write and self.published==self.token then return end
         self.next_write=now+.10
-        local f=options.open(path,'w')
+        local f=options.open(path,'wb')
         if f then
             local ok=f:write(string.format('trust-menu1\n%d\n%s\n%s\n%.6f\nEND\n', self.id,self.token,self.mode,now))
             local closed=f:close()
