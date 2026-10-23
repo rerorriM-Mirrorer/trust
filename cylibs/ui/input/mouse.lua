@@ -104,6 +104,12 @@ function Mouse:handleCompactWidgetMouseEvent(type, x, y, delta)
 end
 
 function Mouse:handleMouseEvent(type, x, y, delta)
+    -- Startup can fail before the HUD/command overlay is constructed. Leave
+    -- native mouse input alone until the UI exists; never enqueue nil views.
+    if not hud or not hud.trustMenu or not hud.viewStack then
+        self.compactDragWidget = nil
+        return false
+    end
     if self:handleCompactWidgetMouseEvent(type, x, y, delta) then
         return true
     end
@@ -116,7 +122,9 @@ function Mouse:handleMouseEvent(type, x, y, delta)
     if hud.viewStack.currentView then
         allViews:push(hud.viewStack.currentView)
     end
-    allViews:push(command_widget)
+    if command_widget then
+        allViews:push(command_widget)
+    end
     while not allViews:empty() do
         currentView = allViews:pop()
         if currentView:hitTest(x, y) then

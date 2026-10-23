@@ -1,3 +1,5 @@
+Fresh installation batch (October 23, 2026): see [the clean-install guide](docs/FRESH-INSTALL-20261023.md) for Killala and Franklet. Includes all cumulative runtime changes and a reversible folder-backup procedure. Explicit defaults registration and startup mouse guards are included; native acceptance pending.
+
 > Starter defaults Test 1: [setup and behavior](docs/STARTER-DEFAULTS-TEST1.md). Existing profiles adopt explicitly with `//trust defaults apply`; controller update retained. See TESTING.md for current status.
 
 > Controller menu Test 1 (October 22, 2026): paired direct Trust navigation. See [docs/CONTROLLER-MENU-TEST1.md](docs/CONTROLLER-MENU-TEST1.md) and the current status in [TESTING.md](TESTING.md). Native acceptance pending.
@@ -370,3 +372,9 @@ Added paired direct controller navigation for Trust, contextual native-input sup
 ### October 23, 2026 — starter defaults Test 1
 
 Consistent factory modes, SMN Carbuncle, empty factory hunting lists, explicit current-profile defaults adoption, and accurate Emergency-healing description. Existing saved profiles remain intact.
+
+
+### October 23, 2026 — fresh installation batch
+
+- Require the starter command explicitly during registration; tolerate an incomplete HUD or missing command overlay in mouse routing.
+- Provide complete cumulative fresh-install instructions, preserving the old folder as a rollback backup.

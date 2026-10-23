@@ -1,3 +1,13 @@
+# Fresh installation batch — October 23, 2026
+
+- Complete cumulative Trust installation requested for Killala and Franklet; no existing personal data included. See docs/FRESH-INSTALL-20261023.md. Rename the old addon folder for a reversible clean baseline; do not merge its data back for this test. Shared-install scope is explicit in the guide.
+- Based on published starter defaults source 62f08233ca9e513e59b4ed008ecf9629a6a653ef. Latest console(20261023-200235).log: DefaultsCommands global missing at startup twice, followed by 274 mouse currentView errors. Earlier errors in the accumulated console remain historical. Mixed installation was suggested but not established.
+- Explicit require at defaults registration removes the dependency on an include-created global. Mouse router returns unhandled before HUD construction and skips an absent command overlay. Existing controller/compact drag paths otherwise unchanged.
+- Nine menu/command scripts pass with mocked APIs under Lua 5.4, including missing/incomplete HUD, missing overlay, normal view routing and explicit registration checks. Three changed/new Lua sources parse after temporary Windower syntax normalization; whitespace check passes. Native fresh-install/FFXI acceptance pending.
+- Factory starter choices and all prior cumulative changes retained. No automatic shared-profile architecture, pull-list command additions, Dummy-song repair or historical skillchainer repair claimed. Previous records follow unchanged.
+
+---
+
 # Current Development Status — October 23, 2026 (starter defaults Test 1)
 
 - Repository rerorriM-Mirrorer/trust, branch test/starter-defaults-20261023. Starting published source 1662a07479ba2ec52007c930a2dec37724223dcc (controller delivery record); unchanged controller implementation retained. Native runtime remains 17.7.3; defaults command reports Starter defaults Test 1.
