@@ -29,7 +29,7 @@ function LoadGlobalsAction:perform()
     state.AutoAcceptRaiseMode:set_description('Off', "Do not automatically accept raises.")
     state.AutoAcceptRaiseMode:set_description('Auto', "Automatically accept raises when knocked out.")
 
-    state.AutoBuffMode = M{['description'] = 'Buff Self and Party', 'Off', 'Auto'}
+    state.AutoBuffMode = M{['description'] = 'Buff Self and Party', 'Auto', 'Off'}
     state.AutoBuffMode:set_description('Off', "Do not buff self and party members.")
     state.AutoBuffMode:set_description('Auto', "Automatically buff self and party members.")
 

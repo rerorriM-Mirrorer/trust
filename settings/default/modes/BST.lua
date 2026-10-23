@@ -1,6 +1,8 @@
 -- Modes file for BST
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
+        ["autohealmode"]="Emergency",
         ["autounloadondeathmode"]="Auto",
         ["autopetmode"]="Off",
         ["subtrustsettingsmode"]="Default",
@@ -9,10 +11,10 @@ return {
         ["autofollowmode"]="Always",
         ["automagicburstmode"]="Off",
         ["skillchainprioritymode"]="Prefer",
-        ["autoskillchainmode"]="Auto",
+        ["autoskillchainmode"]="Off",
         ["autopullmode"]="Off",
         ["autoengagemode"]="Always",
-        ["autobuffmode"]="Off",
+        ["autobuffmode"]="Auto",
         ["skillchaindelaymode"]="Off",
         ["maintrustsettingsmode"]="Default",
         ["autofacemobmode"]="Auto",

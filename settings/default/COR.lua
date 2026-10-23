@@ -55,11 +55,7 @@ return {
             Gambits = L{
                 Gambit.new("Enemy", L{}, RangedAttack.new(), "Enemy", L{"Pulling"}),
             },
-            Targets = L{
-                "Locus Ghost Crab",
-                "Locus Dire Bat",
-                "Locus Armet Beetle",
-            },
+            Targets = L{},
             Blacklist = L{
 
             },

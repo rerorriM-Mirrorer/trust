@@ -47,11 +47,7 @@ return {
                 Gambit.new("Enemy", L{}, Spell.new('Absorb-DEX', L{}, L{}), "Enemy", L{"Pulling"}),
                 Gambit.new("Enemy", L{}, Spell.new('Stone', L{}, L{}), "Enemy", L{"Pulling"}),
             },
-            Targets = L{
-                "Locus Ghost Crab",
-                "Locus Dire Bat",
-                "Locus Armet Beetle",
-            },
+            Targets = L{},
             Blacklist = L{
 
             },

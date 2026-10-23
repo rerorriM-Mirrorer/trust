@@ -1,6 +1,8 @@
 -- Modes file for RUN
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
+        ["autohealmode"]="Emergency",
         ["autounloadondeathmode"]="Auto",
         ["autodispelmode"]="Off",
         ["subtrustsettingsmode"]="Default",
@@ -11,7 +13,7 @@ return {
         ["autofacemobmode"]="Auto",
         ["autofollowmode"]="Always",
         ["autopullmode"]="Off",
-        ["autoengagemode"]="Off",
+        ["autoengagemode"]="Always",
         ["skillchainprioritymode"]="Prefer",
         ["skillchaindelaymode"]="Off",
         ["maintrustsettingsmode"]="Default",

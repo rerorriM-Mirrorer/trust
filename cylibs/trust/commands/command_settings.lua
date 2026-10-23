@@ -7,7 +7,7 @@ local persisted = setmetatable({}, {__mode='k'})
 local selectors = {TrustMode=true, MainTrustSettingsMode=true,
     SubTrustSettingsMode=true, WeaponSkillSettingsMode=true}
 local excluded = {load=true,reload=true,save=true,reset=true,unload=true,restart=true,
-    profile=true,scenario=true,start=true,startall=true,stop=true,stopall=true,toggle=true,
+    profile=true,scenario=true,defaults=true,start=true,startall=true,stop=true,stopall=true,toggle=true,
     send=true,sendall=true,menu=true,widget=true,help=true,status=true,version=true,
     commands=true,debug=true,menuperf=true}
 

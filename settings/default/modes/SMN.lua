@@ -1,6 +1,7 @@
 -- Modes file for SMN
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
         ["autounloadondeathmode"]="Auto",
         ["autodispelmode"]="Auto",
         ["autosilencemode"]="Off",
@@ -11,11 +12,11 @@ return {
         ["autotargetmode"]="Off",
         ["maintrustsettingsmode"]="Default",
         ["automagicburstmode"]="Off",
-        ["autoavatarmode"]="Ifrit",
+        ["autoavatarmode"]="Carbuncle",
         ["subtrustsettingsmode"]="Default",
         ["autodetectauramode"]="Off",
         ["autopullmode"]="Off",
-        ["autoengagemode"]="Off",
+        ["autoengagemode"]="Always",
         ["skillchaindelaymode"]="Off",
         ["skillchainpartnermode"]="Off",
         ["autoconvertmode"]="Off",

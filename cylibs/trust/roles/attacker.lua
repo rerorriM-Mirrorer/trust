@@ -16,7 +16,7 @@ local Attacker = setmetatable({}, {__index = Gambiter })
 Attacker.__index = Attacker
 Attacker.__class = "Attacker"
 
-state.AutoEngageMode = M{['description'] = 'Auto Engage Mode', 'Off', 'Always', 'Mirror'}
+state.AutoEngageMode = M{['description'] = 'Auto Engage Mode', 'Always', 'Off', 'Mirror'}
 state.AutoEngageMode:set_description('Off', "Manually engage and disengage.")
 state.AutoEngageMode:set_description('Always', "Automatically engage when targeting a claimed mob.")
 state.AutoEngageMode:set_description('Mirror', "Mirror the engage status of the party member you are assisting.")

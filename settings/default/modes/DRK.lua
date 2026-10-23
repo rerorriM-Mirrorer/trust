@@ -1,6 +1,8 @@
 -- Modes file for DRK
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
+        ["autohealmode"]="Emergency",
         ["autounloadondeathmode"]="Auto",
         ["actionbatchingmode"] = "Off",
         ["approachpullmode"] = "Off",
@@ -18,7 +20,7 @@ return {
         ["autopullmode"]="Off",
         ["autorestoremanamode"] = "Auto",
         ["autosilencemode"] = "Off",
-        ["autoskillchainmode"] = "Auto",
+        ["autoskillchainmode"] = "Off",
         ["autotargetmode"] = "Off",
         ["autotrustsmode"] = "Off",
         ["combatmode"] = "Off",

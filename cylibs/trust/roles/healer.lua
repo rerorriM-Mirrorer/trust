@@ -13,9 +13,9 @@ local function compare_hpp(a, b)
     return a:get_hpp() < b:get_hpp()
 end
 
-state.AutoHealMode = M{['description'] = 'Heal Player and Party', 'Auto', 'Emergency', 'Off'}
+state.AutoHealMode = M{['description'] = 'Heal Player and Party', 'Emergency', 'Auto', 'Off'}
 state.AutoHealMode:set_description('Auto', "Heal the party using the Default cure threshold.")
-state.AutoHealMode:set_description('Emergency', "Heal the party using the Emergency cure threshold.")
+state.AutoHealMode:set_description('Emergency', "Use configured cure rules with slower regular checks; HP-event checks can bypass that delay. No separate emergency HP threshold.")
 
 -------
 -- Default initializer for a nuker role.

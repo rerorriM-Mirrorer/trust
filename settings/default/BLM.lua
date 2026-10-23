@@ -78,11 +78,7 @@ return {
             Gambits = L{
                 Gambit.new("Enemy", L{}, Spell.new("Burn", L{}, L{}, nil, L{}, nil, true), "Enemy", L{"Pulling"}),
             },
-            Targets = L{
-                "Locus Ghost Crab",
-                "Locus Dire Bat",
-                "Locus Armet Beetle",
-            },
+            Targets = L{},
             Blacklist = L{
 
             },

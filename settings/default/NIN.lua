@@ -71,11 +71,7 @@ return {
                 Gambit.new("Enemy", L{GambitCondition.new(ItemCountCondition.new("Chonofuda", 1, ">="), "Self")}, Spell.new("Jubaku: Ni", L{}, L{}), "Enemy", L{"Pulling"}),
                 Gambit.new("Enemy", L{}, Approach.new(), "Enemy", L{"Pulling"}),
             },
-            Targets = L{
-                "Locus Ghost Crab",
-                "Locus Dire Bat",
-                "Locus Armet Beetle",
-            },
+            Targets = L{},
             Blacklist = L{
 
             },

@@ -1,6 +1,7 @@
 -- Modes file for BLU
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
         ["autounloadondeathmode"]="Auto",
         ["autodispelmode"]="Off",
         ["subtrustsettingsmode"]="Default",
@@ -8,12 +9,12 @@ return {
         ["magicbursttargetmode"]="All",
         ["autofollowmode"]="Always",
         ["autobuffmode"]="Auto",
-        ["autohealmode"]="Off",
-        ["autoskillchainmode"]="Auto",
+        ["autohealmode"]="Emergency",
+        ["autoskillchainmode"]="Off",
         ["autopullmode"]="Off",
         ["autoaftermathmode"]="Auto",
         ["autoengagemode"]="Always",
-        ["autotrustsmode"]="Auto",
+        ["autotrustsmode"]="Off",
         ["autofacemobmode"]="Auto",
         ["maintrustsettingsmode"]="Default",
         ["combatmode"]="Off",

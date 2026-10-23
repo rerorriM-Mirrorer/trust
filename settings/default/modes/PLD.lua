@@ -1,6 +1,7 @@
 -- Modes file for PLD
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
         ["autounloadondeathmode"]="Auto",
         ["skillchainpartnermode"]="Off",
         ["autopullmode"]="Off",
@@ -9,7 +10,7 @@ return {
         ["autoraisemode"]="Off",
         ["subtrustsettingsmode"]="Default",
         ["skillchainprioritymode"]="Prefer",
-        ["autoskillchainmode"]="Auto",
+        ["autoskillchainmode"]="Off",
         ["autobuffmode"]="Auto",
         ["autodetectauramode"]="Off",
         ["autoengagemode"]="Always",

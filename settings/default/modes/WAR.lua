@@ -1,12 +1,14 @@
 -- Modes file for WAR
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
+        ["autohealmode"]="Emergency",
         ["autounloadondeathmode"]="Auto",
         ["skillchainpartnermode"]="Off",
         ["subtrustsettingsmode"]="Default",
         ["automagicburstmode"]="Off",
         ["autofollowmode"]="Always",
-        ["autoskillchainmode"]="Auto",
+        ["autoskillchainmode"]="Off",
         ["autopullmode"]="Off",
         ["autoaftermathmode"]="Off",
         ["skillchainprioritymode"]="Prefer",
@@ -19,7 +21,7 @@ return {
         ["engagemode"]="None",
         ["autofoodmode"]="Off",
         ["combatmode"]="Off",
-        ["autotrustsmode"]="Auto",
+        ["autotrustsmode"]="Off",
         ["autoenmityreductionmode"]="Auto",
         ["ipcmode"]="All",
     }

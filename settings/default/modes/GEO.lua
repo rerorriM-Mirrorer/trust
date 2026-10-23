@@ -1,6 +1,7 @@
 -- Modes file for GEO
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
         ["autounloadondeathmode"]="Auto",
         ["autodispelmode"]="Auto",
         ["maintrustsettingsmode"]="Default",
@@ -11,14 +12,14 @@ return {
         ["autotargetmode"]="Off",
         ["autofacemobmode"]="Auto",
         ["automagicburstmode"]="Off",
-        ["autohealmode"]="Auto",
+        ["autohealmode"]="Emergency",
         ["subtrustsettingsmode"]="Default",
         ["autodetectauramode"]="Off",
         ["autopullmode"]="Off",
-        ["autoengagemode"]="Off",
+        ["autoengagemode"]="Always",
         ["skillchaindelaymode"]="Off",
         ["autofollowmode"]="Always",
-        ["autoskillchainmode"]="Auto",
+        ["autoskillchainmode"]="Off",
         ["autoconvertmode"]="Off",
         ["skillchainprioritymode"]="Prefer",
         ["skillchainpartnermode"]="Off",

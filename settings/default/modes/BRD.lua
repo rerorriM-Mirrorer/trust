@@ -1,13 +1,14 @@
 -- Modes file for BRD
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
         ["magicbursttargetmode"]="Single",
         ["autofoodmode"]="Auto",
         ["autoaftermathmode"]="Off",
         ["maintrustsettingsmode"]="Default",
         ["autofollowmode"]="Always",
         ["autogambitmode"]="Auto",
-        ["autotrustsmode"]="Auto",
+        ["autotrustsmode"]="Off",
         ["autobarspellmode"]="Off",
         ["weaponskillsettingsmode"]="Default",
         ["autosongmode"]="Auto",
@@ -17,12 +18,12 @@ return {
         ["autodetectauramode"]="Off",
         ["skillchainassistantmode"]="Auto",
         ["autodispelmode"]="Auto",
-        ["autoskillchainmode"]="Auto",
+        ["autoskillchainmode"]="Off",
         ["approachpullmode"]="Off",
         ["subtrustsettingsmode"]="Default",
         ["autoassistantmode"]="Off",
         ["automagicburstmode"]="Off",
-        ["autoengagemode"]="Off",
+        ["autoengagemode"]="Always",
         ["autoenablemode"]="Off",
         ["autodisablemode"]="Auto",
         ["ipcmode"]="All",
@@ -45,6 +46,6 @@ return {
         ["actionbatchingmode"]="Off",
         ["autonukemode"]="Off",
         ["autosleepmode"]="Off",
-        ["autobuffmode"]="Off"
+        ["autobuffmode"]="Auto"
     }
 }

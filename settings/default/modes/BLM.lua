@@ -1,6 +1,8 @@
 -- Modes file for BLM
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
+        ["autohealmode"]="Emergency",
         ["autounloadondeathmode"]="Auto",
         ["autodispelmode"]="Off",
         ["subtrustsettingsmode"]="Default",
@@ -11,7 +13,7 @@ return {
         ["autoskillchainmode"]="Off",
         ["automagicburstmode"]="Auto",
         ["autonukemode"]="Off",
-        ["autoengagemode"]="Off",
+        ["autoengagemode"]="Always",
         ["autodebuffmode"]="Auto",
         ["skillchaindelaymode"]="Off",
         ["maintrustsettingsmode"]="Default",
@@ -19,7 +21,7 @@ return {
         ["engagemode"]="None",
         ["autofoodmode"]="Auto",
         ["combatmode"]="Off",
-        ["autotrustsmode"]="Auto",
+        ["autotrustsmode"]="Off",
         ["autoenmityreductionmode"]="Off",
         ["autosleepmode"]="Off",
         ["ipcmode"]="All",

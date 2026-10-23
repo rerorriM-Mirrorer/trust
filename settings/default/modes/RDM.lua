@@ -1,6 +1,7 @@
 -- Modes file for RDM
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
         ["autounloadondeathmode"]="Auto",
         ["autodispelmode"]="Auto",
         ["automagicburstmode"]="Off",
@@ -10,12 +11,12 @@ return {
         ["autoaftermathmode"]="Off",
         ["autodebuffmode"]="Auto",
         ["skillchainprioritymode"]="Prefer",
-        ["autoskillchainmode"]="Auto",
+        ["autoskillchainmode"]="Off",
         ["autobuffmode"]="Auto",
         ["subtrustsettingsmode"]="Default",
         ["autodetectauramode"]="Off",
         ["autopullmode"]="Off",
-        ["autoengagemode"]="Off",
+        ["autoengagemode"]="Always",
         ["autotargetmode"]="Off",
         ["autofollowmode"]="Always",
         ["maintrustsettingsmode"]="Default",

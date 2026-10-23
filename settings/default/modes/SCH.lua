@@ -1,6 +1,7 @@
 -- Modes file for SCH
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
         ["autounloadondeathmode"]="Auto",
         ["autodispelmode"]="Auto",
         ["autosilencemode"]="Off",
@@ -15,10 +16,10 @@ return {
         ["autoartsmode"]="LightArts",
         ["autodetectauramode"]="Auto",
         ["autopullmode"]="Off",
-        ["autoengagemode"]="Off",
+        ["autoengagemode"]="Always",
         ["skillchaindelaymode"]="Off",
         ["autofollowmode"]="Always",
-        ["autoskillchainmode"]="Auto",
+        ["autoskillchainmode"]="Off",
         ["autoconvertmode"]="Off",
         ["skillchainprioritymode"]="Prefer",
         ["skillchainpartnermode"]="Off",
@@ -28,7 +29,7 @@ return {
         ["engagemode"]="None",
         ["autobarspellmode"]="Off",
         ["autotrustsmode"]="Off",
-        ["autohealmode"]="Auto",
+        ["autohealmode"]="Emergency",
         ["autoenmityreductionmode"]="Auto",
         ["ipcmode"]="All",
         ["magicbursttargetmode"]="Single",

@@ -1,6 +1,8 @@
 -- Modes file for DRG
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
+        ["autohealmode"]="Emergency",
         ["autounloadondeathmode"]="Auto",
         ["skillchainpartnermode"]="Off",
         ["subtrustsettingsmode"]="Default",
@@ -9,7 +11,7 @@ return {
         ["autopetmode"]="Auto",
         ["automagicburstmode"]="Off",
         ["autoaftermathmode"]="Off",
-        ["autoskillchainmode"]="Auto",
+        ["autoskillchainmode"]="Off",
         ["skillchainprioritymode"]="Prefer",
         ["autoengagemode"]="Always",
         ["autotrustsmode"]="Off",

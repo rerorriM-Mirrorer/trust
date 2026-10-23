@@ -1,6 +1,7 @@
 -- Modes file for COR
 return {
     ["Default"]={
+        ["autohealmode"]="Emergency",
         ["autounloadondeathmode"]="Auto",
         ["autodispelmode"]="Auto",
         ["autoaftermathmode"]="Off",
@@ -13,7 +14,7 @@ return {
         ["skillchainprioritymode"]="Off",
         ["autopullmode"]="Off",
         ["autoengagemode"]="Always",
-        ["autobuffmode"]="Off",
+        ["autobuffmode"]="Auto",
         ["skillchaindelaymode"]="Off",
         ["maintrustsettingsmode"]="Default",
         ["autofacemobmode"]="Auto",

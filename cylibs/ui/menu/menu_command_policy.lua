@@ -20,6 +20,10 @@ function Policy.effect(command, args)
     args=args or {}
     if immediate[command] then return 'immediate' end
     local verb=type(args[1])=='string' and args[1]:lower() or ''
+    if command=='defaults' then
+        if verb=='' or verb=='status' then return 'immediate' end
+        return verb=='apply' and 'commit' or 'blocked'
+    end
     if command=='combat' then return verb=='' and 'immediate' or 'commit' end
     if command=='set' or command=='cycle' then
         return profiles[verb] and 'blocked' or 'commit'

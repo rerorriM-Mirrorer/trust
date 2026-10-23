@@ -1,6 +1,7 @@
 -- Modes file for WHM
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
         ["autounloadondeathmode"]="Auto",
         ["autoraisemode"]="Off",
         ["autobuffmode"]="Auto",
@@ -13,7 +14,7 @@ return {
         ["flankmode"]="Off",
         ["autoskillchainmode"]="Off",
         ["autodetectauramode"]="Auto",
-        ["autohealmode"]="Auto",
+        ["autohealmode"]="Emergency",
         ["autostatusremovalmode"]="Auto",
         ["autosilencemode"]="Off",
         ["autoaftermathmode"]="Off",
@@ -26,7 +27,7 @@ return {
         ["autobarspellmode"]="Manual",
         ["autofollowmode"]="Always",
         ["autotrustsmode"]="Off",
-        ["autoengagemode"]="Off",
+        ["autoengagemode"]="Always",
         ["autofacemobmode"]="Auto",
         ["autofoodmode"]="Off",
         ["autoenmityreductionmode"]="Auto",

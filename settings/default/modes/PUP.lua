@@ -1,6 +1,8 @@
 -- Modes file for PUP
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
+        ["autohealmode"]="Emergency",
         ["autopetmode"]="Auto",
         ["autotargetmode"]="Off",
         ["skillchainassistantmode"]="Auto",
@@ -25,7 +27,7 @@ return {
         ["autorepairmode"]="Auto",
         ["autounloadondeathmode"]="Auto",
         ["autobuffmode"]="Auto",
-        ["autoskillchainmode"]="Auto",
+        ["autoskillchainmode"]="Off",
         ["autoassaultmode"]="Auto",
         ["ipcmode"]="All",
         ["skillchaindelaymode"]="Off",

@@ -1,6 +1,8 @@
 -- Modes file for THF
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
+        ["autohealmode"]="Emergency",
         ["autounloadondeathmode"]="Auto",
         ["skillchainpartnermode"]="Off",
         ["subtrustsettingsmode"]="Default",
@@ -8,7 +10,7 @@ return {
         ["autobuffmode"]="Auto",
         ["automagicburstmode"]="Off",
         ["autoaftermathmode"]="Off",
-        ["autoskillchainmode"]="Auto",
+        ["autoskillchainmode"]="Off",
         ["skillchainprioritymode"]="Prefer",
         ["autoengagemode"]="Always",
         ["autotargetmode"]="Off",

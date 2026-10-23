@@ -1,12 +1,14 @@
 -- Modes file for SAM
 return {
     ["Default"]={
+        ["autoshootmode"]="Off",
+        ["autohealmode"]="Emergency",
         ["autounloadondeathmode"]="Auto",
         ["skillchainpartnermode"]="Off",
         ["subtrustsettingsmode"]="Default",
         ["automagicburstmode"]="Off",
         ["autofollowmode"]="Always",
-        ["autoskillchainmode"]="Auto",
+        ["autoskillchainmode"]="Off",
         ["autopullmode"]="Off",
         ["autoaftermathmode"]="Off",
         ["skillchainprioritymode"]="Prefer",

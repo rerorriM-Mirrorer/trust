@@ -114,11 +114,7 @@ return {
             Gambits = L{
                 Gambit.new("Enemy", L{}, Debuff.new("Dia", L{}, L{}), "Enemy", L{"Pulling"}),
             },
-            Targets = L{
-                "Locus Ghost Crab",
-                "Locus Dire Bat",
-                "Locus Armet Beetle",
-            },
+            Targets = L{},
             Blacklist = L{
 
             },
