@@ -1,3 +1,5 @@
+> Starter defaults Test 1: [setup and behavior](docs/STARTER-DEFAULTS-TEST1.md). Existing profiles adopt explicitly with `//trust defaults apply`; controller update retained. See TESTING.md for current status.
+
 > Controller menu Test 1 (October 22, 2026): paired direct Trust navigation. See [docs/CONTROLLER-MENU-TEST1.md](docs/CONTROLLER-MENU-TEST1.md) and the current status in [TESTING.md](TESTING.md). Native acceptance pending.
 
 # Trust
@@ -363,3 +365,8 @@ quiet follow/assist API; the companion owns movement-triggered invocation.
 ### October 22, 2026 — controller menu Test 1
 
 Added paired direct controller navigation for Trust, contextual native-input suppression, session/release guards and status diagnostics. See docs/CONTROLLER-MENU-TEST1.md.
+
+
+### October 23, 2026 — starter defaults Test 1
+
+Consistent factory modes, SMN Carbuncle, empty factory hunting lists, explicit current-profile defaults adoption, and accurate Emergency-healing description. Existing saved profiles remain intact.
