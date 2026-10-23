@@ -1,3 +1,5 @@
+> Controller menu Test 1 (October 22, 2026): paired direct Trust navigation. See [docs/CONTROLLER-MENU-TEST1.md](docs/CONTROLLER-MENU-TEST1.md) and the current status in [TESTING.md](TESTING.md). Native acceptance pending.
+
 # Trust
 
 ## Party song gambits test 1 — 2026-10-19
@@ -356,3 +358,8 @@ quiet follow/assist API; the companion owns movement-triggered invocation.
   preserve ordinary command feedback and meaningful errors (details above).
 
 - **2026-10-18 — DirectLink explicit Open:** add idempotent menu open for controller callers; preserve visible editors and existing close validation. Source addendum; native tests pending.
+
+
+### October 22, 2026 — controller menu Test 1
+
+Added paired direct controller navigation for Trust, contextual native-input suppression, session/release guards and status diagnostics. See docs/CONTROLLER-MENU-TEST1.md.

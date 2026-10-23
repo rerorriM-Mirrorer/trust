@@ -1,3 +1,15 @@
+# Current Development Status — October 22, 2026 (controller menu Test 1)
+
+- Repository rerorriM-Mirrorer/trust, branch test/controller-menu-20261022. Starting baseline d63baae74543d653868e0881c28682c02c5068ec; published runtime source bbe08c310016cd2ca40e44de6d64045160220cb3. Paired xivcrossbar source d85bb136259acb2678bb645b02b72f85ab88dd4a, runtime directlink1-trustmenu1, shared Controls 9.15-trustmenu1. Main and prior development branches remain unchanged.
+- Request: direct controller navigation using xivcrossbar's existing AHK button receiver and menu input suppression. Added a focused Trust adapter, ephemeral server/character-specific menu lease, internal direct-action entry point and menu-status counters. Existing menu controls, draft validation and autosave policy perform the actions. No native navigation keys are generated for this direct route.
+- Guards: focus/session changes, sequence/age validation, text/chat/background contexts, original-control release delivery and validated Close All. Ordinary physical keyboard input remains on its existing path. Matching xivcrossbar and AHK files are required for the direct route.
+- Verification: all seven Trust menu scripts pass under Lua 5.4 with mocked UI/I/O (267 existing counted assertions plus explicit-open and new controller adapter checks). Changed Trust Lua files parse after temporary Windower quoted-string normalization. Paired xivcrossbar: 63 top-level Lua regression scripts, 146 parsed Lua sources, seven JavaScript AHK-routing suites, AHK structural/layout checks and whitespace review passed. Actual root lease reader/physical callback/context publication exercised with mocks; native Windows/AHK/Windower/FFXI unavailable.
+- Live acceptance pending: single taps/repeat, no native target/menu movement, nested focus/sliders/text, R1+Square close across held R1 and validation, chat/client handoff, reload/wrapper restart and ordinary controls after closing. See docs/CONTROLLER-MENU-TEST1.md. No new live success inferred. Earlier adjacent placement has positive user feedback; the earlier Modes save-on-exit failure remains unresolved.
+- Delivery: paired ZIP includes full cumulative Trust runtime and cumulative xivcrossbar code-only files for an existing DirectLink Cleanup 1 or newer install, with docs inside each addon folder and no personal data/artwork replacement in xivcrossbar. Back up, unload both addons on all clients, stop shared AHK, merge, then test one client after starting Controls 9.15 once.
+- Deferred user command/menu requests recorded in docs/PENDING-USER-NOTES-20261022.md. No pull defaults, distance commands, job-role changes, menu reordering, shooter repair or empty-skillchain fix included. Next: live accept controller navigation before expanding the patch.
+
+---
+
 # Party song gambits Test 1 publication and package verification — 2026-10-19
 
 Published/fetched source: `1e42f3589b8805185a1966a3c8f5748a70e83e0f`.
