@@ -1,3 +1,5 @@
+Fresh preference defaults (October 24, 2026): sounds Off, menu autosave On, adjacent menus On, IJKL navigation Off. Existing saved preferences are retained. Direct controller menu input does not require IJKL. Follow distance remains 1.
+
 Menu toggle (October 23, 2026): bind `trust menu` as an addon command to open the main menu when closed or save eligible drafts and close all Trust menu levels when open. Invalid drafts keep the editor open. Explicit `trust menu open` and `trust menu close` remain available.
 
 Fresh installation database Fix 1 (October 23, 2026): corrected empty data-directory packaging and startup creation order. SQLite open/copy failures now report the failing path. Use the corrected full package; existing new settings can remain.

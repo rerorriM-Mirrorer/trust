@@ -39,7 +39,7 @@ default.menu_key = '%^numpad+'
 default.menu = {}
 default.menu.save_on_exit = true
 default.menu.adjacent = true
-default.menu.ijkl = true
+default.menu.ijkl = false
 default.autocomplete = {}
 default.autocomplete.visible = true
 default.remote_commands = {} -- can't get rid of because of migration_v27
@@ -67,7 +67,7 @@ default.locales.actions = {}
 default.locales.default = ""
 default.sounds = {}
 default.sounds.sound_effects = {}
-default.sounds.sound_effects.disabled = false
+default.sounds.sound_effects.disabled = true
 default.gearswap = {}
 
 

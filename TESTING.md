@@ -1,3 +1,12 @@
+# Fresh preference defaults — October 24, 2026
+
+- Sounds disabled and IJKL menu navigation disabled in factory addon settings. Autosave on exit and adjacent menus already default On and are retained. Direct controller actions use their own receiver and do not depend on the IJKL setting. Existing saved preferences are preserved by normal configuration loading.
+- Follow distance stays 1. Runtime accepts numeric distances, but the current command accepts only integers 0-50; the menu offers integers 1-18. Path following explicitly uses 1 regardless of that preference. Fractional following and character-specific values are investigation/design topics, not shipped in this batch.
+- Hunting Targets/Blacklist/Distance remain inside each character/job named settings set. Shared hunting configuration is planned, not implemented. No pull distance changes in this batch.
+- Verification: diff/whitespace review and Lua parse check for the changed factory settings passed. Prior menu/controller tests remain historical; no native preference-default acceptance claimed. Cumulative full package retains all preceding changes and required empty data directories.
+
+---
+
 # Menu toggle — October 23, 2026
 
 - Bare //trust menu now opens when hidden or calls the validated close-all path when visible, including nested editors. Named menu shortcuts retain their existing route. Explicit open/close commands remain available. Bind the addon command trust menu to the desired bank button; no xivcrossbar configuration is shipped or overwritten.
