@@ -45,4 +45,13 @@ assert(direct:handle_command('close') and not visible)
 assert(direct:handle_command('open') and visible)
 fail=true;assert(direct:handle_command('close') and visible and #errors==1)
 fail=false
+visible=false
+assert(direct:handle_command() and visible,'bare menu did not open')
+assert(direct:handle_command() and not visible,'bare menu did not close all')
+assert(direct:handle_command() and visible)
+fail=true
+local old_errors=#errors
+assert(direct:handle_command() and visible and #errors==old_errors+1,
+    'toggle discarded an invalid editor draft')
+fail=false
 print('Actual Trust menu command/HUD: explicit registration, once-only open, visible submenu/draft preservation, close/save validation and capability status passed.')

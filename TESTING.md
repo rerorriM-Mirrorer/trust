@@ -1,3 +1,12 @@
+# Menu toggle — October 23, 2026
+
+- Bare //trust menu now opens when hidden or calls the validated close-all path when visible, including nested editors. Named menu shortcuts retain their existing route. Explicit open/close commands remain available. Bind the addon command trust menu to the desired bank button; no xivcrossbar configuration is shipped or overwritten.
+- Based on published database Fix 1 source 1114a813af3f9924fc8dea14dcba4d5e3b9b26b4. Full cumulative package retains empty data directories and resource database. Existing user settings remain intact.
+- Actual dispatcher/HUD test covers repeated bare toggles and invalid-draft refusal. Menu and controller regression suites pass with mocked APIs under Lua 5.4. Native L1+Down binding and save-on-toggle acceptance pending.
+- Cioara_2026.10.23.log shows PS5 ready, Controls 9.16-messages1, Messages input; Trust paused accepted 0/rejected 0. No direct-action sent counter appears in the supplied status. Controller navigation failure remains under investigation; this toggle does not claim to fix that handoff.
+
+---
+
 # Fresh installation database fix — October 23, 2026
 
 - User reports orm.lua lines 70/78 attempting to index nil db on fresh load. Previous ZIP omitted the data directory completely. SQLite cannot create a missing parent directory; reproduced with real SQLite. Nested Windower directory creation had depended on the old root data folder existing. Exact native failing path is not supplied, so the directory failure is supported by the package/code audit rather than a native path capture.

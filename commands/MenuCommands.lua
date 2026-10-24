@@ -12,7 +12,7 @@ function MenuTrustCommands.new(trust, action_queue, hud)
     self.action_queue = action_queue
     self.hud = hud
 
-    self:add_command('default', self.handle_toggle_menu, 'Show and hide the Trust menu')
+    self:add_command('default', self.handle_toggle_menu, 'Open the Trust menu or save and close all Trust menu levels')
     self:add_command('open', self.handle_open, 'Open Trust menus; preserve an already open menu')
     self:add_command('close', self.handle_close, 'Save eligible options and close all Trust menus')
     self:add_command('discard', self.handle_discard, 'Close menus without applying the pending editor draft')
@@ -71,6 +71,14 @@ end
 
 -- // trust menu
 function MenuTrustCommands:handle_toggle_menu(configKey)
+    -- A single bank button toggles the entire menu stack. Named menu shortcuts
+    -- retain their existing route; bare menu uses the validated close path.
+    if configKey == nil then
+        if self.hud.trustMenu:isVisible() then
+            return self:handle_close()
+        end
+        return self:handle_open()
+    end
     local success = true
     local message
 

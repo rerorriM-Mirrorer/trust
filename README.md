@@ -1,3 +1,5 @@
+Menu toggle (October 23, 2026): bind `trust menu` as an addon command to open the main menu when closed or save eligible drafts and close all Trust menu levels when open. Invalid drafts keep the editor open. Explicit `trust menu open` and `trust menu close` remain available.
+
 Fresh installation database Fix 1 (October 23, 2026): corrected empty data-directory packaging and startup creation order. SQLite open/copy failures now report the failing path. Use the corrected full package; existing new settings can remain.
 
 Fresh installation batch (October 23, 2026): see [the clean-install guide](docs/FRESH-INSTALL-20261023.md) for Killala and Franklet. Includes all cumulative runtime changes and a reversible folder-backup procedure. Explicit defaults registration and startup mouse guards are included; native acceptance pending.
