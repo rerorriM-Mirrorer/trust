@@ -33,7 +33,7 @@ return {
         ["skillchaindelaymode"]="Off",
         ["flankmode"]="Off",
         ["autoenmityreductionmode"]="Auto",
-        ["partychatmode"]="Private",
+        ["partychatmode"]="Off",
         ["actionbatchingmode"]="Off",
         ["autoaftermathmode"]="Auto",
         ["maneuvermode"]="HybridRanged",

@@ -28,7 +28,7 @@ return {
         ["flankmode"] = "Off",
         ["ipcmode"] = "All",
         ["maintrustsettingsmode"] = "Default",
-        ["partychatmode"] = "Private",
+        ["partychatmode"]="Off",
         ["skillchaindelaymode"] = "Off",
         ["skillchainpropertymode"] = "Darkness",
         ["subtrustsettingsmode"] = "Default",

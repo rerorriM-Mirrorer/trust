@@ -1,6 +1,7 @@
 -- Modes file for RUN
 return {
     ["Default"]={
+        ["partychatmode"]="Off",
         ["autoshootmode"]="Off",
         ["autohealmode"]="Emergency",
         ["autounloadondeathmode"]="Auto",

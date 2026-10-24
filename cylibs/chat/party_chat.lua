@@ -5,7 +5,7 @@ local PartyChatMessage = require('cylibs/messages/party_chat_message')
 local PartyChat = {}
 PartyChat.__index = PartyChat
 
-state.PartyChatMode = M{['description'] = 'Party Chat Mode', 'Private', 'Party', 'Off'}
+state.PartyChatMode = M{['description'] = 'Party Chat Mode', 'Off', 'Private', 'Party'}
 state.PartyChatMode:set_description('Private', "Okay, only you'll be able to see my messages.")
 state.PartyChatMode:set_description('Party', "Okay, I'll send messages to party chat.")
 

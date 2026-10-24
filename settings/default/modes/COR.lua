@@ -1,6 +1,7 @@
 -- Modes file for COR
 return {
     ["Default"]={
+        ["partychatmode"]="Off",
         ["autohealmode"]="Emergency",
         ["autounloadondeathmode"]="Auto",
         ["autodispelmode"]="Auto",

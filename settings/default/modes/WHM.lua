@@ -1,6 +1,7 @@
 -- Modes file for WHM
 return {
     ["Default"]={
+        ["partychatmode"]="Off",
         ["autoshootmode"]="Off",
         ["autounloadondeathmode"]="Auto",
         ["autoraisemode"]="Off",

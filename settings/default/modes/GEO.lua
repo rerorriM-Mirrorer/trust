@@ -1,6 +1,7 @@
 -- Modes file for GEO
 return {
     ["Default"]={
+        ["partychatmode"]="Off",
         ["autoshootmode"]="Off",
         ["autounloadondeathmode"]="Auto",
         ["autodispelmode"]="Auto",

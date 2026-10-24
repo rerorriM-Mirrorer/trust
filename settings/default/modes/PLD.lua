@@ -1,6 +1,7 @@
 -- Modes file for PLD
 return {
     ["Default"]={
+        ["partychatmode"]="Off",
         ["autoshootmode"]="Off",
         ["autounloadondeathmode"]="Auto",
         ["skillchainpartnermode"]="Off",

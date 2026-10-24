@@ -1,6 +1,7 @@
 -- Modes file for WAR
 return {
     ["Default"]={
+        ["partychatmode"]="Off",
         ["autoshootmode"]="Off",
         ["autohealmode"]="Emergency",
         ["autounloadondeathmode"]="Auto",

@@ -1,3 +1,10 @@
+# Party-chat factory default — October 24, 2026
+
+- PartyChatMode defaults Off in the built-in mode and all 22 factory job mode sets, including former Private overrides for BRD/DRK/PUP. Existing saved profile choices remain authoritative. Explicit local-only messages and command/error feedback retain their existing behavior; this changes the ordinary chatter mode, not all addon output.
+- Small source patch queued for future cumulative deliveries; no new installation package requested. Factory values and Lua syntax verified; native acceptance pending. Starter adoption command retains its previous explicit scope and does not migrate party-chat settings.
+
+---
+
 # Fresh preference defaults — October 24, 2026
 
 - Sounds disabled and IJKL menu navigation disabled in factory addon settings. Autosave on exit and adjacent menus already default On and are retained. Direct controller actions use their own receiver and do not depend on the IJKL setting. Existing saved preferences are preserved by normal configuration loading.

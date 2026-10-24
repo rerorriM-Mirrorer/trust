@@ -28,7 +28,7 @@ return {
         ["autodisablemode"]="Auto",
         ["ipcmode"]="All",
         ["autopianissimomode"]="Off",
-        ["partychatmode"]="Private",
+        ["partychatmode"]="Off",
         ["skillchaindelaymode"]="Off",
         ["skillchainpropertymode"]="Off",
         ["engagemode"]="None",
