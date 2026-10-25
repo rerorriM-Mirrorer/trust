@@ -1,4 +1,6 @@
-Menu simplification (October 25, 2026): main/subjob selections open Settings directly, with Modes last and Status near the bottom. Main Commands and Config GearSwap/Shortcuts/Language entries removed. Gambit descriptions show action before target and conditions. Character-wide persistence and integrated movement controls remain under development.
+Character tools (October 25, 2026): Following, Alter Egos and Paths are on the main menu. Follow, Auto Zone and Alter Ego summoning choices persist for the character across job/profile changes. On first load they adopt the current job choices; later saves use addon config. Food, custom Gambits and Pulling remain job-owned. Path recordings stay in data/paths; selecting a job does not start replay. Integrated movement Send/Ready remains under development.
+
+Menu simplification (October 25, 2026): main/subjob selections open Settings directly, with Modes last and Status near the bottom. Main Commands and Config GearSwap/Shortcuts/Language entries removed. Gambit descriptions show action before target and conditions.
 
 Fresh preference defaults (October 24, 2026): PartyChatMode Off for every job, sounds Off, menu autosave On, adjacent menus On, IJKL navigation Off. Existing saved preferences are retained. Direct controller menu input does not require IJKL. Follow distance remains 1.
 

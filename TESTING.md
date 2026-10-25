@@ -1,3 +1,14 @@
+# Character-wide follow and Alter Ego modes — October 25, 2026
+
+- Following, Alter Egos and Paths moved from job Settings to the main menu, rebuilt with live roles after job changes. Food and custom Gambits remain job-owned. The job Settings list ends with Status then Modes; Status was retained from the bypassed landing page.
+- AutoFollowMode, AutoZoneMode and AutoTrustsMode now persist under character_modes in addon config (data/settings.xml), alongside existing follow options and battle.trusts. Path recordings remain separate resources in data/paths; there is no separate path mode. Path replay uses AutoFollowMode Path. Profile switching does not automatically restart a path or restore an old follow target.
+- One-time adoption takes the first loaded job's saved values (or current defaults), then character values override all later job-profile values. Old files remain readable; subsequent job-mode saves omit character keys. Explicit mode saves and command autosaves route character changes to addon config. Ordinary temporary mode changes retain their existing runtime-only behavior until explicitly saved. The job all-Modes list excludes these three; Following/Alter Egos provide their editors.
+- Starter defaults apply now saves AutoTrustsMode Off at character scope, with updated feedback. Other starter choices remain selected-job/profile scope. No Pulling ownership changes yet. Recorded paths are shared files within this installation, not embedded in character config.
+- Seven menu/command suites passed under Lua 5.4 mocks, including actual mode-writer routing, first adoption, conflicting job/profile values, subsequent loads, main-menu placement and correct role rebuilding. Changed-source parse and whitespace checks pass. Native migration/job switch/reload acceptance pending.
+- Located current movement_signal.ahk on xivcrossbar development/directlink; readiness-based sender still present. Send/Ready movement integration remains a separate pending patch, not shipped here.
+
+---
+
 # Menu simplification — October 25, 2026
 
 - Main/subjob choices now construct Settings directly with their own owners; all-mode editor is the last entry. Status retained before Modes. Removed Commands from main menu and GearSwap/Shortcuts/Language entries from Config; underlying features/settings remain available in code. Gambit descriptions show action first, then target and conditions, using an ASCII separator.

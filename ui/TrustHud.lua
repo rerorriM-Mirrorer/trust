@@ -220,6 +220,11 @@ function TrustHud:reloadJobMenuItems()
     if player.sub_job_name ~= 'None' then
         self.mainMenuItem:setChildMenuItem(player.sub_job_name, subJobItem)
     end
+    -- Rebuild character tools along with job roles so no menu keeps a retired
+    -- follower, pather or truster after a job change.
+    self.mainMenuItem:setChildMenuItem('Following', self:getFollowerMenuItem(player.trust.main_job:role_with_type('follower'), self.trustModeSettings))
+    self.mainMenuItem:setChildMenuItem('Alter Egos', self:getTrusterMenuItem(player.trust.main_job:role_with_type('truster')))
+    self.mainMenuItem:setChildMenuItem('Paths', self:getPatherMenuItem(player.trust.main_job:role_with_type('pather'), player.trust.main_job:role_with_type('follower')))
 end
 
 function TrustHud:setCommands(commands)
@@ -237,6 +242,9 @@ function TrustHud:getMainMenuItem()
         ButtonItem.localized(player.main_job_name, i18n.resource('jobs', 'en', player.main_job_name)),
         ButtonItem.localized(player.sub_job_name, i18n.resource('jobs', 'en', player.sub_job_name)),
         ButtonItem.localized('Profiles', i18n.translate('Button_Profiles')),
+        ButtonItem.localized('Following', i18n.translate('Button_Following')),
+        ButtonItem.localized('Alter Egos', i18n.translate('Button_Alter_Egos')),
+        ButtonItem.localized('Paths', i18n.translate('Button_Paths')),
         ButtonItem.default('Config', 18),
     }, {
         Profiles = LoadSettingsMenuItem.new(self.addon_settings, self.trustModeSettings, main_trust_settings, weapon_skill_settings, sub_trust_settings),
@@ -272,7 +280,10 @@ function TrustHud:getSettingsMenuItem(trust, trustSettings, trustSettingsMode, w
     local debuffSettingsItem = DebuffSettingsMenuItem.new(trust, trustSettings, trustSettingsMode, trustModeSettings)
 
     -- Modes
-    local modesMenuItem = ModesMenuItem.new(self.trustModeSettings, "View and change Trust modes.", L(T(state):keyset()):sort(), true, "modes")
+    local modeNames=L(T(state):keyset()):sort():filter(function(name)
+        return not require('settings/character_modes').owns(name)
+    end)
+    local modesMenuItem = ModesMenuItem.new(self.trustModeSettings, "View and change Trust modes.", modeNames, true, "modes")
 
     -- Settings
     local menuItems = L{}
@@ -365,24 +376,11 @@ function TrustHud:getSettingsMenuItem(trust, trustSettings, trustSettingsMode, w
         childMenuItems.Weaponskills = self:getMenuItemForRole(trust:role_with_type("skillchainer"), weaponSkillSettings, weaponSkillSettingsMode, trust, jobNameShort, viewSize, trustSettings, trustSettingsMode, trustModeSettings)
     end
 
-    if trust:role_with_type("follower") then
-        menuItems:append(ButtonItem.localized('Following', i18n.translate('Button_Following')))
-        childMenuItems.Following = self:getMenuItemForRole(trust:role_with_type("follower"), weaponSkillSettings, weaponSkillSettingsMode, trust, jobNameShort, viewSize, trustSettings, trustSettingsMode, trustModeSettings)
-    end
 
     menuItems:append(ButtonItem.localized('Food', i18n.translate('Button_Food')))
     local FoodSettingsMenuItem = require('ui/settings/menus/buffs/FoodSettingsMenuItem')
     childMenuItems.Food = FoodSettingsMenuItem.new(trustSettings, trustSettingsMode, trustModeSettings)
 
-    if trust:role_with_type("truster") then
-        menuItems:append(ButtonItem.localized('Alter Egos', i18n.translate('Button_Alter_Egos')))
-        childMenuItems['Alter Egos'] = self:getMenuItemForRole(trust:role_with_type("truster"), weaponSkillSettings, weaponSkillSettingsMode, trust, jobNameShort, viewSize)
-    end
-
-    if trust:role_with_type("pather") then
-        menuItems:append(ButtonItem.localized('Paths', i18n.translate('Button_Paths')))
-        childMenuItems.Paths = self:getMenuItemForRole(trust:role_with_type("pather"), weaponSkillSettings, weaponSkillSettingsMode, trust, jobNameShort, viewSize)
-    end
 
     local EquipSetMenuItem = require('ui/views/inventory/equipment/EquipSetMenuItem')
     local EquipSet = require('cylibs/inventory/equipment/equip_set')

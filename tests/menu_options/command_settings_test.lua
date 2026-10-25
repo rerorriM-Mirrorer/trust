@@ -145,3 +145,26 @@ local old=trust_mode_settings.settings.Default.autoraisemode
 local ok=pcall(function() trust_mode_settings:saveModeChanges('Default',{autoraisemode='Off'}) end)
 check(not ok and trust_mode_settings.settings.Default.autoraisemode==old,'failed mode write does not update stored model')
 print('PASS: '..checks..' command settings assertions (real writers/dispatcher; game and disk mocked)')
+-- Character choices survive conflicting legacy job profiles and use addon
+-- persistence through the actual mode writer, not the job file.
+fail[modePath]=nil
+local Character=require('settings/character_modes')
+Character.configure(addon_settings)
+local runtime={AutoFollowMode={value='Off'},AutoZoneMode={value='Auto'},AutoTrustsMode={value='Off'}}
+local function lookup(name)return runtime[name]end
+local adopted=Character.overlay({autofollowmode='Always',autotrustsmode='Off'},lookup)
+check(adopted.autofollowmode=='Always','first legacy follow choice adopted')
+local otherJob=Character.overlay({autofollowmode='Off',autotrustsmode='Auto',combatmode='Mirror'},lookup)
+check(otherJob.autofollowmode=='Always' and otherJob.autotrustsmode=='Off' and otherJob.combatmode=='Mirror',
+    'job profile must not override character preferences or lose job tactics')
+local before=writes[modePath]
+check(trust_mode_settings:saveModeChanges('Default',{autofollowmode='Off'}),'character-only save')
+check(writes[modePath]==before and addon_settings.settings.character_modes.autofollowmode=='Off',
+    'character-only command must write addon settings, not job modes')
+trust_mode_settings.settings.Default.autofollowmode='Always'
+check(trust_mode_settings:saveModeChanges('Default',{autoraisemode='Auto'}),'mixed legacy profile save')
+check(not disk[modePath]:find('autofollowmode',1,true) and addon_settings.settings.character_modes.autofollowmode=='Off',
+    'legacy profile key must not overwrite character choice or remain in new job writes')
+Character.configure(addon_settings)
+check(Character.overlay({autofollowmode='Always'},lookup).autofollowmode=='Off','saved value survives owner reconfiguration')
+print('PASS character-mode adoption, conflicting job switches and real save routing')

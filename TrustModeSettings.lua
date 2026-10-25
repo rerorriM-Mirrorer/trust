@@ -97,7 +97,15 @@ function TrustModeSettings:saveSettings(setName, trust_modes, skip_set_mode, pre
         end
     end
 
+    local characterModes=require('settings/character_modes')
+    if characterModes.ready() then
+        characterModes.save(trust_modes)
+        trust_modes=characterModes.without(trust_modes)
+    end
     local newSettings = T(self.settings):copy()
+    if characterModes.ready() then
+        for name,values in pairs(newSettings) do newSettings[name]=characterModes.without(values) end
+    end
     newSettings[setName] = trust_modes
 
     for existingSetName, modeSet in pairs(newSettings) do
@@ -148,8 +156,16 @@ end
 function TrustModeSettings:saveModeChanges(setName, changes)
     setName = setName or self.trustMode.value
     if not self.settings[setName] then return false, 'The selected mode set no longer exists.' end
+    local characterModes=require('settings/character_modes')
+    if characterModes.ready() then
+        characterModes.save(changes)
+        changes=characterModes.without(changes)
+        if next(changes)==nil then return true end
+    end
     local updated = {}
-    for key, value in pairs(self.settings[setName]) do updated[key]=value end
+    for key, value in pairs(self.settings[setName]) do
+        if not characterModes.ready() or not characterModes.owns(key) then updated[key]=value end
+    end
     for key, value in pairs(changes) do updated[key]=value end
     return self:saveSettings(setName, updated, true, true)
 end

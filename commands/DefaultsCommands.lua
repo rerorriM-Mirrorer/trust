@@ -24,6 +24,6 @@ function Defaults:handle_apply()
     -- It changes only named starter keys, retaining all other profile choices.
     local ok,message=self.modes:saveModeChanges(state.TrustMode.value,changes)
     if ok==false then return false,message or 'Unable to save starter defaults.' end
-    return true,'Starter modes applied and saved for '..self.job..' / '..state.TrustMode.value..'. Existing pull lists and positioning retained.'
+    return true,'Starter job modes saved for '..self.job..' / '..state.TrustMode.value..'; Alter Ego summoning Off saved for this character. Existing pull lists and positioning retained.'
 end
 return Defaults

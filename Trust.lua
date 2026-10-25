@@ -209,10 +209,13 @@ function load_user_files(main_job_id, sub_job_id)
 end
 
 function load_trust_modes(job_name_short)
+	local characterModes = require('settings/character_modes')
+	characterModes.configure(addon_settings)
 	trust_mode_settings = TrustModeSettings.new(job_name_short, windower.ffxi.get_player().name, state.TrustMode)
 	trust_mode_settings:copySettings()
 
 	local function update_for_new_modes(new_modes)
+		new_modes = characterModes.overlay(new_modes, get_state)
 		for state_name, state_var in pairs(state) do
 			if class(state_var) == 'mode' and state_name ~= 'TrustMode'
 					and new_modes[state_name:lower()] == nil then
