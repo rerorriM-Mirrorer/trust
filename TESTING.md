@@ -1,3 +1,13 @@
+# Current Development Status — October 25, 2026 — integrated Movement Test 1
+
+- Trust branch test/starter-defaults-20261023, starting published 2ff0542cfb61a769ec87bd8aa03fd6b720daa40f. Paired personal xivcrossbar branch test/trust-movement-20261025 starts from development/directlink 7959a99d9871b00e18bd3faaf4b3946c85595fc1. Main/public beta unchanged.
+- Integrated RC3 movement receiver with main-menu Send/Ready choice, Send default; enabled/quiet defaults On and Status counts. Immediate internal Follow me then Assist me, no Start/Stop/path-stop additions or deferred retry. Same private keyboard transport 0x7B; sender now reads integrated policy/readiness and retains Ready-only legacy fallback. Unload old trustmovement to avoid duplicate receivers.
+- Cumulative Trust payload includes defaults, Full/Condensed menus and character-wide Follow/Auto Zone/Alter Ego mode persistence queued in prior entries. No new shared Pulling architecture, BRD short-song editor, or historical skillchainer repair claimed.
+- Fourteen Trust suites and changed Lua parsing pass under Lua 5.4 mocks/temporary Windower syntax normalization; nine JS suites execute actual AHK functions with native/file observations mocked. AHK lexical/includes and whitespace checks pass. Native AHK/Windower/FFXI acceptance pending. Prior user-confirmed controller behavior retained as history, not acceptance of this new batch.
+- See docs/MOVEMENT-SEND-READY-TEST1.md for install, counters, exact actions, rearming, limitations and rollback. Next: two-client Send/Ready native comparison before developing further AUTO/MANUAL policies.
+
+---
+
 # Full / Condensed menus — October 25, 2026
 
 - Config > Menu > Menu layout selects Condensed (factory default) or Full. Save and close/reopen the menu to apply. Rebuild is deferred until the old menu is closed, avoiding destruction during editor-save validation.

@@ -262,6 +262,7 @@ function TrustHud:getMainMenuItem()
         ButtonItem.localized('Alter Egos', i18n.translate('Button_Alter_Egos')),
         ButtonItem.localized('Paths', i18n.translate('Button_Paths')),
         ButtonItem.default('Config', 18),
+        ButtonItem.default('Movement',18),
     }, {
         Profiles = LoadSettingsMenuItem.new(self.addon_settings, self.trustModeSettings, main_trust_settings, weapon_skill_settings, sub_trust_settings),
         Config = ConfigSettingsMenuItem.new(self.addon_settings, main_trust_settings, state.MainTrustSettingsMode, self.mediaPlayer),
@@ -269,12 +270,13 @@ function TrustHud:getMainMenuItem()
 
     self.mainMenuItem = mainMenuItem
     self.menuLayout=layout
+    mainMenuItem:setChildMenuItem('Movement',require('ui/settings/menus/MovementSettingsMenuItem').new(self.addon_settings))
     if layout=='Full' then
         mainMenuItem.buttonItems=L{
             ButtonItem.localized(player.main_job_name,i18n.resource('jobs','en',player.main_job_name)),
             ButtonItem.localized(player.sub_job_name,i18n.resource('jobs','en',player.sub_job_name)),
             ButtonItem.localized('Profiles',i18n.translate('Button_Profiles')),
-            ButtonItem.default('Commands',18),ButtonItem.default('Config',18),
+            ButtonItem.default('Commands',18),ButtonItem.default('Config',18),ButtonItem.default('Movement',18),
         }
         mainMenuItem:setChildMenuItem('Commands',require('ui/settings/menus/commands/CommandsMenuItem').new(self.commands))
     end

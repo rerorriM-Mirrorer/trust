@@ -14,7 +14,7 @@ end
 function Defaults:get_command_name() return 'defaults' end
 function Defaults:handle_status()
     return true,'Starter defaults Test 1 | engage Always | heal Emergency | buffs Auto | skillchains/Trusts/shooting Off'..
-        (self.job=='SMN' and ' | avatar Carbuncle' or '')..' | apply affects current job/profile only'
+        (self.job=='SMN' and ' | avatar Carbuncle' or '')..' | apply saves job/profile choices and character summon preference'
 end
 function Defaults:handle_apply()
     if is_modes_locked() then return false,'Modes are temporarily locked. Stop the current activity before applying defaults.' end

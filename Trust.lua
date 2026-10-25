@@ -9,6 +9,8 @@ _addon.timeout = nil
 
 windower.trust = {}
 local controller_menu
+local movement_receiver
+local movement_keyboard
 windower.trust.get_temp_dir = function(file_name)
 	if file_name then
 		return string.format("%s/temp/%s", windower.addon_path..'data', file_name)
@@ -441,6 +443,44 @@ function load_ui()
             return menu,focus,mode,character and character.id
         end})
     windower.trust.controller_menu=controller_menu
+    if movement_receiver then movement_receiver:close() end
+    if movement_keyboard then windower.unregister_event(movement_keyboard) end
+    windower.create_dir(windower.addon_path..'data/movement')
+    movement_receiver=require('cylibs/ui/input/movement_receiver').new({
+        settings=function() return addon_settings:getSettings().movement end,
+        focused=windower.has_focus,clock=require('socket').gettime,timestamp=os.time,
+        open=io.open,remove=os.remove,
+        name=function()
+            local info=windower.ffxi.get_info()
+            local character=windower.ffxi.get_player()
+            return info and info.logged_in and character and character.name or nil
+        end,
+        path=function(name)return windower.addon_path..'data/movement/'..name..'.lease' end,
+        blocked=function()
+            if not windower.has_focus() then return 'unfocused' end
+            local info=windower.ffxi.get_info()
+            if not info or not info.logged_in then return 'logged out' end
+            if info.chat_open then return 'chat input' end
+            if info.menu_open then return 'game menu' end
+            local character=windower.ffxi.get_player()
+            if not character then return 'no character' end
+            if character.status==4 then return 'event/cutscene' end
+            if hud.trustMenu:isVisible() then return 'Trust menu' end
+            if state.IpcMode.value~='All' and state.IpcMode.value~='Send' then return 'IpcMode must be All or Send' end
+        end,
+        perform=function()
+            -- Preserve RC3's actions/order. Direct internal calls avoid a
+            -- queued command executing later in a changed client context.
+            return require('cylibs/util/command_feedback').run(addon_settings:getSettings().movement.quiet~=false,function()
+                local ok,message=shortcuts.follow:handle_follow_me()
+                if ok==false then return false,message end
+                return shortcuts.assist:handle_assist_me()
+            end)
+        end,
+    })
+    windower.trust.movement=movement_receiver
+    movement_keyboard=windower.register_event('keyboard',function(...)return movement_receiver:key(...)end)
+    movement_receiver:tick(true)
 
 	hud:addSubview(widgets)
 
@@ -703,6 +743,9 @@ function unload_chunk_event()
 end
 
 function unloaded()
+    if movement_keyboard then windower.unregister_event(movement_keyboard);movement_keyboard=nil end
+    if movement_receiver then movement_receiver:close();movement_receiver=nil end
+    windower.trust.movement=nil
     if controller_menu then controller_menu:close();controller_menu=nil end
     windower.trust.controller_menu=nil
     if user_events then
@@ -813,6 +856,13 @@ end
 windower.register_event('addon command', addon_command)
 windower.register_event('prerender', function()
     if controller_menu then controller_menu:tick() end
+    if movement_receiver then movement_receiver:tick() end
+end)
+windower.register_event('gain focus',function()
+    if movement_receiver then movement_receiver.down=false;movement_receiver:tick(true) end
+end)
+windower.register_event('lose focus',function()
+    if movement_receiver then movement_receiver.down=false;movement_receiver:tick(true) end
 end)
 windower.register_event('load', loaded)
 windower.register_event('unload', unloaded)

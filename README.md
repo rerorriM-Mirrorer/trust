@@ -1,8 +1,10 @@
+Integrated movement Test 1 (October 25, 2026): main menu > Movement offers Send (default) and Ready, enabled/quiet options and Status counters. Replaces the separate trustmovement receiver; unload that addon before testing. Matching personal xivcrossbar sender required. Preserves RC3 Follow me then Assist me actions. See [install and testing](docs/MOVEMENT-SEND-READY-TEST1.md). Native acceptance pending.
+
 Menu layout (October 25, 2026): Config > Menu > Menu layout offers Condensed (default) and Full. Save, close and reopen the menu to apply. Condensed opens job Settings directly, with Modes last and Status hidden. Full restores job landing pages and the hidden Commands/GearSwap/Shortcuts/Language entries, with character tools accessible through jobs. Mode persistence is identical in both layouts.
 
-Character tools (October 25, 2026): in Condensed, Following, Alter Egos and Paths are on the main menu. Follow, Auto Zone and Alter Ego summoning choices persist for the character across job/profile changes. On first load they adopt the current job choices; later saves use addon config. Food, custom Gambits and Pulling remain job-owned. Path recordings stay in data/paths; selecting a job does not start replay. Integrated movement Send/Ready remains under development.
+Character tools (October 25, 2026): in Condensed, Following, Alter Egos and Paths are on the main menu. Follow, Auto Zone and Alter Ego summoning choices persist for the character across job/profile changes. On first load they adopt the current job choices; later saves use addon config. Food, custom Gambits and Pulling remain job-owned. Path recordings stay in data/paths; selecting a job does not start replay.
 
-Menu simplification (October 25, 2026): main/subjob selections open Settings directly, with Modes last and Status near the bottom. Main Commands and Config GearSwap/Shortcuts/Language entries removed. Gambit descriptions show action before target and conditions.
+Menu simplification (October 25, 2026): Condensed main/subjob selections open Settings directly, with Modes last. Status stays on the Full job landing page. Full restores Commands and Config GearSwap/Shortcuts/Language. Gambit descriptions show action before target and conditions.
 
 Fresh preference defaults (October 24, 2026): PartyChatMode Off for every job, sounds Off, menu autosave On, adjacent menus On, IJKL navigation Off. Existing saved preferences are retained. Direct controller menu input does not require IJKL. Follow distance remains 1.
 
