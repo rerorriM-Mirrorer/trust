@@ -1,3 +1,12 @@
+# Full / Condensed menus — October 25, 2026
+
+- Config > Menu > Menu layout selects Condensed (factory default) or Full. Save and close/reopen the menu to apply. Rebuild is deferred until the old menu is closed, avoiding destruction during editor-save validation.
+- Condensed goes directly to job Settings with Modes last and no Status entry. Full restores job Status/Settings/Help/Donate/Discord landing pages, main Commands, Config GearSwap/Shortcuts/Language, Modes first and job-local access to Following/Alter Egos/Paths. Character-wide mode persistence is unchanged by layout; Full restores navigation rather than old storage ownership. Action-first gambit descriptions remain in both layouts.
+- Corrects the previous unsolicited relocation of Status into job Settings: Status remains only on the Full landing page. Earlier implementation records below are preserved as history.
+- Six menu/command suites pass under Lua 5.4 mocks, including Full/Condensed construction, reopening in the other layout, owner routing, status placement, toggle/save validation, character-mode persistence and controller regression checks. Changed Lua parse/whitespace checks pass; native layout switch acceptance pending. Queued for the next cumulative package.
+
+---
+
 # Character-wide follow and Alter Ego modes — October 25, 2026
 
 - Following, Alter Egos and Paths moved from job Settings to the main menu, rebuilt with live roles after job changes. Food and custom Gambits remain job-owned. The job Settings list ends with Status then Modes; Status was retained from the bypassed landing page.

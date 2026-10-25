@@ -13,6 +13,7 @@ local ConfigSettingsMenuItem = setmetatable({}, {__index = MenuItem })
 ConfigSettingsMenuItem.__index = ConfigSettingsMenuItem
 
 function ConfigSettingsMenuItem.new(addonSettings, trustSettings, trustSettingsMode, mediaPlayer)
+    local full=require('cylibs/ui/menu/menu_preferences').layout()=='Full'
     local self = setmetatable(MenuItem.new(L{
         ButtonItem.default('Widgets', 18),
         ButtonItem.default('Menu', 18),
@@ -20,6 +21,14 @@ function ConfigSettingsMenuItem.new(addonSettings, trustSettings, trustSettingsM
         ButtonItem.default('Sounds', 18),
         ButtonItem.default('Logging', 18),
     }, {}, nil, "Config", "Configure addon settings."), ConfigSettingsMenuItem)
+    if full then
+        self.buttonItems=L{
+            ButtonItem.default('Widgets',18),ButtonItem.default('Menu',18),
+            ButtonItem.default('GearSwap',18),ButtonItem.default('Remote',18),
+            ButtonItem.default('Shortcuts',18),ButtonItem.default('Sounds',18),
+            ButtonItem.default('Language',18),ButtonItem.default('Logging',18),
+        }
+    end
 
     self.disposeBag = DisposeBag.new()
     self.mediaPlayer = mediaPlayer
@@ -39,16 +48,22 @@ function ConfigSettingsMenuItem:reloadSettings(addonSettings, trustSettings, tru
     }, {}, function(_, infoView)
         local values = addonSettings:getSettings().menu
         local configItems = L{
+            PickerConfigItem.new('layout', values.layout or 'Condensed', L{'Condensed','Full'}, nil, 'Menu layout'),
             BooleanConfigItem.new('save_on_exit', 'Save options on exit'),
             BooleanConfigItem.new('adjacent', 'Place editor beside menu'),
             BooleanConfigItem.new('ijkl', 'I/J/K/L navigate menus'),
         }
         return ConfigEditor.new(addonSettings, values, configItems, infoView)
-    end, 'Menu', 'Save on exit also saves successful command changes and focuses options lists. If off, use Save to enable it again.'))
+    end, 'Menu', 'Choose Full or Condensed, save, then close and reopen Trust menus to apply the layout.'))
     self:setChildMenuItem("Widgets", WidgetSettingsMenuItem.new())
     self:setChildMenuItem("Logging", self:getLoggingMenuItem(addonSettings))
     self:setChildMenuItem("Remote", RemoteCommandsSettingsMenuItem.new(addonSettings))
     self:setChildMenuItem("Sounds", self:getSoundSettingsMenuItem(addonSettings))
+    if require('cylibs/ui/menu/menu_preferences').layout()=='Full' then
+        self:setChildMenuItem('GearSwap',self:getGearSwapMenuItem(trustSettings,trustSettingsMode))
+        self:setChildMenuItem('Shortcuts',ShortcutListMenuItem.new())
+        self:setChildMenuItem('Language',self:getLanguageSettingsMenuItem(addonSettings))
+    end
 end
 
 function ConfigSettingsMenuItem:getGearSwapMenuItem(trustSettings, trustSettingsMode)

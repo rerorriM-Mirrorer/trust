@@ -21,4 +21,9 @@ function Preferences.saved()
     if savedCallback then savedCallback() end
 end
 
+function Preferences.layout()
+    local settings=owner and owner:getSettings()
+    return settings and settings.menu and settings.menu.layout=='Full' and 'Full' or 'Condensed'
+end
+
 return Preferences

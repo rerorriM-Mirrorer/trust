@@ -39,6 +39,7 @@ default.logging.filter_pattern = ''
 default.menu_key = '%^numpad+'
 -- Testing defaults; each option can be restored independently in Config > Menu.
 default.menu = {}
+default.menu.layout = 'Condensed'
 default.menu.save_on_exit = true
 default.menu.adjacent = true
 default.menu.ijkl = false

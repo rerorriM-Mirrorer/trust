@@ -14,17 +14,19 @@ local function node(buttons,children)
 end
 local generic={new=function()return node()end}
 generic.disabled=generic.new
+local layout='Condensed'
 local env=setmetatable({TrustHud=methods,L=L,
-    Frame=generic,ModesMenuItem=generic,
+    Frame=generic,ModesMenuItem=generic,ConfigSettingsMenuItem=generic,
+    MenuPreferences={layout=function()return layout end},
     GambitSettingsMenuItem=generic,JobGambitSettingsMenuItem=generic,ReactionSettingsMenuItem=generic,
     ButtonItem={default=function(k)return k end,localized=function(k)return k end},
     MenuItem={new=node},T=function()return{keyset=function()return{}end}end,
     state={MainTrustSettingsMode={},SubTrustSettingsMode={},WeaponSkillSettingsMode={}},
-    i18n={translate=function(k)return k end},
+    i18n={translate=function(k)return k end,resource=function(_,_,k)return k end},
     res={jobs={with=function(_,_,job)return {en=job}end}},require=function()return generic end,
     player={main_job_name='Bard',sub_job_name='White Mage',main_job_name_short='BRD',sub_job_name_short='WHM',trust={main_job={role_with_type=function()return{}end},sub_job={}}},
     main_trust_settings={},sub_trust_settings={},weapon_skill_settings={},trust_mode_settings={}}, {__index=_G})
-for _,name in ipairs({'getSettingsMenuItem','reloadJobMenuItems'}) do
+for _,name in ipairs({'getSettingsMenuItem','reloadJobMenuItems','getMainMenuItem'}) do
     local body=assert(source:match('(function TrustHud:'..name..'%(.-)\nfunction TrustHud:'))
     assert(load(body,'actual '..name,'t',env))()
 end
@@ -35,7 +37,7 @@ hud.getTrusterMenuItem=hud.getFollowerMenuItem
 hud.getPatherMenuItem=hud.getFollowerMenuItem
 local settings=hud:getSettingsMenuItem(job,{}, {},nil,nil,{},'BRD')
 assert(settings.buttons[#settings.buttons]=='Modes','all modes must be last')
-assert(settings.children.Status and settings.children.Gambits)
+assert(not settings.children.Status and settings.children.Gambits)
 assert(not settings.children.Following and not settings.children.Paths and not settings.children['Alter Egos'])
 local calls={}
 hud.mainMenuItem=node()
@@ -47,4 +49,21 @@ assert(calls[1][2]==env.main_trust_settings and calls[1][4]==env.weapon_skill_se
 assert(calls[2][2]==env.sub_trust_settings and calls[2][4]==nil)
 assert(hud.mainMenuItem.children.Bard and hud.mainMenuItem.children['White Mage'])
 assert(hud.mainMenuItem.children.Following and hud.mainMenuItem.children.Paths and hud.mainMenuItem.children['Alter Egos'])
+layout='Full'
+local fullSettings=methods.getSettingsMenuItem(hud,job,{}, {},nil,nil,{},'BRD')
+assert(fullSettings.buttons[1]=='Modes' and not fullSettings.children.Status)
+local fullCalls=0
+hud.getMenuItems=function()fullCalls=fullCalls+1;return node({'Status','Settings','Help','Donate','Discord'})end
+hud.mainMenuItem=node()
+hud:reloadJobMenuItems()
+assert(fullCalls==2 and hud.mainMenuItem.children.Bard.children.Status)
+assert(not hud.mainMenuItem.children.Following,'Full duplicated character tools at root')
+hud.trustMenu={isVisible=function()return false end}
+hud.mainMenuItem=nil
+local fullRoot=hud:getMainMenuItem()
+assert(fullRoot.children.Commands and fullRoot.buttonItems[4]=='Commands')
+layout='Condensed'
+local condensedRoot=hud:getMainMenuItem()
+assert(condensedRoot~=fullRoot and fullRoot.dead and not condensedRoot.children.Commands)
+assert(condensedRoot.children.Following and hud.menuLayout=='Condensed')
 print('PASS direct job settings routing, correct owners and Modes-last ordering')

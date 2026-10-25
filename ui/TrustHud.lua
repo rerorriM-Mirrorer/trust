@@ -212,8 +212,15 @@ function TrustHud:reloadJobMenuItems()
     end
 
     -- Open job settings directly; each retains its own settings owner/mode.
-    local mainJobItem = self:getSettingsMenuItem(player.trust.main_job, main_trust_settings, state.MainTrustSettingsMode, weapon_skill_settings, state.WeaponSkillSettingsMode, trust_mode_settings, player.main_job_name_short)
-    local subJobItem = self:getSettingsMenuItem(player.trust.sub_job, sub_trust_settings, state.SubTrustSettingsMode, nil, nil, trust_mode_settings, player.sub_job_name_short)
+    local full=MenuPreferences.layout()=='Full'
+    local build=full and self.getMenuItems or self.getSettingsMenuItem
+    local mainJobItem = build(self,player.trust.main_job, main_trust_settings, state.MainTrustSettingsMode, weapon_skill_settings, state.WeaponSkillSettingsMode, trust_mode_settings, player.main_job_name_short,player.main_job_name)
+    local subJobItem = build(self,player.trust.sub_job, sub_trust_settings, state.SubTrustSettingsMode, nil, nil, trust_mode_settings, player.sub_job_name_short,player.sub_job_name)
+    if full then
+        local status=self:getStatusMenuItem(player.trust.main_job)
+        mainJobItem:setChildMenuItem('Status',status)
+        subJobItem:setChildMenuItem('Status',status)
+    end
 
     self.mainMenuItem:setChildMenuItem(player.main_job_name, mainJobItem)
 
@@ -222,9 +229,11 @@ function TrustHud:reloadJobMenuItems()
     end
     -- Rebuild character tools along with job roles so no menu keeps a retired
     -- follower, pather or truster after a job change.
+    if not full then
     self.mainMenuItem:setChildMenuItem('Following', self:getFollowerMenuItem(player.trust.main_job:role_with_type('follower'), self.trustModeSettings))
     self.mainMenuItem:setChildMenuItem('Alter Egos', self:getTrusterMenuItem(player.trust.main_job:role_with_type('truster')))
     self.mainMenuItem:setChildMenuItem('Paths', self:getPatherMenuItem(player.trust.main_job:role_with_type('pather'), player.trust.main_job:role_with_type('follower')))
+    end
 end
 
 function TrustHud:setCommands(commands)
@@ -232,6 +241,13 @@ function TrustHud:setCommands(commands)
 end
 
 function TrustHud:getMainMenuItem()
+    local layout=MenuPreferences.layout()
+    -- Apply layout only after leaving the current editor/menu stack, so a
+    -- preference save cannot destroy its own view during exit validation.
+    if self.mainMenuItem and self.menuLayout~=layout and not self.trustMenu:isVisible() then
+        self.mainMenuItem:destroy()
+        self.mainMenuItem=nil
+    end
     if self.mainMenuItem then
         return self.mainMenuItem
     end
@@ -252,6 +268,16 @@ function TrustHud:getMainMenuItem()
     }, nil, "Jobs")
 
     self.mainMenuItem = mainMenuItem
+    self.menuLayout=layout
+    if layout=='Full' then
+        mainMenuItem.buttonItems=L{
+            ButtonItem.localized(player.main_job_name,i18n.resource('jobs','en',player.main_job_name)),
+            ButtonItem.localized(player.sub_job_name,i18n.resource('jobs','en',player.sub_job_name)),
+            ButtonItem.localized('Profiles',i18n.translate('Button_Profiles')),
+            ButtonItem.default('Commands',18),ButtonItem.default('Config',18),
+        }
+        mainMenuItem:setChildMenuItem('Commands',require('ui/settings/menus/commands/CommandsMenuItem').new(self.commands))
+    end
 
     self:reloadJobMenuItems()
 
@@ -281,12 +307,15 @@ function TrustHud:getSettingsMenuItem(trust, trustSettings, trustSettingsMode, w
 
     -- Modes
     local modeNames=L(T(state):keyset()):sort():filter(function(name)
-        return not require('settings/character_modes').owns(name)
+        return MenuPreferences.layout()=='Full' or not require('settings/character_modes').owns(name)
     end)
     local modesMenuItem = ModesMenuItem.new(self.trustModeSettings, "View and change Trust modes.", modeNames, true, "modes")
 
     -- Settings
     local menuItems = L{}
+    if MenuPreferences.layout()=='Full' then
+        menuItems:append(ButtonItem.localized('Modes',i18n.translate('Button_Modes')))
+    end
     local childMenuItems = {
         Modes = modesMenuItem,
         Debuffs = debuffSettingsItem,
@@ -380,6 +409,20 @@ function TrustHud:getSettingsMenuItem(trust, trustSettings, trustSettingsMode, w
     menuItems:append(ButtonItem.localized('Food', i18n.translate('Button_Food')))
     local FoodSettingsMenuItem = require('ui/settings/menus/buffs/FoodSettingsMenuItem')
     childMenuItems.Food = FoodSettingsMenuItem.new(trustSettings, trustSettingsMode, trustModeSettings)
+    if MenuPreferences.layout()=='Full' then
+        if trust:role_with_type('follower') then
+            menuItems:append(ButtonItem.localized('Following',i18n.translate('Button_Following')))
+            childMenuItems.Following=self:getFollowerMenuItem(trust:role_with_type('follower'),trustModeSettings)
+        end
+        if trust:role_with_type('truster') then
+            menuItems:append(ButtonItem.localized('Alter Egos',i18n.translate('Button_Alter_Egos')))
+            childMenuItems['Alter Egos']=self:getTrusterMenuItem(trust:role_with_type('truster'))
+        end
+        if trust:role_with_type('pather') then
+            menuItems:append(ButtonItem.localized('Paths',i18n.translate('Button_Paths')))
+            childMenuItems.Paths=self:getPatherMenuItem(trust:role_with_type('pather'),trust:role_with_type('follower'))
+        end
+    end
 
 
     local EquipSetMenuItem = require('ui/views/inventory/equipment/EquipSetMenuItem')
@@ -407,10 +450,9 @@ function TrustHud:getSettingsMenuItem(trust, trustSettings, trustSettingsMode, w
         Reactions = ReactionSettingsMenuItem.new(trust, trustSettings, trustSettingsMode, self.trustModeSettings),
     }, nil, "Gambits", "Configure Trust behavior.")
 
-    -- Keep status accessible after bypassing the old job landing page.
-    menuItems:append(ButtonItem.default('Status', 18))
-    childMenuItems.Status = self:getStatusMenuItem(trust)
-    menuItems:append(ButtonItem.localized('Modes', i18n.translate('Button_Modes')))
+    if MenuPreferences.layout()~='Full' then
+        menuItems:append(ButtonItem.localized('Modes', i18n.translate('Button_Modes')))
+    end
     local settingsMenuItem = MenuItem.new(menuItems, childMenuItems, nil, "Settings", "Configure Trust settings for skillchains, buffs, debuffs and more.")
     return settingsMenuItem
 end
