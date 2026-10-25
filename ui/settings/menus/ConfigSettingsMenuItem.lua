@@ -16,11 +16,8 @@ function ConfigSettingsMenuItem.new(addonSettings, trustSettings, trustSettingsM
     local self = setmetatable(MenuItem.new(L{
         ButtonItem.default('Widgets', 18),
         ButtonItem.default('Menu', 18),
-        ButtonItem.default('GearSwap', 18),
         ButtonItem.default('Remote', 18),
-        ButtonItem.default('Shortcuts', 18),
         ButtonItem.default('Sounds', 18),
-        ButtonItem.default('Language', 18),
         ButtonItem.default('Logging', 18),
     }, {}, nil, "Config", "Configure addon settings."), ConfigSettingsMenuItem)
 
@@ -49,12 +46,9 @@ function ConfigSettingsMenuItem:reloadSettings(addonSettings, trustSettings, tru
         return ConfigEditor.new(addonSettings, values, configItems, infoView)
     end, 'Menu', 'Save on exit also saves successful command changes and focuses options lists. If off, use Save to enable it again.'))
     self:setChildMenuItem("Widgets", WidgetSettingsMenuItem.new())
-    self:setChildMenuItem("GearSwap", self:getGearSwapMenuItem(trustSettings, trustSettingsMode))
     self:setChildMenuItem("Logging", self:getLoggingMenuItem(addonSettings))
     self:setChildMenuItem("Remote", RemoteCommandsSettingsMenuItem.new(addonSettings))
-    self:setChildMenuItem("Shortcuts", ShortcutListMenuItem.new())
     self:setChildMenuItem("Sounds", self:getSoundSettingsMenuItem(addonSettings))
-    self:setChildMenuItem("Language", self:getLanguageSettingsMenuItem(addonSettings))
 end
 
 function ConfigSettingsMenuItem:getGearSwapMenuItem(trustSettings, trustSettingsMode)

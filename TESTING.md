@@ -1,3 +1,11 @@
+# Menu simplification — October 25, 2026
+
+- Main/subjob choices now construct Settings directly with their own owners; all-mode editor is the last entry. Status retained before Modes. Removed Commands from main menu and GearSwap/Shortcuts/Language entries from Config; underlying features/settings remain available in code. Gambit descriptions show action first, then target and conditions, using an ASCII separator.
+- Direct Settings construction/owner routing/Modes-last check, explicit menu open/toggle checks, 103 menu assertions and controller regressions pass under Lua 5.4 with mocked APIs. Changed UI sources require Windower quoted-string normalization for parse checks. Native menu acceptance pending.
+- Character-wide candidates investigated in docs/CHARACTER-WIDE-CANDIDATES-20261025.md; no persistence migration made. Movement Send/Ready integration and main-menu option pending the latest running AHK sender/includes. No movement implementation or install package claimed in this commit.
+
+---
+
 # Party-chat factory default — October 24, 2026
 
 - PartyChatMode defaults Off in the built-in mode and all 22 factory job mode sets, including former Private overrides for BRD/DRK/PUP. Existing saved profile choices remain authoritative. Explicit local-only messages and command/error feedback retain their existing behavior; this changes the ordinary chatter mode, not all addon output.

@@ -211,20 +211,9 @@ function TrustHud:reloadJobMenuItems()
         oldSubJobItem:destroy()
     end
 
-    local mainJobItem = self:getMenuItems(player.trust.main_job, main_trust_settings, state.MainTrustSettingsMode, weapon_skill_settings, state.WeaponSkillSettingsMode, trust_mode_settings, player.main_job_name_short, player.main_job_name)
-    local subJobItem = self:getMenuItems(player.trust.sub_job, sub_trust_settings, state.SubTrustSettingsMode, nil, nil, trust_mode_settings, player.sub_job_name_short, player.sub_job_name)
-
-    local statusMenuItem = self:getStatusMenuItem(player.trust.main_job)
-
-    mainJobItem:setChildMenuItem("Status", statusMenuItem)
-    subJobItem:setChildMenuItem("Status", statusMenuItem)
-
-    if mainJobItem:getChildMenuItem('Settings'):getChildMenuItem('Pulling') == nil then
-        local pullerMenuItem = subJobItem:getChildMenuItem('Settings'):getChildMenuItem('Pulling')
-        if pullerMenuItem then
-            mainJobItem:getChildMenuItem('Settings'):setChildMenuItem('Pulling', pullerMenuItem)
-        end
-    end
+    -- Open job settings directly; each retains its own settings owner/mode.
+    local mainJobItem = self:getSettingsMenuItem(player.trust.main_job, main_trust_settings, state.MainTrustSettingsMode, weapon_skill_settings, state.WeaponSkillSettingsMode, trust_mode_settings, player.main_job_name_short)
+    local subJobItem = self:getSettingsMenuItem(player.trust.sub_job, sub_trust_settings, state.SubTrustSettingsMode, nil, nil, trust_mode_settings, player.sub_job_name_short)
 
     self.mainMenuItem:setChildMenuItem(player.main_job_name, mainJobItem)
 
@@ -248,7 +237,6 @@ function TrustHud:getMainMenuItem()
         ButtonItem.localized(player.main_job_name, i18n.resource('jobs', 'en', player.main_job_name)),
         ButtonItem.localized(player.sub_job_name, i18n.resource('jobs', 'en', player.sub_job_name)),
         ButtonItem.localized('Profiles', i18n.translate('Button_Profiles')),
-        ButtonItem.default('Commands', 18),
         ButtonItem.default('Config', 18),
     }, {
         Profiles = LoadSettingsMenuItem.new(self.addon_settings, self.trustModeSettings, main_trust_settings, weapon_skill_settings, sub_trust_settings),
@@ -258,9 +246,6 @@ function TrustHud:getMainMenuItem()
     self.mainMenuItem = mainMenuItem
 
     self:reloadJobMenuItems()
-
-    local CommandsMenuItem = require('ui/settings/menus/commands/CommandsMenuItem')
-    self.mainMenuItem:setChildMenuItem('Commands', CommandsMenuItem.new(self.commands))
 
     return self.mainMenuItem
 end
@@ -290,9 +275,7 @@ function TrustHud:getSettingsMenuItem(trust, trustSettings, trustSettingsMode, w
     local modesMenuItem = ModesMenuItem.new(self.trustModeSettings, "View and change Trust modes.", L(T(state):keyset()):sort(), true, "modes")
 
     -- Settings
-    local menuItems = L{
-        ButtonItem.localized('Modes', i18n.translate('Button_Modes')),
-    }
+    local menuItems = L{}
     local childMenuItems = {
         Modes = modesMenuItem,
         Debuffs = debuffSettingsItem,
@@ -426,6 +409,10 @@ function TrustHud:getSettingsMenuItem(trust, trustSettings, trustSettingsMode, w
         Reactions = ReactionSettingsMenuItem.new(trust, trustSettings, trustSettingsMode, self.trustModeSettings),
     }, nil, "Gambits", "Configure Trust behavior.")
 
+    -- Keep status accessible after bypassing the old job landing page.
+    menuItems:append(ButtonItem.default('Status', 18))
+    childMenuItems.Status = self:getStatusMenuItem(trust)
+    menuItems:append(ButtonItem.localized('Modes', i18n.translate('Button_Modes')))
     local settingsMenuItem = MenuItem.new(menuItems, childMenuItems, nil, "Settings", "Configure Trust settings for skillchains, buffs, debuffs and more.")
     return settingsMenuItem
 end

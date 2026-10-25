@@ -1,3 +1,5 @@
+Menu simplification (October 25, 2026): main/subjob selections open Settings directly, with Modes last and Status near the bottom. Main Commands and Config GearSwap/Shortcuts/Language entries removed. Gambit descriptions show action before target and conditions. Character-wide persistence and integrated movement controls remain under development.
+
 Fresh preference defaults (October 24, 2026): PartyChatMode Off for every job, sounds Off, menu autosave On, adjacent menus On, IJKL navigation Off. Existing saved preferences are retained. Direct controller menu input does not require IJKL. Follow distance remains 1.
 
 Menu toggle (October 23, 2026): bind `trust menu` as an addon command to open the main menu when closed or save eligible drafts and close all Trust menu levels when open. Invalid drafts keep the editor open. Explicit `trust menu open` and `trust menu close` remain available.
