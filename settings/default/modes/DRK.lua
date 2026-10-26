@@ -3,7 +3,7 @@ return {
     ["Default"]={
         ["autoshootmode"]="Off",
         ["autohealmode"]="Emergency",
-        ["autounloadondeathmode"]="Auto",
+        ["autounloadondeathmode"]="Disable",
         ["actionbatchingmode"] = "Off",
         ["approachpullmode"] = "Off",
         ["autobuffmode"] = "Auto",

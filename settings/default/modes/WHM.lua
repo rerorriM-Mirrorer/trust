@@ -3,7 +3,7 @@ return {
     ["Default"]={
         ["partychatmode"]="Off",
         ["autoshootmode"]="Off",
-        ["autounloadondeathmode"]="Auto",
+        ["autounloadondeathmode"]="Disable",
         ["autoraisemode"]="Off",
         ["autobuffmode"]="Auto",
         ["maintrustsettingsmode"]="Default",

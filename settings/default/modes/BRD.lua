@@ -12,7 +12,7 @@ return {
         ["autobarspellmode"]="Off",
         ["weaponskillsettingsmode"]="Default",
         ["autosongmode"]="Auto",
-        ["autounloadondeathmode"]="Auto",
+        ["autounloadondeathmode"]="Disable",
         ["autosilencemode"]="Off",
         ["autohealmode"]="Emergency",
         ["autodetectauramode"]="Off",

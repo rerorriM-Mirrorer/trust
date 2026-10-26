@@ -24,7 +24,7 @@ local env=setmetatable({TrustHud=methods,L=L,
     state={MainTrustSettingsMode={},SubTrustSettingsMode={},WeaponSkillSettingsMode={}},
     i18n={translate=function(k)return k end,resource=function(_,_,k)return k end},
     res={jobs={with=function(_,_,job)return {en=job}end}},require=function()return generic end,
-    player={main_job_name='Bard',sub_job_name='White Mage',main_job_name_short='BRD',sub_job_name_short='WHM',trust={main_job={role_with_type=function()return{}end},sub_job={}}},
+    player={main_job_name='Bard',sub_job_name='White Mage',main_job_name_short='BRD',sub_job_name_short='WHM',trust={main_job={role_with_type=function()return{}end},sub_job={role_with_type=function()return nil end}}},
     main_trust_settings={},sub_trust_settings={},weapon_skill_settings={},trust_mode_settings={}}, {__index=_G})
 for _,name in ipairs({'getSettingsMenuItem','reloadJobMenuItems','getMainMenuItem'}) do
     local body=assert(source:match('(function TrustHud:'..name..'%(.-)\nfunction TrustHud:'))
@@ -39,6 +39,18 @@ local settings=hud:getSettingsMenuItem(job,{}, {},nil,nil,{},'BRD')
 assert(settings.buttons[#settings.buttons]=='Modes','all modes must be last')
 assert(not settings.children.Status and settings.children.Gambits)
 assert(not settings.children.Following and not settings.children.Paths and not settings.children['Alter Egos'])
+assert(settings.children.Food and settings.children.Pulling and settings.children.Modes)
+assert(settings.children.Gambits.buttons[1]=='BRD' and settings.children.Gambits.buttons[2]=='Custom')
+local subSettings=hud:getSettingsMenuItem(job,{},env.state.SubTrustSettingsMode,nil,nil,{},'WHM')
+assert(not subSettings.children.Food and not subSettings.children.Pulling and not subSettings.children.Modes)
+local pullingOwner
+env.player.trust.sub_job.role_with_type=function(_,name)if name=='puller' then return {}end end
+hud.getMenuItemForRole=function(_,role,ws,wsm,trust,jobName,view,owner,mode)
+    pullingOwner={owner,mode,jobName};return node()
+end
+hud:getSettingsMenuItem(job,{},env.state.MainTrustSettingsMode,nil,nil,{},'BRD')
+assert(pullingOwner[1]==env.sub_trust_settings and pullingOwner[2]==env.state.SubTrustSettingsMode and pullingOwner[3]=='WHM')
+env.player.trust.sub_job.role_with_type=function()return nil end
 local calls={}
 hud.mainMenuItem=node()
 hud.getSettingsMenuItem=function(_,trust,owner,mode,ws)
@@ -52,6 +64,8 @@ assert(hud.mainMenuItem.children.Following and hud.mainMenuItem.children.Paths a
 layout='Full'
 local fullSettings=methods.getSettingsMenuItem(hud,job,{}, {},nil,nil,{},'BRD')
 assert(fullSettings.buttons[1]=='Modes' and not fullSettings.children.Status)
+local fullSub=methods.getSettingsMenuItem(hud,job,{},env.state.SubTrustSettingsMode,nil,nil,{},'WHM')
+assert(not fullSub.children.Modes and not fullSub.children.Food and not fullSub.children.Pulling)
 local fullCalls=0
 hud.getMenuItems=function()fullCalls=fullCalls+1;return node({'Status','Settings','Help','Donate','Discord'})end
 hud.mainMenuItem=node()

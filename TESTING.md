@@ -1,3 +1,13 @@
+# Current Development Status — October 26, 2026 — Shared Job gambits Test 1
+
+- Branch test/starter-defaults-20261023; source 9735e9665b076c375b2ec2b89b055a57f5f2bb34. Trust-only patch over integrated Movement Test 1; no AHK change. User confirms the full previous combined bundle fixed the Cioara AHK mismatch; Condensed menu and movement following work in game. Ready/blocked-context edge cases are not thereby accepted.
+- Full editor for the named Job list now saves shared factory Default.GambitSettings.Default. Job first, Custom below; titles/descriptions expose shared installation vs character/job/profile scope. Existing Custom-before-Job runtime priority remains. Current owner refreshes; others reload. Original factory source, other settings and Custom rules preserved; previous-file backup, exclusive writer, stage validation/verification, atomic Win32 replacement and stale-content rejection. Job Reload discards a stale draft. Legacy per-character Job caches remain migration-managed.
+- AutoUnloadOnDeathMode starts Disable and all 22 factory mode sets use Disable. Existing saved profiles are preserved. Correction to earlier chat expectation: previous shipped factory mode sets were Auto. Food/Pulling/full Modes removed from subjob Settings in both layouts; main Pulling can route to the active subjob-owned role without changing storage ownership.
+- FlankMode left available/unchanged per request. AutoDisengage/pathing and Pathfinder interaction deferred; no behavioral changes to them. Factory job files omitted from patch to preserve shared edits. Read docs/SHARED-JOB-GAMBITS-TEST1.md before installation and future full updates.
+- Sixteen suites pass under Lua 5.4 with temporary inherited Windower syntax normalization, including actual shared writer/menu adapter, real temporary-file roundtrip and failure cases, Win32 calls mocked, both menu layouts, all factory death defaults and prior regression suites. Changed-source parsing and whitespace checks pass. Native Windows LuaJIT/FFI save, cross-client reload/conflict and game/UI acceptance pending; no native result inferred.
+
+---
+
 # Current Development Status — October 25, 2026 — integrated Movement Test 1
 
 - Trust branch test/starter-defaults-20261023, starting published 2ff0542cfb61a769ec87bd8aa03fd6b720daa40f. Paired personal xivcrossbar branch test/trust-movement-20261025 starts from development/directlink 7959a99d9871b00e18bd3faaf4b3946c85595fc1. Main/public beta unchanged.

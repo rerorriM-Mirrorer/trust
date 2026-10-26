@@ -25,7 +25,7 @@ return {
         ["combatmode"]="Off",
         ["skillchainpropertymode"]="Off",
         ["autorepairmode"]="Auto",
-        ["autounloadondeathmode"]="Auto",
+        ["autounloadondeathmode"]="Disable",
         ["autobuffmode"]="Auto",
         ["autoskillchainmode"]="Off",
         ["autoassaultmode"]="Auto",

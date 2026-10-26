@@ -3,7 +3,7 @@ return {
     ["Default"]={
         ["partychatmode"]="Off",
         ["autohealmode"]="Emergency",
-        ["autounloadondeathmode"]="Auto",
+        ["autounloadondeathmode"]="Disable",
         ["autodispelmode"]="Auto",
         ["autoaftermathmode"]="Off",
         ["autofollowmode"]="Always",

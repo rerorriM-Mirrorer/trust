@@ -4,7 +4,7 @@ return {
         ["partychatmode"]="Off",
         ["autoshootmode"]="Off",
         ["autohealmode"]="Emergency",
-        ["autounloadondeathmode"]="Auto",
+        ["autounloadondeathmode"]="Disable",
         ["autodispelmode"]="Off",
         ["subtrustsettingsmode"]="Default",
         ["autofollowmode"]="Always",

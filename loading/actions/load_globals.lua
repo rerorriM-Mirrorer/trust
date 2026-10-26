@@ -20,7 +20,7 @@ function LoadGlobalsAction:perform()
     state.AutoDisableMode:set_description('Off', "Do not disable Trust after zoning.")
     state.AutoDisableMode:set_description('Auto', "Disable Trust after zoning.")
 
-    state.AutoUnloadOnDeathMode = M{['description'] = 'Auto Unload On Death Mode', 'Auto', 'Disable', 'Off'}
+    state.AutoUnloadOnDeathMode = M{['description'] = 'Auto Unload On Death Mode', 'Disable', 'Auto', 'Off'}
     state.AutoUnloadOnDeathMode:set_description('Off', "Keep trust on after getting knocked out. BEWARE USING WHILE AFK!")
     state.AutoUnloadOnDeathMode:set_description('Disable', "Pause Trust after getting knocked out.")
     state.AutoUnloadOnDeathMode:set_description('Auto', "Unload Trust after getting knocked out.")

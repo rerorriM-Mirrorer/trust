@@ -37,6 +37,7 @@ assert(policy.effect('defaults',{'bad'})=='blocked')
 local jobs={'WAR','MNK','WHM','BLM','RDM','THF','PLD','DRK','BST','BRD','RNG','SAM','NIN','DRG','SMN','BLU','COR','PUP','DNC','SCH','GEO','RUN'}
 for _,job in ipairs(jobs)do
     local factory=assert(loadfile('settings/default/modes/'..job..'.lua'))().Default
+    assert(factory.autounloadondeathmode=='Disable',job..' death default')
     for name,value in pairs(Starter.values(job))do assert(factory[name:lower()]==value,job..' '..name)end
 end
 print('Starter defaults: all 22 factory mode sets, validation-before-mutation, lock refusal, exact profile delta, explicit save, idempotence, SMN isolation and menu policy passed.')

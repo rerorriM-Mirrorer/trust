@@ -4,7 +4,7 @@ return {
         ["partychatmode"]="Off",
         ["autoshootmode"]="Off",
         ["autohealmode"]="Emergency",
-        ["autounloadondeathmode"]="Auto",
+        ["autounloadondeathmode"]="Disable",
         ["skillchainpartnermode"]="Off",
         ["subtrustsettingsmode"]="Default",
         ["automagicburstmode"]="Off",

@@ -302,6 +302,7 @@ end
 
 function TrustHud:getSettingsMenuItem(trust, trustSettings, trustSettingsMode, weaponSkillSettings, weaponSkillSettingsMode, trustModeSettings, jobNameShort)
     local viewSize = Frame.new(0, 0, 500, 500)
+    local isSubjob = trustSettingsMode == state.SubTrustSettingsMode
 
     local DebuffSettingsMenuItem = require('ui/settings/menus/debuffs/DebuffSettingsMenuItem')
 
@@ -315,11 +316,11 @@ function TrustHud:getSettingsMenuItem(trust, trustSettings, trustSettingsMode, w
 
     -- Settings
     local menuItems = L{}
-    if MenuPreferences.layout()=='Full' then
+    if not isSubjob and MenuPreferences.layout()=='Full' then
         menuItems:append(ButtonItem.localized('Modes',i18n.translate('Button_Modes')))
     end
     local childMenuItems = {
-        Modes = modesMenuItem,
+        Modes = not isSubjob and modesMenuItem or nil,
         Debuffs = debuffSettingsItem,
     }
 
@@ -384,12 +385,18 @@ function TrustHud:getSettingsMenuItem(trust, trustSettings, trustSettingsMode, w
         childMenuItems.Combat = self:getMenuItemForRole(trust:role_with_type("combatmode"), weaponSkillSettings, weaponSkillSettingsMode, trust, jobNameShort, viewSize, trustSettings, trustSettingsMode, trustModeSettings)
     end
 
-    menuItems:append(ButtonItem.localized('Pulling', i18n.translate('Button_Pulling')))
-    if trust:role_with_type("puller") then
-        childMenuItems.Pulling = self:getMenuItemForRole(trust:role_with_type("puller"), weaponSkillSettings, weaponSkillSettingsMode, trust, jobNameShort, viewSize, trustSettings, trustSettingsMode, trustModeSettings)
-    else
-        local PullSettingsMenuItem = require('ui/settings/menus/pulling/PullSettingsMenuItem')
-        childMenuItems.Pulling = PullSettingsMenuItem.disabled("Configure pull settings from the other job's menu.")
+    if not isSubjob then
+        menuItems:append(ButtonItem.localized('Pulling', i18n.translate('Button_Pulling')))
+        if trust:role_with_type("puller") then
+            childMenuItems.Pulling = self:getMenuItemForRole(trust:role_with_type("puller"), weaponSkillSettings, weaponSkillSettingsMode, trust, jobNameShort, viewSize, trustSettings, trustSettingsMode, trustModeSettings)
+        elseif player.trust.sub_job and player.trust.sub_job:role_with_type('puller') then
+            -- The only pulling entry remains usable when its active role belongs
+            -- to the subjob. Route edits to that role's existing owner/profile.
+            childMenuItems.Pulling = self:getMenuItemForRole(player.trust.sub_job:role_with_type('puller'),nil,nil,player.trust.sub_job,player.sub_job_name_short,viewSize,sub_trust_settings,state.SubTrustSettingsMode,trustModeSettings)
+        else
+            local PullSettingsMenuItem = require('ui/settings/menus/pulling/PullSettingsMenuItem')
+            childMenuItems.Pulling = PullSettingsMenuItem.disabled("Configure pull settings from the other job's menu.")
+        end
     end
 
     if trust:role_with_type("shooter") then
@@ -408,9 +415,11 @@ function TrustHud:getSettingsMenuItem(trust, trustSettings, trustSettingsMode, w
     end
 
 
-    menuItems:append(ButtonItem.localized('Food', i18n.translate('Button_Food')))
-    local FoodSettingsMenuItem = require('ui/settings/menus/buffs/FoodSettingsMenuItem')
-    childMenuItems.Food = FoodSettingsMenuItem.new(trustSettings, trustSettingsMode, trustModeSettings)
+    if not isSubjob then
+        menuItems:append(ButtonItem.localized('Food', i18n.translate('Button_Food')))
+        local FoodSettingsMenuItem = require('ui/settings/menus/buffs/FoodSettingsMenuItem')
+        childMenuItems.Food = FoodSettingsMenuItem.new(trustSettings, trustSettingsMode, trustModeSettings)
+    end
     if MenuPreferences.layout()=='Full' then
         if trust:role_with_type('follower') then
             menuItems:append(ButtonItem.localized('Following',i18n.translate('Button_Following')))
@@ -441,18 +450,22 @@ function TrustHud:getSettingsMenuItem(trust, trustSettings, trustSettingsMode, w
 
     local customGambitsMenuItem = GambitSettingsMenuItem.new(trust, trustSettings, trustSettingsMode, self.trustModeSettings, 'GambitSettings')
     customGambitsMenuItem:setConfigKey("gambits")
+    customGambitsMenuItem.titleText='Custom (local)'
+    customGambitsMenuItem.getDescriptionText=function()
+        return 'Only '..(trustSettings.playerName or 'this character')..' / '..jobNameShort..' / profile '..tostring(trustSettingsMode.value)..'. Checked before shared Job rules.'
+    end
 
     childMenuItems.Gambits = MenuItem.new(L{
-        ButtonItem.default('Custom', 18),
         ButtonItem.default(jobName, 18),
+        ButtonItem.default('Custom', 18),
         ButtonItem.default('Reactions', 18),
     }, {
         Custom = customGambitsMenuItem,
         [jobName] = JobGambitSettingsMenuItem.new(trust, trustSettings, trustSettingsMode, self.trustModeSettings),
         Reactions = ReactionSettingsMenuItem.new(trust, trustSettings, trustSettingsMode, self.trustModeSettings),
-    }, nil, "Gambits", "Configure Trust behavior.")
+    }, nil, "Gambits", "Job: shared across this installation. Custom: this character/profile only.")
 
-    if MenuPreferences.layout()~='Full' then
+    if not isSubjob and MenuPreferences.layout()~='Full' then
         menuItems:append(ButtonItem.localized('Modes', i18n.translate('Button_Modes')))
     end
     local settingsMenuItem = MenuItem.new(menuItems, childMenuItems, nil, "Settings", "Configure Trust settings for skillchains, buffs, debuffs and more.")

@@ -399,3 +399,11 @@ Consistent factory modes, SMN Carbuncle, empty factory hunting lists, explicit c
 - Create the writable data directory before opening databases and nested temporary directories.
 - Stop on failed database copies/opens with path diagnostics; make database cleanup idempotent.
 - Include empty runtime data directories in the complete ZIP without personal data.
+# Shared Job gambits Test 1 — October 26, 2026
+
+Job gambits now have a full editor with shared installation scope; Custom stays
+local to the character's job profile. Job appears first, while Custom retains
+execution priority. Death factory defaults now Disable. Subjob Settings omit
+Food, Pulling and full Modes. See docs/SHARED-JOB-GAMBITS-TEST1.md for installation,
+shared-file backups/conflicts, reload and native tests still pending. Flanking,
+AutoDisengage and Pathfinder work remain deferred. No AHK change in this batch.
