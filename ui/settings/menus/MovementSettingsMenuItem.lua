@@ -9,14 +9,17 @@ function M.new(owner)
     return MenuItem.new(L{ButtonItem.default('Save'),ButtonItem.default('Status')},{
         Status=MenuItem.action(function()
             local receiver=windower.trust.movement
-            addon_system_message('Movement Test 1 | '..(receiver and receiver:status() or 'initializing'))
+            addon_system_message('Movement | '..(receiver and receiver:status() or 'initializing'))
         end,'Movement','Show received, accepted and ignored signals.')
     },function(_,infoView)
         return ConfigEditor.new(owner,owner:getSettings().movement,L{
             PickerConfigItem.new('policy','Send',L{'Send','Ready'},nil,'First movement signal'),
             BooleanConfigItem.new('enabled','Movement follow/assist enabled'),
             BooleanConfigItem.new('quiet','Quiet follow/assist feedback'),
+            BooleanConfigItem.new('stop_on_movement','Stop my Trust on movement'),
+            BooleanConfigItem.new('start_others','Start others after follow/assist'),
+            BooleanConfigItem.new('auto_lockon','Automatic lock-on when engaging'),
         },infoView)
-    end,'Movement','Send acts once without waiting; Ready waits for readiness. Both request Follow me, then Assist me. Switch clients to rearm.')
+    end,'Movement','Send acts once without waiting; Ready waits for readiness. Follow/assist stays enabled independently of local Stop and others Start. Lock-on controls engaging. Switch clients to rearm.')
 end
 return M

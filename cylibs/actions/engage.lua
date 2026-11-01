@@ -85,7 +85,9 @@ function EngageAction:perform()
         if windower.ffxi.get_player().id == mob_id then
             local target = windower.ffxi.get_mob_by_target('t')
             if target and target.index == self.target_index then
-                if not self.cursor_only and not windower.ffxi.get_player().target_locked then
+                -- A: preserve upstream lock-on unless explicitly disabled in Config > Movement.
+                local movement = addon_settings and addon_settings:getSettings().movement or {}
+                if movement.auto_lockon ~= false and not self.cursor_only and not windower.ffxi.get_player().target_locked then
                     windower.send_command('input /lockon')
                 end
                 self:complete(true)

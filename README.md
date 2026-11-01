@@ -415,3 +415,10 @@ Sounds are saved once for the installation. Movement and Profiles are inside
 Config in Condensed menus. Shared/Legacy source choice preserves old lists;
 import is explicit. See docs/SHARED-PULLING-SOUNDS-TEST1.md for patch installation,
 commands, shared-save behavior and native acceptance still pending. No AHK change.
+
+
+### Personal development: Movement Handoff Test 1 (2026-11-01)
+
+Config > Movement offers **Stop my Trust on movement** and **Start others after follow/assist**, both Off initially. Enable both to steer the moved character with its Trust stopped while other IPC receivers follow/assist it and start. Existing first-movement-per-client-switch semantics and guards remain; no AHK update is required. Stop includes walking/native follow and current sequence movement. Start resumes eligible configured following. Whole-addon Stop pauses automated healing/buffs too and leaves game engagement unchanged.
+
+**Automatic lock-on when engaging** defaults On; turn Off to suppress future Trust EngageAction lock-on requests, including Approach pulls. An existing lock must be removed separately. Movement Status reports all three preferences. `//trust handoff <party member name>` applies follow, assist and Start locally in order, refusing Start after setup failure. See TESTING.md for pending in-game tests.

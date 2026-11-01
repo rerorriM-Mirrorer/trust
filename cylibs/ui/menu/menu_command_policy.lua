@@ -6,7 +6,7 @@ local immediate={help=true,version=true,status=true,debug=true,menuperf=true,
 local profiles={trustmode=true,maintrustsettingsmode=true,subtrustsettingsmode=true,weaponskillsettingsmode=true}
 local runtime={
     attack={['']=true,off=true,mirror=true,engage=true,distance=true},
-    follow={['*']=true}, assist={['*']=true},
+    follow={['*']=true}, assist={['*']=true}, handoff={['*']=true},
     heal={['']=true,auto=true,off=true,emergency=true,alliance=true},
     buff={auto=true,off=true}, debuff={auto=true,off=true},
     pull={['']=true,auto=true,aggroed=true,all=true,off=true,target=true,distance=true,clear=true,ignore=true,delay=true,randomize=true,action=true},

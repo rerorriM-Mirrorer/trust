@@ -47,7 +47,24 @@ function load_user_files(main_job_id, sub_job_id)
 			action_queue:enable()
 		else
 			action_queue:disable()
+            -- A: following owns a separate walking queue; stopping the main
+            -- queue alone leaves its movement and event callbacks alive.
+            local trust = player and player.trust and player.trust.main_job
+            local follower = trust and trust:role_with_type('follower')
+            if follower then follower:stop_following() end
+            for _,job in pairs(player and player.trust and {
+                player.trust.main_job, player.trust.sub_job } or {}) do
+                local reacter=job:role_with_type('reacter')
+                if reacter then reacter.react_action_queue:disable() end
+            end
+            windower.ffxi.run(false)
+            windower.ffxi.follow()
 		end
+        if isEnabled then
+            local trust = player and player.trust and player.trust.main_job
+            local follower = trust and trust:role_with_type('follower')
+            if follower then follower:start_following() end
+        end
 	end)
 
 	main_job_id = tonumber(main_job_id)
@@ -472,6 +489,17 @@ function load_ui()
             -- Preserve RC3's actions/order. Direct internal calls avoid a
             -- queued command executing later in a changed client context.
             return require('cylibs/util/command_feedback').run(addon_settings:getSettings().movement.quiet~=false,function()
+                local movement=addon_settings:getSettings().movement
+                if movement.stop_on_movement then handle_stop() end
+                if movement.start_others then
+                    shortcuts.follow:get_follower():set_follow_target(nil)
+                    local quiet_flag=require('cylibs/util/command_feedback').is_quiet() and ' --quiet' or ''
+                    -- One message executes follow -> assist -> start at each
+                    -- receiver, avoiding Start racing ahead of target updates.
+                    IpcRelay.shared():send_message(require('cylibs/messages/command_message').new(
+                        'trust handoff '..windower.ffxi.get_player().name..quiet_flag))
+                    return true
+                end
                 local ok,message=shortcuts.follow:handle_follow_me()
                 if ok==false then return false,message end
                 return shortcuts.assist:handle_assist_me()

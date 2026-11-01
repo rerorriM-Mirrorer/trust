@@ -207,6 +207,9 @@ function Reacter:on_add()
 end
 
 function Reacter:check_gambits(gambits, param)
+    -- A: reactions have an independent queue; stopped Trust must not rearm it.
+    if self.action_queue.is_enabled == false then return end
+    self.react_action_queue:enable()
     if self.state_var.value == 'Off' or gambits:length() == 0 then
         return
     end

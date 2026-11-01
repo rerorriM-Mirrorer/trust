@@ -33,6 +33,26 @@ assert(#requests==2 and env.windower.trust.movement.last=='Trust menu')
 menu=false;env.state.IpcMode.value='Receive'
 events.keyboard(0x7B,true);events.keyboard(0x7B,false)
 assert(#requests==2 and env.windower.trust.movement.ignored==2)
+-- Optional handoff: local Stop precedes one ordered remote operation.
+menu=false;env.state.IpcMode.value='All'
+local order={}
+options.movement.stop_on_movement=true;options.movement.start_others=true
+env.handle_stop=function()order[#order+1]='stop'end
+env.shortcuts.follow.get_follower=function()return{set_follow_target=function(_,target)
+    assert(target==nil);order[#order+1]='clear local follow'end}end
+env.IpcRelay={shared=function()return{send_message=function(_,m)
+    order[#order+1]=m.command end}end}
+local original_require=env.require
+env.require=function(name)
+    if name=='cylibs/messages/command_message' then return{new=function(c)return{command=c}end} end
+    return original_require(name)
+end
+events.keyboard(0x7B,true);events.keyboard(0x7B,false)
+assert(table.concat(order,',')=='stop,clear local follow,trust handoff Myrr --quiet')
+assert(not Feedback.is_quiet())
+menu=true;events.keyboard(0x7B,true);events.keyboard(0x7B,false)
+assert(#order==3,'blocked movement must not stop or start anyone')
+menu=false
 assert(load(block,'actual receiver replacement','t',env))()
 assert(env.windower.trust.movement.received==0)
 print('PASS actual Trust movement wiring: direct action order, quiet scope, menu/IPC guards and replacement')

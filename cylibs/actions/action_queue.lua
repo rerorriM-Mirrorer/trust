@@ -140,6 +140,9 @@ end
 -- Performs the next action in the queue if the
 -- queue is not empty
 function ActionQueue:perform_next_action()
+    -- A: cancellation completes synchronously and can ask for the next action
+    -- while disable() is clearing. Never start work from a disabled queue.
+    if not self.is_enabled then return end
 	if self.current_action ~= nil then
 		return
 	end

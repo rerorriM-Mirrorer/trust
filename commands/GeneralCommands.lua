@@ -27,6 +27,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
 
     -- State
     self:add_command('start', self.handle_start, 'Start Trust')
+    self:add_command('handoff', self.handle_handoff, 'Follow and assist a party member, then start: //trust handoff <name>')
     self:add_command('startall', self.handle_start_all, 'Start Trust on all characters, or only party members with // trust startall party')
     self:add_command('stop', self.handle_stop, 'Stop Trust')
     self:add_command('stopall', self.handle_stop_all, 'Stop Trust on all characters, or only party members with // trust stopall party')
@@ -173,6 +174,23 @@ function GeneralTrustCommands:handle_menuperf(_, mode)
     end
     windower.trust.menu_perf_enabled = mode == 'on'
     return true, 'Menu CPU timings '..(windower.trust.menu_perf_enabled and 'ON' or 'OFF')
+end
+
+-- A: one receiver-side operation preserves handoff ordering on each client.
+-- Failed target setup never starts a stopped client; normal command feedback
+-- reports the reason on that receiver (subject to the existing quiet option).
+function GeneralTrustCommands:handle_handoff(_, name)
+    if type(name) ~= 'string' or not name:match('^%a+$') then
+        return false, 'Usage: //trust handoff <party member name>'
+    end
+    if name:lower() == windower.ffxi.get_player().name:lower() then
+        return false, 'Handoff must name another party member'
+    end
+    local ok,message=shortcuts.follow:handle_follow_party_member(name)
+    if ok==false then return false,message end
+    ok,message=shortcuts.assist:handle_assist_player(name)
+    if ok==false then return false,message end
+    return self:handle_start()
 end
 
 -- // trust start

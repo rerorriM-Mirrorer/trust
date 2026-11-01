@@ -1,3 +1,22 @@
+# Current Development Status — November 1, 2026 — Movement Handoff Test 1
+
+- Working branch: `test/starter-defaults-20261023`, based on published `cf97adbaf4c0adbd86a0a4e024799a4fb4bbcd8b`. Commit recorded in Git history. No AHK changes; use the existing personal DirectLink/AHK v2 wrapper.
+- Stop now cancels main and follower walking queues, cancels native run/follow, and stops independent reaction queues. Follower start/distance/zone callbacks and reactions cannot rearm while the main queue is disabled. Sequence cancellation cancels the currently executing child before it can advance to the next action. Start resumes configured following/path following; destinations and modes are retained unless follow-me/handoff explicitly clears them.
+- Config > Movement adds **Stop my Trust on movement** (Off), **Start others after follow/assist** (Off), and **Automatic lock-on when engaging** (On). Existing enabled, Send/Ready and quiet settings remain. Options save in existing addon config. Lock-on preference affects future EngageAction lock-on requests, including pulling Approach; it does not remove an already active or manually selected lock.
+- Enable both new handoff switches to stop the moved client's Trust, clear its follow target, and send one `trust handoff <name>` operation to other IPC receivers. Each receiver sets following, sets assist, then starts only after both succeed. Normal follow/assist command effects remain, including disabling pulling when assisting another character. IPC still follows existing relay membership/mode rules; no cross-PC transport added. Sender acceptance means a request was sent, not acknowledgements from every client.
+- Existing signal remains once per switch to a different FFXI client, with the existing chat/menu/session guards. This does not detect every later stick movement on the same client. Stop is whole-addon Stop, including automated heals/buffs; game autoattack/engagement and existing lock-on are not forcibly removed. No focus-away automatic resume, movement-only state, or detour recovery added.
+- Verification: focused production-method mocks exercise Stop relay, follower gates, sequence active-child cancellation, ordered receiver setup/failure, both lock-on preferences and optional root handoff dispatch. All 21 regression suites passed under Lua 5.4 with temporary Windower syntax normalization; changed Lua sources parse and whitespace checks pass. Disabled queue completion is explicitly gated against advancing to another action. Native Windows/Windower/FFXI live tests pending.
+- Install `Trust-Movement-Handoff-Test1-20261101.zip` as an overlay into the existing personal Trust install (folder `trust`); unload Trust on all clients first, back up code/settings, merge, reload. Cumulative patch includes prior shared Job gambits/Pulling/sounds since integrated Movement Test 1. No user data or resource databases included. Rollback: restore previous code backup; new config keys can remain unused.
+
+Live checks (all PENDING):
+1. With new switches Off, verify original follow/assist on first movement, Send/Ready guards and controller menus.
+2. While following a player, pulling with Approach, and replaying a path, run `//trust stop`. Movement should cease and stay stopped across target movement/status changes. Run `//trust start`; retained eligible following/path should resume. Repeat Stop while already stopped.
+3. Enable both handoff switches, switch clients, and move. Local Trust stops; others follow/assist the moved character and start. Test an unavailable receiver and invalid target; no failed setup should start a stopped receiver. Check local quiet Off for diagnostic feedback.
+4. Turn automatic lock-on Off, unlock an existing lock manually, then engage/pull. Targeting/engagement still work without Trust requesting a new lock. Turn On and retest; validate facing and approach behavior in game.
+5. Test Stop during nested action sequences, zoning-follow callbacks and a movement reaction. Confirm no action advances after cancellation and ordinary Start works afterward.
+
+---
+
 # Current Development Status — October 31, 2026 — Shared Pulling/sounds Test 1
 
 - Branch test/starter-defaults-20261023, starting 96314920c6c8ccaab3e89e80585b40042e040c62. Trust-only cumulative patch over integrated Movement Test 1; includes Shared Job editor changes, no AHK/runtime transport changes. Main/public branches untouched.

@@ -95,12 +95,14 @@ function SequenceAction:perform()
 end
 
 function SequenceAction:cancel()
-	for action in self.queue:it() do
-		action:cancel()
-		-- action:destroy()
-	end
-
-	Action.cancel(self)
+    -- A: stop the active child too. Mark first so its synchronous completion
+    -- callback cannot advance to another action while cancellation unwinds.
+    self.cancelled = true
+    for action in self.queue:it() do
+        action:cancel()
+    end
+    if self.current_action then self.current_action:cancel() end
+    if not self.completed then self:complete(false) end
 end
 
 function SequenceAction:getactions()

@@ -26,7 +26,7 @@ default.follow.distance = 1
 default.follow.auto_pause = false
 -- Filled once from the active job, then retained across job/profile switches.
 default.character_modes = {}
-default.movement = {policy='Send',enabled=true,quiet=true}
+default.movement = {policy='Send',enabled=true,quiet=true,stop_on_movement=false,start_others=false,auto_lockon=true}
 default.flags = {}
 default.flags.show_death_warning = true
 default.flags.check_files = true
