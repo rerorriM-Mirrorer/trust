@@ -27,11 +27,9 @@ end
 
 -- // trust sounds
 function SoundCommands:handle_toggle_sound()
-    if self.mediaPlayer:isEnabled() then
-        return self:handle_set_sound_enabled(false)
-    else
-        return self:handle_set_sound_enabled(true)
-    end
+    local data,err=require('settings/shared_preferences').shared():read()
+    if not data then return false,err end
+    return self:handle_set_sound_enabled(data.Sounds.disabled)
 end
 
 -- // trust sounds [enable | disable]
@@ -44,6 +42,8 @@ function SoundCommands:handle_set_sound_enabled(is_enabled)
     else
         message = "Sound effects from Trust are now disabled"
     end
+    local ok,err=require('settings/shared_preferences').shared():update('Sounds',{disabled=not is_enabled})
+    if not ok then return false,err end
     self.mediaPlayer:setEnabled(is_enabled)
 
     return success, message

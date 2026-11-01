@@ -69,6 +69,7 @@ default.locales.font_names.english = "Arial"
 default.locales.font_names.japanese = "MS Gothic"
 default.locales.actions = {}
 default.locales.default = ""
+default.use_shared_pulling = true
 default.sounds = {}
 default.sounds.sound_effects = {}
 default.sounds.sound_effects.disabled = true
@@ -102,6 +103,7 @@ function TrustAddonSettings:loadSettings()
         if settings.menu[key] == nil then settings.menu[key] = value end
     end
     self.settings = settings
+    require('settings/shared_preferences').configure(self)
     self:onSettingsChanged():trigger(self.settings)
     return self.settings
 end

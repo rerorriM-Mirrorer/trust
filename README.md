@@ -407,3 +407,11 @@ execution priority. Death factory defaults now Disable. Subjob Settings omit
 Food, Pulling and full Modes. See docs/SHARED-JOB-GAMBITS-TEST1.md for installation,
 shared-file backups/conflicts, reload and native tests still pending. Flanking,
 AutoDisengage and Pathfinder work remain deferred. No AHK change in this batch.
+# Shared Pulling and sounds Test 1 — October 31, 2026
+
+Main-menu Pulling shares targets/exclusions, 30-yalm detection and delay across
+the installation; job actions and individual pulling modes remain separate.
+Sounds are saved once for the installation. Movement and Profiles are inside
+Config in Condensed menus. Shared/Legacy source choice preserves old lists;
+import is explicit. See docs/SHARED-PULLING-SOUNDS-TEST1.md for patch installation,
+commands, shared-save behavior and native acceptance still pending. No AHK change.

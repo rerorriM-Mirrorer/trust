@@ -43,6 +43,8 @@ function ConfigSettingsMenuItem:destroy()
 end
 
 function ConfigSettingsMenuItem:reloadSettings(addonSettings, trustSettings, trustSettingsMode)
+    self:setChildMenuItem('Movement',require('ui/settings/menus/MovementSettingsMenuItem').new(addonSettings))
+    self:setChildMenuItem('Profiles',require('ui/settings/menus/loading/LoadSettingsMenuItem').new(addonSettings,self.trustModeSettings or trust_mode_settings,main_trust_settings,weapon_skill_settings,sub_trust_settings))
     self:setChildMenuItem('Menu', MenuItem.new(L{
         ButtonItem.default('Save'),
     }, {}, function(_, infoView)
@@ -128,23 +130,11 @@ function ConfigSettingsMenuItem:getLoggingMenuItem(addonSettings)
 end
 
 function ConfigSettingsMenuItem:getSoundSettingsMenuItem(addonSettings)
-    local languageMenuItem = MenuItem.new(L{
-        ButtonItem.default('Save'),
-    }, {
-        Save = MenuItem.action(function()
-            self.mediaPlayer:setEnabled(not addonSettings:getSettings().sounds.sound_effects.disabled)
-        end),
-    }, function(menuArgs)
-        local configItems = L{
-            BooleanConfigItem.new('disabled', "Disable sound effects"),
-        }
-        local editor = ConfigEditor.new(addonSettings, addonSettings:getSettings().sounds.sound_effects, configItems)
-        editor:onConfigChanged():addAction(function()
-            self.mediaPlayer:setEnabled(not addonSettings:getSettings().sounds.sound_effects.disabled)
-        end)
-        return editor
-    end, "Sounds", "Configure sound settings.")
-    return languageMenuItem
+    return MenuItem.new(L{ButtonItem.default('Save')},{},function(_,info)
+        local owner,err=require('settings/shared_preferences').shared():owner('Sounds')
+        if not owner then addon_system_error(err);return nil end
+        return ConfigEditor.new(owner,owner:getSettings(),L{BooleanConfigItem.new('disabled','Disable sound effects for this installation')},info)
+    end,'Sounds (shared)','Saved for all characters using this Trust installation. Other clients update automatically.')
 end
 
 function ConfigSettingsMenuItem:getLanguageSettingsMenuItem(addonSettings)

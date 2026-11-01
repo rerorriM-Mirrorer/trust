@@ -33,7 +33,7 @@ function PullTrustCommands.new(trust, trust_settings, action_queue, puller)
             local settings = commands:get_settings()
             return settings and settings.PullSettings and settings.PullSettings.Gambits
         end,
-        save = function(commands) commands.trust_settings:saveSettings(true) end,
+        save = function(commands) commands:get_pull_owner():saveSettings(true) end,
     })
     self:add_command('randomize', self.handle_set_randomize, 'Enable or disable randomizing pull targets', L{
         PickerConfigItem.new('value', 'true', L{ 'true', 'false' }, nil, "Randomize Target")
@@ -45,6 +45,10 @@ function PullTrustCommands.new(trust, trust_settings, action_queue, puller)
         PickerConfigItem.new('mode_value', 'auto', L{ 'auto', 'target', 'approach' }, nil, "Pull Action")
     }, true)
 
+    -- Preserve pull add/remove as ability-gambit commands; target is explicit.
+    self:add_command('target',self.handle_target,'Edit targets: target add/remove <name>, or target clear')
+    self:add_command('clear',function(commands)return commands:handle_target(nil,'clear')end,'Clear target names and IDs')
+    self:add_command('distance',self.handle_distance,'Set shared or legacy search distance (0-50 yalms)')
     return self
 end
 
@@ -56,8 +60,53 @@ function PullTrustCommands:get_puller()
     return self.puller
 end
 
+function PullTrustCommands:get_pull_owner()
+    if sub_trust_settings and self.trust.role_with_type and self.puller~=self.trust:role_with_type('puller') then return sub_trust_settings,state.SubTrustSettingsMode end
+    return self.trust_settings,state.MainTrustSettingsMode
+end
 function PullTrustCommands:get_settings()
-    return self.trust_settings:getSettings()[state.MainTrustSettingsMode.value]
+    local owner,mode=self:get_pull_owner()
+    return owner:getSettings()[mode.value]
+end
+function PullTrustCommands:edit_pull(edit)
+    local shared=require('settings/shared_preferences')
+    if shared.enabled() then
+        local data,source=shared.shared():read();if not data then return false,source end
+        local ok,why=edit(data.Pulling);if ok==false then return false,why end
+        return shared.shared():update('Pulling',data.Pulling,{source=source})
+    end
+    local value=self:get_settings().PullSettings
+    local ok,why=edit(value);if ok==false then return false,why end
+    return self:get_pull_owner():saveSettings(true)
+end
+function PullTrustCommands:handle_target(_,verb,...)
+    verb=tostring(verb or ''):lower()
+    if verb~='add' and verb~='remove' and verb~='clear' then return false,'Usage: //trust pull target add/remove <name> | clear' end
+    local name=table.concat({...},' '):match('^%s*(.-)%s*$')
+    if name=='<t>' then local target=windower.ffxi.get_mob_by_target('t');name=target and target.name or ''end
+    if verb~='clear' and name=='' then return false,'Specify a target name or <t>' end
+    local ok,err=self:edit_pull(function(p)
+        if verb=='clear' then p.Targets=L{};p.TargetIds=L{};return true end
+        local targets=L{};local found=false
+        for _,item in ipairs(p.Targets or {})do
+            if item:lower()==name:lower() then found=true;if verb=='add' then targets:append(item)end
+            else targets:append(item)end
+        end
+        if verb=='add' and not found then targets:append(name)end
+        p.Targets=targets;return true
+    end)
+    if not ok then return false,err end
+    if verb=='add' then
+        local enabled,why=self:handle_set_mode('AutoPullMode','Auto')
+        if enabled==false then return false,'Target saved; pulling mode unchanged: '..tostring(why)end
+    end
+    return true,'Pull target list updated ('..(require('settings/shared_preferences').enabled() and 'shared' or 'legacy job')..')'
+end
+function PullTrustCommands:handle_distance(_,value)
+    local distance=tonumber(value)
+    if not distance or distance<0 or distance>50 then return false,'Distance must be 0-50 yalms' end
+    local ok,err=self:edit_pull(function(p)p.Distance=distance end)
+    return ok,ok and ('Pull search distance set to '..distance..' yalms') or err
 end
 
 -- // trust pull camp
@@ -78,49 +127,23 @@ end
 
 -- // trust pull ignore
 function PullTrustCommands:handle_ignore(_, ...)
-    local success
-    local message
-
-    local mob_name = table.concat({...}, " ") or ""
-    if mob_name == "<t>" then
-        mob_name = windower.ffxi.get_mob_by_target('t') and windower.ffxi.get_mob_by_target('t').name
-    end
-
-    if not mob_name or mob_name:length() == 0 then
-        success = false
-        message = "Invalid mob name"
-    else
-        success = true
-        message = string.format("%s has been added to the blacklist", mob_name)
-
-        local blacklist = self:get_settings().PullSettings.Blacklist
-        if not blacklist:contains(mob_name) then
-            blacklist:append(mob_name)
-
-            self.trust_settings:saveSettings(true)
-        end
-    end
-
-    return success, message
+    local name=table.concat({...},' '):match('^%s*(.-)%s*$')
+    if name=='<t>' then local target=windower.ffxi.get_mob_by_target('t');name=target and target.name or ''end
+    if name=='' then return false,'Specify an exclusion name or <t>'end
+    local ok,err=self:edit_pull(function(p)
+        p.Blacklist=p.Blacklist or L{}
+        for _,item in ipairs(p.Blacklist)do if item:lower()==name:lower()then return end end
+        table.insert(p.Blacklist,name)
+    end)
+    return ok,ok and (name..' added to pulling exclusions') or err
 end
 
 -- // trust pull delay <seconds>
-function PullTrustCommands:handle_delay(_, delay)
-    local success
-    local message
-
-    if delay and delay:match("^%d+$") then
-        delay = math.min(math.max(tonumber(delay), 0), 50)
-        self:get_settings().PullSettings.Delay = delay
-        self.trust_settings:saveSettings(true)
-        success = true
-        message = 'Pull delay set to ' .. delay .. ' seconds'
-    else
-        success = false
-        message = 'Invalid delay: specify a number of seconds (0-50)'
-    end
-
-    return success, message
+function PullTrustCommands:handle_delay(_,value)
+    local delay=tonumber(value)
+    if not delay or delay<0 or delay>50 then return false,'Delay must be 0-50 seconds'end
+    local ok,err=self:edit_pull(function(p)p.Delay=delay end)
+    return ok,ok and ('Pull delay set to '..delay..' seconds') or err
 end
 
 -- // trust pull randomize <true|false>
@@ -131,7 +154,7 @@ function PullTrustCommands:handle_set_randomize(_, value)
 
     local enabled = value == "true"
     self:get_settings().PullSettings.RandomizeTarget = enabled
-    self.trust_settings:saveSettings(true)
+    self:get_pull_owner():saveSettings(true)
 
     return true, 'Pull target randomization '..(enabled and 'enabled' or 'disabled')
 end

@@ -45,6 +45,15 @@ function PullSettingsMenuItem.new(abilities, trust, job_name_short, trust_settin
     self.dispose_bag = DisposeBag.new()
 
     self:reloadSettings()
+    if require('settings/shared_preferences').enabled() then
+        self.buttonItems=L{ButtonItem.default('Actions',18),ButtonItem.default('Modes',18),ButtonItem.default('Config',18)}
+        self.childMenuItems.Targets=nil;self.childMenuItems['Target IDs']=nil;self.childMenuItems.Blacklist=nil
+        self.childMenuItems.Config=MenuItem.new(L{ButtonItem.default('Save')},{},function(_,info)
+            local values=trust_settings:getSettings()[trust_settings_mode.value].PullSettings
+            return ConfigEditor.new(trust_settings,values,L{BooleanConfigItem.new('RandomizeTarget','Randomize pull targets')},info)
+        end,'Job Pulling config','Job-owned pulling behavior. Shared targets/distance are in main-menu Pulling.')
+        self.descriptionText='Job pulling actions and modes. Targets/exclusions/distance are in main-menu Pulling.'
+    end
 
     return self
 end
@@ -112,7 +121,7 @@ function PullSettingsMenuItem:getBlacklistMenuItem()
                 end
             end
         end, "Blacklist", "Remove selected target from the blacklist.", false, function()
-            return self.trust_settings:getSettings()[self.trust_settings_mode.value].PullSettings.Targets:length() > 0
+            return self.trust_settings:getSettings()[self.trust_settings_mode.value].PullSettings.Blacklist:length() > 0
         end),
     },
     function()

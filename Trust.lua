@@ -411,7 +411,7 @@ function load_ui()
 	local MediaPlayer = require('cylibs/sounds/media_player')
 
 	local mediaPlayer = MediaPlayer.new(windower.addon_path..'sounds')
-	mediaPlayer:setEnabled(not addon_settings:getSettings().sounds.sound_effects.disabled)
+	mediaPlayer:setEnabled(not ((require('settings/shared_preferences').shared():read() or {}).Sounds or {disabled=true}).disabled)
 
 	local soundTheme = FFXISoundTheme.default()
 
@@ -857,6 +857,8 @@ windower.register_event('addon command', addon_command)
 windower.register_event('prerender', function()
     if controller_menu then controller_menu:tick() end
     if movement_receiver then movement_receiver:tick() end
+    local shared=require('settings/shared_preferences').poll()
+    if shared and hud and hud.mediaPlayer then hud.mediaPlayer:setEnabled(not shared.Sounds.disabled)end
 end)
 windower.register_event('gain focus',function()
     if movement_receiver then movement_receiver.down=false;movement_receiver:tick(true) end

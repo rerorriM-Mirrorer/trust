@@ -63,7 +63,7 @@ function Puller:on_add()
     local on_pull_mode_changed = function(new_value)
         self:get_party():set_should_ignore_assist_target(new_value ~= 'Off')
         if new_value ~= 'Off' then
-            self:set_pull_settings(self.pull_settings)
+            self:set_pull_settings(self.job_pull_settings or self.pull_settings)
             windower.send_command('input /autotarget off')
             self:get_party():set_assist_target(self:get_party():get_player())
         else
@@ -93,6 +93,12 @@ function Puller:on_add()
 end
 
 function Puller:tic(_, _)
+    local shared=require('settings/shared_preferences')
+    local revision=shared.shared().revision
+    local enabled=shared.enabled()
+    if self.shared_revision~=revision or self.shared_enabled~=enabled then
+        self:set_pull_settings(self.job_pull_settings)
+    end
     if state.AutoPullMode.value == 'Off' then
         return
     end
@@ -251,6 +257,11 @@ function Puller:get_pull_settings()
 end
 
 function Puller:set_pull_settings(pull_settings)
+    self.job_pull_settings=pull_settings
+    local shared=require('settings/shared_preferences')
+    pull_settings=shared.effective(pull_settings)
+    self.shared_revision=shared.shared().revision
+    self.shared_enabled=shared.enabled()
     self.pull_settings = pull_settings
     self.distance = pull_settings.Distance
     self.blacklist = pull_settings.Blacklist

@@ -23,7 +23,7 @@ local env=setmetatable({TrustHud=methods,L=L,
     MenuItem={new=node},T=function()return{keyset=function()return{}end}end,
     state={MainTrustSettingsMode={},SubTrustSettingsMode={},WeaponSkillSettingsMode={}},
     i18n={translate=function(k)return k end,resource=function(_,_,k)return k end},
-    res={jobs={with=function(_,_,job)return {en=job}end}},require=function()return generic end,
+    res={jobs={with=function(_,_,job)return {en=job}end}},require=function(path)if path=='settings/shared_preferences' then return {enabled=function()return true end}end;return generic end,
     player={main_job_name='Bard',sub_job_name='White Mage',main_job_name_short='BRD',sub_job_name_short='WHM',trust={main_job={role_with_type=function()return{}end},sub_job={role_with_type=function()return nil end}}},
     main_trust_settings={},sub_trust_settings={},weapon_skill_settings={},trust_mode_settings={}}, {__index=_G})
 for _,name in ipairs({'getSettingsMenuItem','reloadJobMenuItems','getMainMenuItem'}) do
@@ -80,4 +80,7 @@ layout='Condensed'
 local condensedRoot=hud:getMainMenuItem()
 assert(condensedRoot~=fullRoot and fullRoot.dead and not condensedRoot.children.Commands)
 assert(condensedRoot.children.Following and hud.menuLayout=='Condensed')
+local names=condensedRoot.buttons
+assert(names[1]=='Bard' and names[2]=='White Mage' and names[3]=='Pulling' and names[4]=='Following' and names[5]=='Paths' and names[6]=='Alter Egos' and names[7]=='Config' and #names==7)
+assert(condensedRoot.children.Pulling and not condensedRoot.children.Movement and not condensedRoot.children.Profiles)
 print('PASS direct job settings routing, correct owners and Modes-last ordering')

@@ -229,6 +229,7 @@ function TrustHud:reloadJobMenuItems()
     end
     -- Rebuild character tools along with job roles so no menu keeps a retired
     -- follower, pather or truster after a job change.
+    self.mainMenuItem:setChildMenuItem('Pulling',require('ui/settings/menus/pulling/SharedPullSettingsMenuItem').new(self.addon_settings,player.trust.main_job,main_trust_settings,state.MainTrustSettingsMode,self.trustModeSettings))
     if not full then
     self.mainMenuItem:setChildMenuItem('Following', self:getFollowerMenuItem(player.trust.main_job:role_with_type('follower'), self.trustModeSettings))
     self.mainMenuItem:setChildMenuItem('Alter Egos', self:getTrusterMenuItem(player.trust.main_job:role_with_type('truster')))
@@ -242,9 +243,10 @@ end
 
 function TrustHud:getMainMenuItem()
     local layout=MenuPreferences.layout()
+    local sharedPulling=require('settings/shared_preferences').enabled()
     -- Apply layout only after leaving the current editor/menu stack, so a
     -- preference save cannot destroy its own view during exit validation.
-    if self.mainMenuItem and self.menuLayout~=layout and not self.trustMenu:isVisible() then
+    if self.mainMenuItem and (self.menuLayout~=layout or self.sharedPulling~=sharedPulling) and not self.trustMenu:isVisible() then
         self.mainMenuItem:destroy()
         self.mainMenuItem=nil
     end
@@ -257,26 +259,25 @@ function TrustHud:getMainMenuItem()
     local mainMenuItem = MenuItem.new(L{
         ButtonItem.localized(player.main_job_name, i18n.resource('jobs', 'en', player.main_job_name)),
         ButtonItem.localized(player.sub_job_name, i18n.resource('jobs', 'en', player.sub_job_name)),
-        ButtonItem.localized('Profiles', i18n.translate('Button_Profiles')),
+        ButtonItem.default('Pulling',18),
         ButtonItem.localized('Following', i18n.translate('Button_Following')),
-        ButtonItem.localized('Alter Egos', i18n.translate('Button_Alter_Egos')),
         ButtonItem.localized('Paths', i18n.translate('Button_Paths')),
+        ButtonItem.localized('Alter Egos', i18n.translate('Button_Alter_Egos')),
         ButtonItem.default('Config', 18),
-        ButtonItem.default('Movement',18),
     }, {
-        Profiles = LoadSettingsMenuItem.new(self.addon_settings, self.trustModeSettings, main_trust_settings, weapon_skill_settings, sub_trust_settings),
         Config = ConfigSettingsMenuItem.new(self.addon_settings, main_trust_settings, state.MainTrustSettingsMode, self.mediaPlayer),
     }, nil, "Jobs")
 
     self.mainMenuItem = mainMenuItem
     self.menuLayout=layout
-    mainMenuItem:setChildMenuItem('Movement',require('ui/settings/menus/MovementSettingsMenuItem').new(self.addon_settings))
+    self.sharedPulling=sharedPulling
     if layout=='Full' then
+        mainMenuItem:setChildMenuItem('Profiles',LoadSettingsMenuItem.new(self.addon_settings,self.trustModeSettings,main_trust_settings,weapon_skill_settings,sub_trust_settings))
         mainMenuItem.buttonItems=L{
             ButtonItem.localized(player.main_job_name,i18n.resource('jobs','en',player.main_job_name)),
             ButtonItem.localized(player.sub_job_name,i18n.resource('jobs','en',player.sub_job_name)),
             ButtonItem.localized('Profiles',i18n.translate('Button_Profiles')),
-            ButtonItem.default('Commands',18),ButtonItem.default('Config',18),ButtonItem.default('Movement',18),
+            ButtonItem.default('Commands',18),ButtonItem.default('Config',18),
         }
         mainMenuItem:setChildMenuItem('Commands',require('ui/settings/menus/commands/CommandsMenuItem').new(self.commands))
     end
