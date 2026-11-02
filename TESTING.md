@@ -1,3 +1,20 @@
+# Current Development Status — November 1, 2026 — Shared Save Compatibility Fix 1
+
+- User report: changing Cioara's shared pull detection distance to 50 fails with `Shared saving requires Windows LuaJIT file support`. The previous shared writer incorrectly required FFI from this Windower 4 session. This is a writer compatibility failure, not distance validation. Source parent published `493260b702bdbc458305e2ac71a4c3e2de7337f4`; branch `test/starter-defaults-20261023`.
+- Replace FFI-dependent mutex with nonblocking SQLite `BEGIN IMMEDIATE` using Trust's existing `sqlite3` module. Each shared file gets a small `.lock.sqlite3`/`.job-gambits.lock.sqlite3` sidecar. No extra module installation or AHK change. Locks release on close/connection loss. Upgrade/reload Trust on ALL clients before editing; mixed older FFI-lock writers do not share this new mutex.
+- FFI/Win32 atomic rename remains optional when available. Standard Lua fallback preserves the previous complete file as `.shared-previous`, moves the verified candidate into place, verifies new bytes, then removes the previous copy. Reads during a rename gap fall back to the previous complete file; after interruption, the next locked writer restores it. Failed staged rename restores original bytes; failed restore leaves fallback bytes readable and returns an error. Unlike Win32 MoveFileEx, this fallback is not a single atomic overwrite or a power-loss durability guarantee. Existing independent `.bak`/`.job-gambits.bak`, stale-draft guards and source validation remain.
+- The shared backend serves Pulling (including distance), Sounds and shared Job gambits, so this one runtime fix covers all three. It does not alter scopes, existing targets, factory rules or defaults.
+- Verification: 23 existing regression suites plus a dedicated production-backend test against real host SQLite connections through a LuaSQLite3 API bridge, with FFI absent and Windows destination-exists rename behavior simulated. Tests cover writer exclusion, idempotent release, connection loss, save/replace, read-during-rename, interruption recovery, failed stage/restore, stale editor rejection and real shared Distance=50 save/readback by another store. Optional Win32 replacement wiring remains mocked. Syntax/whitespace checks passed. Repeat the host backend check with `python3 tests/menu_options/run_shared_file_backend_test.py` (Python standard library + host liblua5.4). Windows/Windower native acceptance PENDING.
+- Package `Trust-Shared-Save-Fix1-Cumulative-20261101.zip` overlays the existing personal installation. Includes all changes since integrated Movement Test 1: shared Job/Pulling/sounds, movement handoff and stuck recovery. Unload Trust on every client, merge included trust folder, reload on every client. No personal settings, lock databases or factory Job edits are shipped. Rollback: restore prior code backup; retained `.shared-previous` must not be discarded if a save was interrupted.
+
+Live checks (PENDING):
+1. Reopen Config/Pulling after reload and set Distance to 50, or run `//trust pull distance 50`. Confirm save succeeds, value survives reopening/reload and another same-installation client adopts it.
+2. Toggle sounds and edit one shared Job gambit, checking persistence and previous-file backups. Preserve personal/shared rule backups before changing the Job list.
+3. Open the same shared editor on two clients; save one, then attempt the stale save on the other. Stale save should be refused. Reopen to adopt the saved value.
+4. Confirm no FFI/LuaJIT requirement and existing Movement/menus remain intact. If another save error occurs, retain exact message and `.shared-previous`/backup files.
+
+---
+
 # Current Development Status — November 1, 2026 — Stuck Recovery Test 1
 
 - Branch `test/starter-defaults-20261023`; parent published `65469b7534c0cf101c5ee20b1373a25d2e7b16a2` (Movement Handoff). Commit recorded in Git history. Trust-only cumulative overlay; no AHK changes or user data.

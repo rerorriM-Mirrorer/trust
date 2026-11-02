@@ -429,3 +429,8 @@ Config > Movement offers **Stop my Trust on movement** and **Start others after 
 Open **Config > Movement > Stuck Recovery**. Recovery starts **Off**; choose **Detour** to try it. Starting values: two seconds with less than half a yalm of displacement, two-yalm detours, two attempts, thirty-second pull-target cooldown. Pulling, Following and Paths each have a scope switch. **Pause** goes straight to the failure response without a detour.
 
 After failed recovery, pulling skips that individual mob locally for the cooldown; following/path movement pauses with its destination retained. Use `//trust follow start` or `//trust path start` to retry a paused follow/path. Stop cancels recovery; the existing movement handoff still works. Enable diagnostics for short transition records in `data/movement/recovery-<Character>.log`; Stuck Recovery > Status reports the active mode/result. This is a bounded direction-change experiment, not terrain-aware pathfinding. See TESTING.md for installation and pending in-game checks.
+
+
+### Personal development: Shared Save Compatibility Fix 1 (2026-11-01)
+
+Shared Pulling, Sounds and Job gambit saving now uses Trust's existing SQLite module for writer locking and no longer requires LuaJIT/FFI. Unload/update/reload Trust on every client before editing. Standard-Lua replacement preserves a complete `.shared-previous` copy until the new file is verified; leave that copy in place after an interrupted save so recovery can restore it. Existing backups and stale-editor protection remain. Retry `//trust pull distance 50` or reopen the Pulling menu after installing.

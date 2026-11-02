@@ -74,10 +74,10 @@ local kernel={
     GetLastError=function()return 32 end,
 }
 package.loaded.ffi={os='Windows',cdef=function()end,load=function()return kernel end,cast=function(_,value)return value end}
-local native=Disk.new();local release=assert(native:lock('test.lock'));release()
-assert(native:replace('stage','target'))
-failLock=true;assert(not native:lock('test.lock'))
-failReplace=true;assert(not native:replace('stage','target'))
-assert(calls[1]=='lock' and calls[2]=='close' and calls[3]=='replace')
+local native=Disk.new();local stage=os.tmpname();assert(native:write(stage,'candidate'))
+assert(native:replace(stage,'target'))
+failReplace=true;assert(not native:replace(stage,'target'))
+assert(calls[1]=='replace' and calls[2]=='replace')
+os.remove(stage)
 package.loaded.ffi=nil
 print('PASS shared Job editor: real file roundtrip, exact base preservation, runtime/profile isolation, backup, stale/busy rejection, failed replace, malformed Lua and reload')
