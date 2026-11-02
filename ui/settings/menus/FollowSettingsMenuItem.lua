@@ -16,7 +16,7 @@ function FollowSettingsMenuItem.new(follower, trustModeSettings, addonSettings)
 
     self.contentViewConstructor = function(_, _, _)
         local configItems = L{
-            ConfigItem.new('distance', 1, 18, 1, function(value) return value.." yalms" end, "Follow Distance"),
+            ConfigItem.new('distance', 0.1, 18, 0.1, function(value) return string.format('%.1f yalms',value) end, "Follow Distance"),
             BooleanConfigItem.new('auto_pause', "Pause for Spells and Abilities")
         }
         return ConfigEditor.new(self.addonSettings, self.addonSettings:getSettings().follow, configItems)
@@ -41,7 +41,7 @@ function FollowSettingsMenuItem:getConfigMenuItem()
         ButtonItem.default('Reset', 18),
     }, L{}, function(menuArgs)
         local configItems = L{
-            ConfigItem.new('distance', 1, 18, 1, function(value) return value.." yalms" end, "Follow Distance"),
+            ConfigItem.new('distance', 0.1, 18, 0.1, function(value) return string.format('%.1f yalms',value) end, "Follow Distance"),
             BooleanConfigItem.new('auto_pause', "Pause for Spells and Abilities")
         }
         return ConfigEditor.new(self.addonSettings, self.addonSettings:getSettings().follow, configItems)

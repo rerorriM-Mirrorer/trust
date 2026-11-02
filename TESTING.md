@@ -1,3 +1,12 @@
+# Current Development Status — November 1, 2026 — Follow Distance Tenths
+
+- Starting local a7cf447723ca5d6b367d90fe506c0960b2e5a99a; published parent fb480e0253f0bc04070a2a369113599574771ce2 on test/starter-defaults-20261023. Both Following editor constructors now expose 0.1–18 yalms in 0.1-yalm steps and display one decimal. Existing distance/default values and character-wide save scope unchanged. Follower already consumes numeric distance without integer rounding; Path mode retains its separate fixed 1-yalm threshold.
+- Very close distances need live tuning: position-update latency and movement stopping precision mean .1-yalm selections do not promise .1-yalm physical accuracy. Different distances change stopping radius, not direction; they do not implement lateral formation or guarantee separation. Combat MirrorDistance remains separate and unmodified. Proposed formation uses stable leader-relative slots before considering peer separation; not implemented.
+- Pulling cooldown/priority/action choreography unchanged. Agreed direction remains removal of blanket cooldown, intended-action-range approach, early engagement alongside pull action, bounded active-pull movement priority through party claim with emergency/manual interruption, specific retry/timeouts and wait-reason diagnostics. Final implementation still pending discussion; no evidence identifies the live idle queue blocker yet.
+- Verification: parse changed menu, inspect both editor paths and numeric follower usage; existing menu/routing and movement suites. Native save/reload of 0.8/1.1/1.4 and physical close following PENDING. No new AHK change; cumulative delivery retains prior neutral takeover/mute companions.
+
+---
+
 # Current Development Status — November 1, 2026 — Neutral Takeover and PS5 Leader Button
 
 - Trust repository rerorriM-Mirrorer/trust, branch test/starter-defaults-20261023; starting local a11d857f, previous published 7ff7bed6b7b3845505c850f89ec308559c9e9fd2. Trust upstream version remains 17.7.3; companion movement version 0.2.1-neutral-takeover1. First-focus movement previously live-confirmed; new same-client takeover and mute behavior await native acceptance.
