@@ -24,6 +24,7 @@ function M.new(owner)
                 ConfigItem.new('attempts',1,4,1,nil,'Maximum detour attempts'),
                 ConfigItem.new('pull_cooldown',5,180,5,function(v)return v..' seconds'end,'Pull target cooldown'),
                 BooleanConfigItem.new('diagnostics','Write recovery diagnostics'),
+                BooleanConfigItem.new('verbose','Show recovery messages'),
             },infoView)
         end,'Recovery','Try bounded detours, then skip a blocked pull mob or pause following/path. Stop cancels recovery. No terrain route finding.')
 end

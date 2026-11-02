@@ -17,6 +17,16 @@ function M.new(addonSettings,trust,jobOwner,jobMode,modes)
         for name,child in pairs(menu.childMenuItems)do
             if name~='Reload' then if child.destroy then child:destroy()end;menu.childMenuItems[name]=nil end
         end
+        local function refreshOnOpen(child)
+            local construct=child.contentViewConstructor
+            if construct then child.contentViewConstructor=function(...)
+                if owner.reloadSettings then
+                    local ok,why=owner:reloadSettings()
+                    if not ok then addon_system_error(why);return nil end
+                end
+                return construct(...)
+            end end
+        end
         local mode={value='Default'}
         local old=require('ui/settings/menus/pulling/PullSettingsMenuItem')
         local helper=setmetatable({trust_settings=owner,trust_settings_mode=mode,dispose_bag=menu.disposeBag}, {__index=old})
@@ -46,6 +56,13 @@ function M.new(addonSettings,trust,jobOwner,jobMode,modes)
             if not ok then addon_system_error(err);return end
             rebuild();parent:showMenu(menu)
         end,'Clear shared targets','Empty shared target names and IDs. Exclusions and job actions remain.'))
+        -- A: commands and other clients can change shared data after this
+        -- long-lived menu was built. Reload before a new view captures values.
+        for _,name in ipairs({'Targets','Target IDs','Exclusions','Config'})do
+            refreshOnOpen(menu.childMenuItems[name])
+        end
+        local exclusions=menu.childMenuItems.Exclusions
+        if exclusions.childMenuItems and exclusions.childMenuItems.Add then refreshOnOpen(exclusions.childMenuItems.Add)end
         -- A: explicit order also survives Reload, which reuses its own item.
         menu.buttonItems=L{ButtonItem.default('Config'),ButtonItem.default('Targets'),
             ButtonItem.default('Target IDs'),ButtonItem.default('Exclusions'),ButtonItem.default('Source'),

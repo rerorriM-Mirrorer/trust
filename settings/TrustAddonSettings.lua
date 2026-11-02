@@ -28,7 +28,7 @@ default.follow.auto_pause = false
 default.character_modes = {}
 default.movement = {policy='Send',enabled=true,quiet=true,stop_on_movement=true,start_others=true,auto_lockon=false,defaults_version=0,
     recovery={mode='Detour',pulling=true,following=true,paths=true,interval=2,min_movement=.5,
-        detour_distance=2,attempts=2,pull_cooldown=30,diagnostics=true}}
+        detour_distance=2,attempts=2,pull_cooldown=30,diagnostics=true,verbose=true}}
 default.flags = {}
 default.flags.show_death_warning = true
 default.flags.check_files = true
@@ -107,14 +107,20 @@ function TrustAddonSettings:loadSettings()
     -- A: apply the explicitly requested movement defaults once to existing
     -- characters too. The saved version keeps later user choices intact.
     local movement=settings.movement
+    local movementDefaultsChanged=false
     if (tonumber(movement.defaults_version) or 0)<1 then
         movement.stop_on_movement=true;movement.start_others=true;movement.auto_lockon=false
         movement.enabled=true;movement.policy='Send';movement.quiet=true
         movement.recovery.mode='Detour';movement.recovery.pulling=true
         movement.recovery.following=true;movement.recovery.paths=true
         movement.recovery.diagnostics=true;movement.defaults_version=1
-        config.save(settings)
+        movementDefaultsChanged=true
     end
+    if (tonumber(movement.defaults_version) or 0)<2 then
+        movement.recovery.verbose=true;movement.defaults_version=2
+        movementDefaultsChanged=true
+    end
+    if movementDefaultsChanged then config.save(settings) end
     self.settings = settings
     require('settings/shared_preferences').configure(self)
     self:onSettingsChanged():trigger(self.settings)

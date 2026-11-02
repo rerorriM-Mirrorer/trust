@@ -15,15 +15,26 @@ local Addon=require('settings/TrustAddonSettings');local owner=Addon.new()
 owner:loadSettings();local m=owner:getSettings().movement
 assert(m.enabled and m.policy=='Send' and m.quiet and m.stop_on_movement and m.start_others and not m.auto_lockon)
 assert(m.recovery.mode=='Detour' and m.recovery.pulling and m.recovery.following and m.recovery.paths and m.recovery.diagnostics)
+assert(m.recovery.verbose==true)
 assert(m.recovery.interval==4,'migration overwrote user timing')
-assert(m.defaults_version==1 and writes==1)
+assert(m.defaults_version==2 and writes==1)
 assert(factory.movement.stop_on_movement and factory.movement.start_others and not factory.movement.auto_lockon)
 assert(factory.movement.recovery.mode=='Detour' and factory.movement.recovery.diagnostics)
 -- A user's later opt-out is preserved, not overwritten on every job/reload.
-m.stop_on_movement=false;m.start_others=false;m.auto_lockon=true;m.recovery.mode='Off';m.recovery.diagnostics=false
+m.stop_on_movement=false;m.start_others=false;m.auto_lockon=true;m.recovery.mode='Off';m.recovery.diagnostics=false;m.recovery.verbose=false
 owner:saveSettings(true);owner:reloadSettings();m=owner:getSettings().movement
-assert(writes==2 and not m.stop_on_movement and not m.start_others and m.auto_lockon and m.recovery.mode=='Off' and not m.recovery.diagnostics)
+assert(writes==2 and not m.stop_on_movement and not m.start_others and m.auto_lockon and m.recovery.mode=='Off' and not m.recovery.diagnostics and not m.recovery.verbose)
 -- Fresh settings receive the same defaults and an explicit applied version.
 saved={};owner=Addon.new();owner:loadSettings();m=owner:getSettings().movement
-assert(m.defaults_version==1 and m.recovery.mode=='Detour' and m.stop_on_movement and m.start_others and not m.auto_lockon)
+assert(m.defaults_version==2 and m.recovery.mode=='Detour' and m.stop_on_movement and m.start_others and not m.auto_lockon)
 print('PASS actual fresh/existing movement defaults, one-time migration, saved opt-out and tuning preservation')
+
+-- Updating from movement defaults v1 enables only the new verbosity flag.
+saved={movement={defaults_version=1,stop_on_movement=false,start_others=false,auto_lockon=true,
+ recovery={mode='Pause',verbose=false}}}
+owner=Addon.new();owner:loadSettings();m=owner:getSettings().movement
+assert(m.defaults_version==2 and m.recovery.verbose and m.recovery.mode=='Pause')
+assert(not m.stop_on_movement and not m.start_others and m.auto_lockon)
+m.recovery.verbose=false;owner:saveSettings(true);owner:reloadSettings()
+assert(not owner:getSettings().movement.recovery.verbose)
+print('PASS verbosity-only v1 upgrade preserves movement overrides and later quiet preference')

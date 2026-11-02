@@ -6,7 +6,7 @@ local clock=require('socket').gettime
 local M={skips={},last='idle'}
 local detector=Detector.new(clock)
 local defaults={mode='Detour',pulling=true,following=true,paths=true,interval=2,
-    min_movement=.5,detour_distance=2,attempts=2,pull_cooldown=30,diagnostics=true}
+    min_movement=.5,detour_distance=2,attempts=2,pull_cooldown=30,diagnostics=true,verbose=true}
 local function settings()
     local saved=addon_settings and addon_settings:getSettings().movement
     saved=saved and saved.recovery or {}
@@ -38,9 +38,11 @@ function M.reset(clear_skips)
     if clear_skips then M.skips={} end
 end
 function M.status()return settings().mode..' | '..M.last end
-local function report(text,config,important)
+local function report(text,config,important,display)
     M.last=text
-    if important and addon_system_message then addon_system_message('Movement: '..text) end
+    if important or config.verbose then
+        require('cylibs/ui/chat/status_message').show('Recovery',display or text)
+    end
     if not config.diagnostics then return end
     windower.create_dir(windower.addon_path..'data/movement')
     local character=windower.ffxi.get_player()
@@ -111,15 +113,23 @@ function M.step(action,pos,goal,radius)
         return true
     end
     local key=mobkey(meta.key)
+    local previous=detector.context and detector.context.key==key and detector.last or ''
     local decision,offset,started=detector:sample(key,pos,goal,radius,config,suspended())
-    if decision=='normal' then M.last=detector.last;return false end
+    if decision=='normal' then
+        M.last=detector.last
+        if previous:find('detour',1,true) then
+            report(meta.kind..': retrying original destination',config,false)
+        end
+        return false
+    end
     windower.ffxi.follow()
     windower.ffxi.run(false)
     if decision=='detour' then
         if started then
             if windower.ffxi.get_player().target_locked then windower.send_command('input /lockon') end
             report(string.format('%s %s: detour %d from %.2f,%.2f toward %.2f,%.2f; goal %.2f,%.2f',
-                meta.kind,tostring(meta.id or meta.key),detector.context.attempts,pos[1],pos[2],offset[1],offset[2],goal[1],goal[2]),config)
+                meta.kind,tostring(meta.id or meta.key),detector.context.attempts,pos[1],pos[2],offset[1],offset[2],goal[1],goal[2]),config,false,
+                meta.kind..': detour '..detector.context.attempts..' '..(detector.context.attempts%2==1 and 'left' or 'right')..' ('..config.detour_distance..' yalms)')
         end
         windower.ffxi.run(offset[1]-pos[1],offset[2]-pos[2],pos[3])
     elseif decision=='failed' and not meta.handled then

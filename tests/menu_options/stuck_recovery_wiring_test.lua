@@ -47,8 +47,8 @@ local options={movement={policy='Ready',recovery={mode='Detour'}}};local owner={
 local menu=real_require('ui/settings/menus/MovementSettingsMenuItem').new(owner)
 assert(not menu.children['Stuck Recovery'] and not menu.children.Recovery)
 local sub=real_require('ui/settings/menus/RecoverySettingsMenuItem').new(owner);assert(sub.title=='Recovery')
-local editor=sub.view();assert(editor.data==options.movement.recovery and #editor.items==10)
-local expected={'mode','pulling','following','paths','interval','min_movement','detour_distance','attempts','pull_cooldown','diagnostics'}
+local editor=sub.view();assert(editor.data==options.movement.recovery and #editor.items==11)
+local expected={'mode','pulling','following','paths','interval','min_movement','detour_distance','attempts','pull_cooldown','diagnostics','verbose'}
 for i,key in ipairs(expected)do assert(editor.items[i].args[1]==key)end
 assert(menu.view().data==options.movement and menu.view().items[1].args[2]=='Ready')
 assert(editor.items[1].args[2]=='Detour','saved Recovery selection was reset to Off')

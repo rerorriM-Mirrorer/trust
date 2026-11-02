@@ -107,3 +107,21 @@ callbacks.on_spell_interrupted();assert(R.casting_until==0)
 callbacks.on_spell_begin();callbacks.on_spell_finish();assert(R.casting_until==0)
 R.bind(actor);assert(disposed==1);R.close();assert(disposed==2 and not R.is_skipped(42))
 print('PASS engaged failure ordering, actual pull/engage/gambit exclusion gates, action timeout budget and spell-event lifecycle')
+
+-- Verbose messages show detour/retry transitions; Off keeps them quiet.
+config.mode='Detour';config.verbose=true;config.diagnostics=false;character.status=0;R.reset(true)
+local startMessages=#messages;local trial=action();R.tag(trial,'pulling',43)
+for i=1,30 do now=now+.1;R.step(trial,{0,0,0},{10,0,0},1)end
+assert(#messages>=startMessages+2 and messages[startMessages+1]:find('detour',1,true))
+assert(messages[startMessages+2]:find('retrying original',1,true))
+config.verbose=false;R.reset(true);trial=action();R.tag(trial,'pulling',44)
+startMessages=#messages
+for i=1,8 do now=now+.1;R.step(trial,{0,0,0},{10,0,0},1)end
+assert(#messages==startMessages)
+local originalColor=string.color;local colored
+string.color=function(s,n)return '<'..n..'>'..s end
+windower.add_to_chat=function(mode,text)assert(mode==0);colored=text end
+require('cylibs/ui/chat/status_message').show('Recovery','path detour')
+assert(colored=='<200>[Trust] <167>Recovery <200>-> <0>path detour')
+string.color=originalColor
+print('PASS verbose detour/retry messages, opt-out and BattleStations fragment colors')

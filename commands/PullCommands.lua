@@ -22,7 +22,7 @@ function PullTrustCommands.new(trust, trust_settings, action_queue, puller)
     self:add_command('all', function(_) return self:handle_set_mode('AutoPullMode', 'All')  end, 'Automatically pull nearby monsters')
     self:add_command('off', function(_) return self:handle_set_mode('AutoPullMode', 'Off')  end, 'Disable pulling')
     self:add_command('camp', self.handle_camp, 'Automatically return to camp after battle')
-    self:add_command('ignore', self.handle_ignore, 'Add a mob to the blacklist')
+    self:add_command('ignore', self.handle_ignore, 'Save exclusion: //trust pull ignore <name|<t>>; //trust pull ignore list shows saved exclusions')
     self:add_command('delay', self.handle_delay, 'Set delay between pulls')
 
     gambit_commands.register(self, {
@@ -127,15 +127,36 @@ end
 
 -- // trust pull ignore
 function PullTrustCommands:handle_ignore(_, ...)
+    local shared=require('settings/shared_preferences')
+    local scope=shared.enabled() and 'shared' or 'legacy job'
+    local function readExclusions()
+        if shared.enabled() then
+            local data,err=shared.shared():read();if not data then return nil,err end
+            return data.Pulling.Blacklist or {}
+        end
+        return self:get_settings().PullSettings.Blacklist or {}
+    end
     local name=table.concat({...},' '):match('^%s*(.-)%s*$')
-    if name=='<t>' then local target=windower.ffxi.get_mob_by_target('t');name=target and target.name or ''end
-    if name=='' then return false,'Specify an exclusion name or <t>'end
+    if name=='' or name:lower()=='list' then
+        local names,err=readExclusions();if not names then return false,err end
+        local items={};for _,item in ipairs(names)do items[#items+1]=item end
+        return true,'Pull exclusions ('..scope..', '..#items..'): '..(#items>0 and table.concat(items,', ') or 'none')
+    end
+    if name:lower()=='<t>' then local target=windower.ffxi.get_mob_by_target('t');name=target and target.name or ''end
+    if name=='' then return false,'Select a target or specify an exclusion name'end
+    local already=false
     local ok,err=self:edit_pull(function(p)
-        p.Blacklist=p.Blacklist or L{}
-        for _,item in ipairs(p.Blacklist)do if item:lower()==name:lower()then return end end
-        table.insert(p.Blacklist,name)
+        -- Rebuild as a proper Windower list: table.insert alone does not
+        -- maintain L{}'s internal length in legacy job settings.
+        local names=L{}
+        for _,item in ipairs(p.Blacklist or {})do
+            names:append(item);if item:lower()==name:lower()then already=true end
+        end
+        if not already then names:append(name)end
+        p.Blacklist=names
     end)
-    return ok,ok and (name..' added to pulling exclusions') or err
+    if not ok then return false,err end
+    return true,(already and 'Already excluded ' or 'Saved exclusion ')..name..' ('..scope..')'
 end
 
 -- // trust pull delay <seconds>

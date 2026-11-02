@@ -94,6 +94,16 @@ function M.new(options)
         local parent=self
         return {
             getSettings=function()return root end,
+            -- A: refresh only when opening a new editor/view. Active drafts
+            -- keep their snapshot so stale-save checks still protect edits.
+            reloadSettings=function()
+                local data,latest=parent:read();if not data then return false,latest end
+                root=section=='Pulling' and {Default={PullSettings=data.Pulling}} or data.Sounds
+                if section=='Pulling' then
+                    for _,k in ipairs({'Targets','TargetIds','Blacklist'})do root.Default.PullSettings[k]=L(root.Default.PullSettings[k])end
+                end
+                source=latest;return true
+            end,
             saveSettings=function(_,persist)
                 if not persist then return true end
                 local value=section=='Pulling' and root.Default.PullSettings or root

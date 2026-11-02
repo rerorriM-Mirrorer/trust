@@ -456,3 +456,10 @@ Recovery is now directly under Config. It displays the saved Off/Detour/Pause se
 Approach no longer waits two seconds before engaging/closing. Already-engaged requests for the same target finish immediately; new requests observe confirmation and time out if it never arrives. Pull target/exclusion names and their priority order now match without regard to capitalization, using whole names only.
 
 The requested movement defaults are applied once as each character reloads: Stop self and Start others On, automatic engage lock-on Off, Recovery Detour for pulling/following/paths and diagnostics On. Later changes are preserved. Existing numeric recovery tuning remains. These settings still belong to each character across jobs; all clients adopt on their own next load rather than through live preference sharing.
+
+
+### Personal development: Exclusions refresh and visible Recovery (2026-11-01)
+
+Shared Pulling views now refresh when reopened, so command/other-client changes appear in Exclusions without rebuilding the whole menu. `//trust pull ignore list` shows the saved exclusions with scope/count; ignore feedback identifies shared vs legacy job storage. Legacy list length is maintained correctly.
+
+Config > Recovery > Show recovery messages starts On for this testing batch and announces detours/retries. Turn it Off for quieter recovery; disk diagnostics are separate. New recovery messages use the BattleStations-style Trust prefix and fragment colors. Existing Trust messages have not all been converted.
