@@ -142,17 +142,26 @@ function Follower:follow_target_named(target_name)
     end
 end
 
+-- Ordinary following has its own walking queue and remains available while
+-- job automation is stopped. Manual takeover/explicit follow pause still wins.
+function Follower:movement_allowed()
+    if self.manual_pause or self.action_queue.pull_action then return false end
+    return self.action_queue.is_enabled~=false or
+        (self.state_var and self.state_var.value=='Always')
+end
+
 function Follower:start_following(override)
     if self.recovery_paused then
         if require('cylibs/movement/recovery').settings().mode=='Off' then self.recovery_paused=false
         else return end
     end
-    -- A: callbacks remain subscribed while Trust is stopped. Never rearm walking.
-    if self.action_queue.pull_action or self.action_queue.is_enabled == false then return end
+    -- Ordinary following survives Stop; recorded paths and manual takeover do not.
+    if self.manual_pause or self.action_queue.pull_action
+            or (self.action_queue.is_enabled == false and self.state_var.value ~= 'Always') then return end
     if not override and S{ 'Dead', 'Engaged', 'Resting' }:contains(self:get_party():get_player():get_status()) then
         return
     end
-    self.walk_action_queue:clear()
+    self.walk_action_queue:disable()
     self.walk_action_queue:enable()
     windower.ffxi.run(false)
 
@@ -189,7 +198,9 @@ function Follower:is_valid_target(target_name)
 end
 
 function Follower:check_distance()
-    if self.action_queue.pull_action or self.recovery_paused or self.action_queue.is_enabled == false or self.state_var.value == 'Off' then
+    if self.manual_pause or self.action_queue.pull_action or self.recovery_paused
+            or (self.action_queue.is_enabled == false and self.state_var.value ~= 'Always')
+            or self.state_var.value == 'Off' then
         return
     end
     local follow_target = self:get_follow_target()
@@ -208,7 +219,7 @@ function Follower:check_distance()
     if player then
         local distance = player_util.distance(player_util.get_player_position(), follow_target:get_position())
         local deltaZ = math.abs(z - player.z)
-        if self.fan_out and self.state_var.value=='Always' and player.status==0
+        if self.fan_out and self.action_queue.is_enabled ~= false and self.state_var.value=='Always' and player.status==0
                 and distance<self.maxfollowdistance and deltaZ<1 then
             local goal,radius=self.formation:goal(follow_target:get_id(),windower.ffxi.get_info().zone,
                 {x,y,z},self:get_party():get_party_member_ids(),player.id,self:get_distance())
@@ -223,6 +234,7 @@ function Follower:check_distance()
         if current and current.formation then current:cancel() end
         if distance < self.maxfollowdistance and deltaZ < 6 and (deltaZ > 1 or distance > self:get_distance()) then
             local action=RunToLocation.new(x, y, z, self:get_distance())
+            action.follow_while_stopped=self.state_var.value=='Always'
             local kind=self.state_var.value=='Path' and 'paths' or 'following'
             local key=kind..':'..tostring(follow_target)..':'..tostring(follow_target.current_index or '')
             require('cylibs/movement/recovery').tag(action,kind,nil,key)
@@ -232,7 +244,7 @@ function Follower:check_distance()
 end
 
 -- Coalesce the moving slot into one action rather than following stale queued
--- locations. Recovery and Stop still own the existing tagged walking action.
+-- locations. Recovery and manual takeover still own the tagged walking action.
 function Follower:follow_formation_goal(goal,radius,target)
     local current=self.walk_action_queue.current_action
     if current and current.formation and not current:is_cancelled() and not current.completed then
@@ -322,7 +334,8 @@ end
 
 function Follower:can_zone(zone_id)
     local player = self:get_party():get_player()
-    if self.action_queue.pull_action or self.recovery_paused or self.action_queue.is_enabled == false or state.AutoZoneMode.value == 'Off' or state.AutoFollowMode.value == 'Off' or not player or (os.time() - player:get_last_zone_time()) < self.zone_cooldown
+    if self.manual_pause or self.action_queue.pull_action or self.recovery_paused
+            or (self.action_queue.is_enabled == false and self.state_var.value ~= 'Always') or state.AutoZoneMode.value == 'Off' or state.AutoFollowMode.value == 'Off' or not player or (os.time() - player:get_last_zone_time()) < self.zone_cooldown
             or zone_id ~= windower.ffxi.get_info().zone or windower.ffxi.get_info().zone == 0 then
         return false
     end

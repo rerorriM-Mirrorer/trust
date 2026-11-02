@@ -1,3 +1,18 @@
+# Current Development Status — November 2, 2026 — Stop Keeps Following 1
+
+- Repository `rerorriM-Mirrorer/trust`, branch `test/starter-defaults-20261023`; starting published `0b9fa3b7c1966ea72293d3290ef0de8685c84b50` (local equivalent `2007f18f`). User reports Fan Out looks/feels good in game. New request: Stop pauses Trust actions while ordinary following continues, without Fan Out; Start restores enabled Fan Out.
+- Main/reaction queues still stop and active movement/recovery is canceled before the separate ordinary-follow queue restarts. While stopped only Always following (including existing zone assistance) may run; recorded Path mode remains paused. Existing follow distance, status/range/height checks, Fan Out saved preference, and recovery pause remain respected. This does not force follow On or invent a target.
+- Manual movement/mute takeover uses a distinct manual pause before stopping Trust, preventing transient follow restart; existing takeover target clearing remains. Start or explicit follow start releases that gate. No new command/option or AHK changes.
+- Package `Trust-Stop-Keeps-Following1-Cumulative-20261102.zip` is a cumulative overlay with WORKFLOW.md/TESTING.md/README.md inside trust/. Unload Trust on every client, merge trust/, reload. Existing installation/assets/settings required; no personal settings included. Roll back using preceding Fan Out 1 overlay.
+- Verification: all 31 simulated Lua suites pass under host Lua 5.4 with temporary Windower syntax normalization; actual SQLite writer/save checks pass through the existing LuaSQLite3 API bridge. Diff whitespace check passes. These do not replace native Windower/FFXI tests, which remain PENDING.
+
+Live tests — PENDING:
+1. Follow leader, Stop while fanned out: cancel offset movement and settle on ordinary follow distance; walk/stop/turn and confirm close following continues with Trust visibly Off. Job actions/reactions/pulling remain stopped.
+2. Start: offsets return when Fan Out enabled; saved Fan Out Off remains Off. Repeat stop/start and party-wide commands; recorded paths stay paused while stopped.
+3. Move controlled character after neutral while started and already stopped; verify no tug/restart. Mute hands leadership over with local following canceled; Start restores eligible following. Check combat/cutscene/death gates and zone following.
+
+---
+
 # Current Development Status — November 1, 2026 — Follow Fan Out 1
 
 - Trust repository rerorriM-Mirrorer/trust; branch test/starter-defaults-20261023. Starting local afe6789ea54a8bbb0458ab81efdf879201c6d516 / published c735038301417bd1f92c0092fc529a2a772d6b1f. User authorized optional cosmetic fanning with On default after pulling test delivery. Last user-confirmed live result remains mute handoff convenience; responsive pulling and new formation native acceptance pending.

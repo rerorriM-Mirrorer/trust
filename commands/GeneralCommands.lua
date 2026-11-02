@@ -29,7 +29,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('start', self.handle_start, 'Start Trust')
     self:add_command('handoff', self.handle_handoff, 'Follow and assist a party member, then start: //trust handoff <name>')
     self:add_command('startall', self.handle_start_all, 'Start Trust on all characters, or only party members with // trust startall party')
-    self:add_command('stop', self.handle_stop, 'Stop Trust')
+    self:add_command('stop', self.handle_stop, 'Stop Trust actions; keep following without Fan Out')
     self:add_command('stopall', self.handle_stop_all, 'Stop Trust on all characters, or only party members with // trust stopall party')
     self:add_command('toggle', self.handle_toggle, 'Toggle Trust On and Off')
     self:add_command('reload', self.handle_reload, 'Reload job settings files')

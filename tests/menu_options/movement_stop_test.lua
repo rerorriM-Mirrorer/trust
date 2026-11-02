@@ -18,15 +18,18 @@ local env=setmetatable({action_queue=main,player={player={monitor=function()end}
 local root=source('Trust.lua');local a=assert(root:find('\taddon_enabled = ValueRelay.new(false)',1,true));local b=assert(root:find('\n\tmain_job_id =',a,true))
 assert(load(root:sub(a,b-1),'actual stop relay','t',env))()
 callback(nil,false)
-assert(table.concat(calls,',')=='disable,walking stopped,reaction stopped,run stopped,native follow stopped')
+assert(table.concat(calls,',')=='disable,walking stopped,reaction stopped,run stopped,native follow stopped,walking resumed')
 callback(nil,true);assert(main.is_enabled and calls[#calls]=='walking resumed')
--- Every path that can rearm walking is gated while the parent queue is stopped.
+-- Recorded paths and manual takeover remain gated while Trust is stopped.
 local Follower={};local e=setmetatable({Follower=Follower},{__index=_G})
 method('cylibs/trust/roles/follower.lua','function Follower:start_following(override)','function Follower:stop_following',e)
 method('cylibs/trust/roles/follower.lua','function Follower:check_distance()','function Follower:on_player_status_change',e)
 method('cylibs/trust/roles/follower.lua','function Follower:can_zone(zone_id)','function Follower:zone(',e)
-local f=setmetatable({action_queue={is_enabled=false},get_party=function()return{get_player=function()return{}end}end},{__index=Follower})
+local f=setmetatable({action_queue={is_enabled=false},state_var={value='Path'},get_party=function()return{get_player=function()return{}end}end},{__index=Follower})
 f:start_following(true);f:check_distance();assert(f:can_zone(1)==false)
+f.state_var.value='Always';f.manual_pause=true
+f:start_following(true);f:check_distance();assert(f:can_zone(1)==false)
+follower.manual_pause=true;callback(nil,true);assert(follower.manual_pause==false,'Start must release manual takeover')
 -- Current child cancellation can synchronously call perform again. It must not
 -- progress to the next child, including partial-failure sequences.
 local SequenceAction={};e={SequenceAction=SequenceAction}

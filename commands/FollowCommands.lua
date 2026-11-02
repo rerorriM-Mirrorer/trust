@@ -70,6 +70,7 @@ function FollowTrustCommands:handle_follow_party_member(party_member_name)
         self:handle_set_mode('AutoFollowMode', 'Always', command_feedback.is_quiet())
 
         require('cylibs/movement/recovery').reset()
+        self:get_follower().manual_pause=false
         self:get_follower().recovery_paused=false
         local error_message = self:get_follower():follow_target_named(party_member_name)
         if error_message then
@@ -112,6 +113,7 @@ end
 -- // trust follow start
 function FollowTrustCommands:handle_start()
     require('cylibs/movement/recovery').reset()
+    self:get_follower().manual_pause=false
     self:get_follower().recovery_paused=false
     local success = true
     local message = 'Following resumed'
@@ -126,6 +128,7 @@ function FollowTrustCommands:handle_stop()
     local success = true
     local message = 'Following paused'
 
+    self:get_follower().manual_pause=true
     self:get_follower():stop_following()
 
     return success, message

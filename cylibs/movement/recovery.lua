@@ -86,11 +86,11 @@ function M.close()
     if M.dispose_bag then M.dispose_bag:destroy();M.dispose_bag=nil end
     M.reset(true)
 end
-local function suspended()
+local function suspended(ordinary_follow)
     local info=windower.ffxi.get_info();local character=windower.ffxi.get_player()
     if not info or not info.logged_in or info.chat_open or info.menu_open or not character then return true end
     if character.status~=0 and character.status~=1 then return true end
-    if addon_enabled and not addon_enabled:getValue() then return true end
+    if not ordinary_follow and addon_enabled and not addon_enabled:getValue() then return true end
     if clock()<(M.casting_until or 0) then return true end
     if hud and hud.trustMenu and hud.trustMenu:isVisible() then return true end
     for _,id in ipairs(character.buffs or {}) do
@@ -115,7 +115,7 @@ function M.step(action,pos,goal,radius)
     end
     local key=mobkey(meta.key)
     local previous=detector.context and detector.context.key==key and detector.last or ''
-    local decision,offset,started=detector:sample(key,pos,goal,radius,config,suspended())
+    local decision,offset,started=detector:sample(key,pos,goal,radius,config,suspended(meta.kind=='following' and action.follow_while_stopped==true))
     if decision=='normal' then
         M.last=detector.last
         if previous:find('detour',1,true) then

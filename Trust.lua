@@ -48,8 +48,8 @@ function load_user_files(main_job_id, sub_job_id)
 		else
 			action_queue:disable()
             require('cylibs/movement/recovery').reset()
-            -- A: following owns a separate walking queue; stopping the main
-            -- queue alone leaves its movement and event callbacks alive.
+            -- A: retire any formation/path step, then resume plain following
+            -- independently of job automation. Manual takeover has its own gate.
             local trust = player and player.trust and player.trust.main_job
             local follower = trust and trust:role_with_type('follower')
             if follower then follower:stop_following() end
@@ -61,10 +61,13 @@ function load_user_files(main_job_id, sub_job_id)
             windower.ffxi.run(false)
             windower.ffxi.follow()
 		end
-        if isEnabled then
+        do
             local trust = player and player.trust and player.trust.main_job
             local follower = trust and trust:role_with_type('follower')
-            if follower then follower.recovery_paused=false;follower:start_following() end
+            if follower then
+                if isEnabled then follower.manual_pause=false;follower.recovery_paused=false end
+                follower:start_following()
+            end
         end
 	end)
 
@@ -508,7 +511,7 @@ function load_ui()
             return require('cylibs/util/command_feedback').run(addon_settings:getSettings().movement.quiet~=false,function()
                 local movement=addon_settings:getSettings().movement
                 if local_only and not movement.stop_on_movement then return false,'local Stop disabled' end
-                if movement.stop_on_movement then handle_stop() end
+                if movement.stop_on_movement then handle_stop(true) end
                 if local_only then
                     -- Stop is idempotent: clear native motion even if Trust
                     -- was already stopped and its relay does not fire again.
@@ -668,7 +671,13 @@ end
 
 -- Handlers
 
-function handle_stop()
+function handle_stop(cancel_follow)
+    -- Manual input must remain authoritative even if Trust was already stopped.
+    if cancel_follow then
+        local trust=player and player.trust and player.trust.main_job
+        local follower=trust and trust:role_with_type('follower')
+        if follower then follower.manual_pause=true;follower:stop_following() end
+    end
     require('cylibs/movement/recovery').reset()
 	addon_enabled:setValue(false)
 end
