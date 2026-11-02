@@ -67,6 +67,13 @@ function FollowTrustCommands:handle_follow_party_member(party_member_name)
     party_member_name = party_member_name:gsub("^%l", string.upper)
 
     if self:get_follower():is_valid_target(party_member_name) then
+        local follower = self:get_follower()
+        local current = follower:get_follow_target()
+        if state.AutoFollowMode.value == 'Always' and current
+                and current:get_name():lower() == party_member_name:lower()
+                and not follower.manual_pause and not follower.recovery_paused then
+            return true, 'Already following '..party_member_name
+        end
         self:handle_set_mode('AutoFollowMode', 'Always', command_feedback.is_quiet())
 
         require('cylibs/movement/recovery').reset()

@@ -27,6 +27,9 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
 
     -- State
     self:add_command('start', self.handle_start, 'Start Trust')
+    self:add_command('ready', self.handle_ready, 'Assist me and start participating party clients: //trust ready')
+    self:add_command('standdown', self.handle_standdown, 'Stop party actions and follow me: //trust standdown')
+    self:add_command('partyrequest', self.handle_party_request, 'Internal coordinated party request')
     self:add_command('handoff', self.handle_handoff, 'Follow and assist a party member, then start: //trust handoff <name>')
     self:add_command('startall', self.handle_start_all, 'Start Trust on all characters, or only party members with // trust startall party')
     self:add_command('stop', self.handle_stop, 'Stop Trust actions; keep following without Fan Out')
@@ -193,12 +196,84 @@ function GeneralTrustCommands:handle_handoff(_, name)
     return self:handle_start()
 end
 
+-- A: receivers apply one ordered operation locally, with no rebroadcast and
+-- no success chatter. Errors still return through normal command feedback.
+function GeneralTrustCommands:handle_party_request(_, operation, leader, ...)
+    if select('#', ...) > 0 or (operation ~= 'ready' and operation ~= 'standdown')
+            or type(leader) ~= 'string' or not leader:match('^%a+$') then
+        return false, 'Invalid coordinated party request'
+    end
+    local member = self.trust:get_party():get_party_member_named(leader, true)
+    if not member then return false, 'Party leader '..leader..' is unavailable' end
+    return require('cylibs/util/command_feedback').run(true, function()
+        if operation == 'ready' then
+            local ok,message = shortcuts.assist:handle_assist_player(leader)
+            if ok == false then return false,message end
+            self:handle_start()
+        else
+            -- Stop remains useful even if distance/zone prevents following.
+            self:handle_stop()
+            local ok,message = shortcuts.follow:handle_follow_party_member(leader)
+            if ok == false then return false,'Trust stopped; '..message end
+        end
+        return true
+    end)
+end
+
+function GeneralTrustCommands:request_party_state(operation)
+    if state.IpcMode.value ~= 'All' and state.IpcMode.value ~= 'Send' then
+        return false, 'IpcMode must be All or Send to send party requests'
+    end
+    local leader = windower.ffxi.get_player().name
+    local feedback = require('cylibs/util/command_feedback')
+    local ok,message = feedback.run(true, function()
+        if operation == 'ready' then
+            -- The initiating client also starts and leads its own battle target.
+            local assisted,reason = shortcuts.assist:handle_assist_player(leader)
+            if assisted == false then return false,reason end
+            self:handle_start()
+        else
+            self:handle_stop()
+            local follower = shortcuts.follow:get_follower()
+            if follower:get_follow_target() then follower:set_follow_target(nil) end
+        end
+        return true
+    end)
+    if ok == false then return false,message end
+    local sent,seen = 0,{}
+    for name in party_util.get_party_member_names(false):it() do
+        if type(name) == 'string' and name:match('^%a+$')
+                and name:lower() ~= leader:lower() and not seen[name:lower()] then
+            seen[name:lower()] = true
+            IpcRelay.shared():send_message(CommandMessage.new(
+                'trust partyrequest '..operation..' '..leader, name))
+            sent = sent + 1
+        end
+    end
+    require('chat')
+    local heading = operation == 'ready' and 'Party standing ready' or 'Party standing down'
+    local detail = sent > 0 and 'request sent; remote state unconfirmed' or 'local only; no other party members'
+    windower.add_to_chat(0, '[Trust] ':color(200)..heading:color(167)
+        ..' -> ':color(200)..detail:color(0))
+    return true
+end
+
+function GeneralTrustCommands:handle_ready(_, ...)
+    if select('#', ...) > 0 then return false, 'Usage: //trust ready' end
+    return self:request_party_state('ready')
+end
+
+function GeneralTrustCommands:handle_standdown(_, ...)
+    if select('#', ...) > 0 then return false, 'Usage: //trust standdown' end
+    return self:request_party_state('standdown')
+end
+
 -- // trust start
 function GeneralTrustCommands:handle_start(_, include_party)
     local success = true
     local message
 
-    self.addon_enabled:setValue(true)
+    if not self.addon_enabled:getValue() then self.addon_enabled:setValue(true) end
 
     if include_party then
         message = "Trust started on all characters"
@@ -220,7 +295,7 @@ function GeneralTrustCommands:handle_stop(_, include_party)
     local success = true
     local message
 
-    self.addon_enabled:setValue(false)
+    if self.addon_enabled:getValue() then self.addon_enabled:setValue(false) end
 
     if include_party then
         message = "Trust stopped on all characters"

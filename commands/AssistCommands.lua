@@ -56,7 +56,9 @@ function AssistTrustCommands:handle_assist_player(party_member_name, mirror)
 
         if mirror == "true" then
             for mode_name in L{ 'CombatMode' }:it() do
-                self:handle_set_mode(mode_name, 'Mirror', command_feedback.is_quiet())
+                if get_state(mode_name).value ~= 'Mirror' then
+                    self:handle_set_mode(mode_name, 'Mirror', command_feedback.is_quiet())
+                end
             end
             message = message.." (mirroring combat distance)"
         end
