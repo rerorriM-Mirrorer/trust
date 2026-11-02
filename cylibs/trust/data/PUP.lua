@@ -211,6 +211,9 @@ function PuppetmasterTrust:set_maneuver_settings(maneuver_settings)
 end
 
 function PuppetmasterTrust:get_widget()
+    -- Pet automation/tracking remains active; omit its entire visual layer by default.
+    local widgets = addon_settings:getSettings().widgets or {}
+    if widgets.hide_pet ~= false then return nil end
 	local AutomatonStatusWidget = require('ui/widgets/AutomatonStatusWidget')
 	local petStatusWidget = AutomatonStatusWidget.new(
 			Frame.new(168, 324, 125, 57),

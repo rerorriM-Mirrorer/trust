@@ -147,6 +147,9 @@ function SummonerTrust:update_avatar(pet_id, pet_name)
 end
 
 function SummonerTrust:get_widget()
+    -- Pet automation/tracking remains active; omit its entire visual layer by default.
+    local widgets = addon_settings:getSettings().widgets or {}
+    if widgets.hide_pet ~= false then return nil end
 	local AvatarStatusWidget = require('ui/widgets/AvatarStatusWidget')
 	local petStatusWidget = AvatarStatusWidget.new(
 			Frame.new(132, 324, 125, 57),

@@ -322,12 +322,12 @@ function TrustStatusWidget:refreshCompactIcon()
     local active = status == 'active'
     if self.compactStatus ~= status then
         self.compactStatus = status
-        -- Three states with only two base sprites: Off is a faint hourglass,
+        -- Three states with only two base sprites: Off is a translucent hourglass,
         -- Idle and Active both keep the same translucent open book beneath.
         local path = stopped and 'assets/icons/icon_timer.png'
             or 'assets/icons/menu_mapsg_book.png'
         self.compactIcon:loadImage(windower.addon_path..path)
-        self.compactIcon.alpha = stopped and 75 or 185
+        self.compactIcon.alpha = stopped and 155 or 230
     end
 
     -- Retain a restrained green outer halo; the crystal (not the book)

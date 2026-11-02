@@ -20,6 +20,15 @@ Fresh installation batch (October 23, 2026): see [the clean-install guide](docs/
 
 # Trust
 
+### Coordinated party commands
+
+`//trust ready` makes receiving party clients assist this character and starts Trust on everyone participating, including this character. It keeps existing following. `//trust standdown` stops Trust actions and has the other receiving party clients follow this character; following while stopped has no Fan Out. Both print one color-coded request acknowledgment. Sending requires IpcMode All/Send; receiving follows each client's existing All/Receive setting. A sent request is not remote confirmation; a client that cannot follow reports its own failure while remaining stopped.
+
+The stick fires once after switching FFXI characters: with the default movement preferences it stops local Trust/following and requests Follow Me. Returning to neutral or visiting the desktop does not rearm it. Mute keeps its explicit leadership handoff. Repeated Start and unchanged Follow requests preserve active walking and formation.
+
+Pet visuals are hidden by default, with automation/tracking unchanged. The compact hourglass/book are more opaque; the existing crystal animation remains.
+
+
 ## Party song gambits test 1 — 2026-10-19
 
 The gambit ability picker now includes beneficial Bard songs under **Add > Self**
@@ -477,3 +486,5 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - November 2, 2026: `//trust stop` pauses job/pull/reaction actions while ordinary following continues without Fan Out, using the saved follow distance. Start restores Fan Out when enabled. Manual movement/mute takeover still cancels local following; Start or follow start resumes it. Recorded paths remain paused while stopped.
 
 - November 2, 2026: First stick movement after switching characters requests follow only, preserving others' assist target and Start/Stop state. Mute retains explicit leadership (follow/assist/Start when Start others is On) and prints a local request acknowledgment. Later stick episodes remain local takeover. Requires the matching movement_signal.ahk; other AHK companions are unchanged.
+
+- November 2, 2026: Added coordinated Ready/Standdown party requests with a single truthful request acknowledgment, state-aware Start/Follow, once-per-client-switch stick takeover (no neutral rearm), hidden pet widget by default, and compact hourglass/book alpha 155/230. Mute retains its existing handoff. Requires the matched movement_signal.ahk only; other AHK and L1 bindings unchanged.
