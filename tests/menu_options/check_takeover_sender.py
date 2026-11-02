@@ -27,23 +27,21 @@ function poll(x,y=0){MovementPoll({moveX:x,moveY:y,HasOwnProp(k){return Object.h
 function neutral(){poll(0);now+=100;poll(0)}
 reset();MovementTick(1);poll(.5);assert.equal(sends.length,1);assert.match(sends[0],/sc07B/);
 for(let i=0;i<100;i++){now+=10;MovementTick(1);poll(.5)}assert.equal(sends.length,1);
-neutral();poll(.5);assert.equal(sends.length,2);assert.match(sends[1],/sc079/);
-// Brief neutral or near-deadzone motion cannot rearm.
-poll(0);now+=50;poll(0);poll(.5);assert.equal(sends.length,2);
-poll(.18);now+=200;poll(.18);poll(.5);assert.equal(sends.length,2);
-neutral();poll(.5);assert.equal(sends.length,3);
-// Desktop does not reclassify same-client takeover as party handoff.
-MovementTick(0);MovementTick(1);neutral();poll(.5);assert.match(sends[3],/sc079/);
-// Different client keeps first-movement party handoff.
-activeWindow=2;MovementTick(2);poll(.5);assert.match(sends[4],/sc07B/);
+neutral();poll(.5);assert.equal(sends.length,1);
+// Neutral, jitter, holding and leaving for desktop never rearm this client.
+for(let i=0;i<4;i++){neutral();poll(.5);poll(.18)}assert.equal(sends.length,1);
+MovementTick(0);MovementTick(1);neutral();poll(.5);assert.equal(sends.length,1);
+// A different FFXI client rearms exactly one follow request; returning does too.
+activeWindow=2;MovementTick(2);poll(.5);assert.equal(sends.length,2);assert.match(sends[1],/sc07B/);
+activeWindow=1;MovementTick(1);poll(.5);assert.equal(sends.length,3);assert.match(sends[2],/sc07B/);
 reset();MovementTick(1);TM.policy='Ready';ready=false;poll(.5);assert.equal(sends.length,0);
 ready=true;context='menu';poll(.5);assert.equal(sends.length,0);
 context='gameplay';poll(.5);assert.equal(sends.length,1);
 neutral();supported=false;poll(.5);assert.equal(sends.length,1);
 reset();MovementTick(1);ready=false;poll(.5);assert.equal(sends.length,1);poll(.5);assert.equal(sends.length,1);
 neutral();MovementLeader(1);assert.match(sends.at(-1),/sc077/);assert.equal(TM.fired,true);
-neutral();poll(.5);assert.match(sends.at(-1),/sc079/);
-console.log('PASS actual sender decision branches: hold, neutral hysteresis, local-only repeat, focus change, Ready guards, Send once, older-receiver gate');
+let before=sends.length;neutral();poll(.5);assert.equal(sends.length,before);
+console.log('PASS actual sender decision branches: hold, no neutral rearm, desktop continuity, client-switch rearm, mute independence, Ready guards, Send once, older-receiver gate');
 '''
 subprocess.run(['node','-e',js],check=True)
 # Lexical checks and current companion include/function closure.

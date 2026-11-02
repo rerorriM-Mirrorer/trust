@@ -1,6 +1,6 @@
 ; A: integrated Trust movement Send/Ready test 1, AutoHotkey v2.
-; First movement per FFXI focus session requests follow; later stick episodes stop
-; only the local Trust. Stable neutral rearms without repeating party handoff.
+; One movement request per FFXI client switch. Neutral never rearms it.
+; Mute remains an explicit, independent leadership request.
 MovementInit() {
     global TM
     TM := {client:0, fired:false, sent:0, signalOwner:0, due:0
@@ -25,24 +25,11 @@ MovementPoll(states, active, observation := false) {
         return
     now := DllCall("GetTickCount64", "UInt64")
     magnitude := states.moveX * states.moveX + states.moveY * states.moveY
-    ; Hysteresis and 100ms of observed neutral reject noise and tiny pauses.
-    if (magnitude < 0.16 * 0.16) {
-        if (!TM.neutralSince)
-            TM.neutralSince := now
-        if (now - TM.neutralSince >= 100)
-            TM.episode := false
-        return
-    }
-    TM.neutralSince := 0
-    if (TM.episode or magnitude < TM.threshold * TM.threshold)
+    if (TM.fired or magnitude < TM.threshold * TM.threshold)
         return
     ; Existing personal controls expose addon menus as well as text entry.
     ; Holding a crossbar trigger alone still permits movement takeover.
     ready := MovementReceiverReady(active)
-    if (TM.fired and !TM.takeoverSupported) {
-        TM.reason := "local-takeover-unavailable"
-        return
-    }
     ; Send consumes the first movement even in a blocked context. Trust makes
     ; the immediate accept/ignore decision; there is no delayed retry.
     if (TM.policy = "Ready" and PC.enabled) {
@@ -58,7 +45,7 @@ MovementPoll(states, active, observation := false) {
     ; this is a separate scan code, outside the wrapper's F1-F12 signals.
     if (WinActive("ahk_class FFXiClass") != active)
         return
-    MovementSend(active, TM.fired)
+    MovementSend(active, false)
 }
 
 ; Explicit leader request has its own signal, separate from travel following.
