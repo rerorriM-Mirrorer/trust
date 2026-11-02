@@ -1,3 +1,16 @@
+# Current Development Status — November 2, 2026 — Ready Others Only 1
+
+- Repository `rerorriM-Mirrorer/trust`, branch `test/starter-defaults-20261023`; baseline published `7e6e0ef5626f7a06148561b2cd2cd36d98cfd374` / identical local tree `b8c1c62a`. User requested Ready to Start only everyone else. Assist leadership and acknowledgment remain; only the local Start is removed. Initiator retains both an existing Started or Stopped state without firing its relay.
+- Recipients retain ordered assist-then-Start, party/IPC participation rules, idempotence and failure reporting. Ready without other party members now explicitly reports no recipients and unchanged local Start/Stop state. Standdown, mute, stick, following, widgets and settings are unchanged. Previous batch's local Ready Start description below is historical and superseded by this entry.
+- Delivery `Trust-Ready-OthersOnly1-Patch-20261102.zip`: requires preceding Party Commands / Focus Stick / Widgets build. Unload Trust on participating clients, merge trust/ (one runtime file: commands/GeneralCommands.lua), reload. README/WORKFLOW/TESTING are inside trust/. No AHK/settings/assets replacement. Rollback restore previous GeneralCommands.lua from preceding cumulative package.
+- Verification: production Ready/Standdown simulated suite passes, including stopped and started initiators retaining state with zero relay writes; recipient assist/Start, repeat requests, scope/validation/partial failure and follow preservation still pass. Host Lua 5.4 with temporary Windower syntax normalization; native FFXI acceptance PENDING.
+
+Live test — PENDING:
+1. Initiator Trust Stopped: run Ready. It stays Stopped; other receiving party clients assist it and Start. One truthful request acknowledgment.
+2. Initiator Started: Ready leaves it Started. Repeat while others are walking; no formation/queue reset. Standdown still stops local and remote actions and arranges following.
+
+---
+
 # Current Development Status — November 2, 2026 — Party Commands / Focus Stick / Widgets 1
 
 - Repository `rerorriM-Mirrorer/trust`, branch `test/starter-defaults-20261023`; baseline published `fb85d594debbaba2b6f2f0e6178953293829cb40` (identical local tree `52d88745`). User approved coordinated Ready/Standdown and widget adjustments, then explicitly retained whole-Trust Stop on stick takeover and removed neutral rearming. Movement-only takeover is DEFERRED, not implemented. Mute behavior remains the existing explicit handoff.

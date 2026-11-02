@@ -27,7 +27,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
 
     -- State
     self:add_command('start', self.handle_start, 'Start Trust')
-    self:add_command('ready', self.handle_ready, 'Assist me and start participating party clients: //trust ready')
+    self:add_command('ready', self.handle_ready, 'Assist me and start other participating party clients: //trust ready')
     self:add_command('standdown', self.handle_standdown, 'Stop party actions and follow me: //trust standdown')
     self:add_command('partyrequest', self.handle_party_request, 'Internal coordinated party request')
     self:add_command('handoff', self.handle_handoff, 'Follow and assist a party member, then start: //trust handoff <name>')
@@ -228,10 +228,9 @@ function GeneralTrustCommands:request_party_state(operation)
     local feedback = require('cylibs/util/command_feedback')
     local ok,message = feedback.run(true, function()
         if operation == 'ready' then
-            -- The initiating client also starts and leads its own battle target.
+            -- Keep the initiator's Start/Stop state; only receivers start.
             local assisted,reason = shortcuts.assist:handle_assist_player(leader)
             if assisted == false then return false,reason end
-            self:handle_start()
         else
             self:handle_stop()
             local follower = shortcuts.follow:get_follower()
@@ -252,7 +251,9 @@ function GeneralTrustCommands:request_party_state(operation)
     end
     require('chat')
     local heading = operation == 'ready' and 'Party standing ready' or 'Party standing down'
-    local detail = sent > 0 and 'request sent; remote state unconfirmed' or 'local only; no other party members'
+    local detail = sent > 0 and 'request sent; remote state unconfirmed'
+        or (operation == 'ready' and 'no other party members; local Start/Stop unchanged'
+            or 'local only; no other party members')
     windower.add_to_chat(0, '[Trust] ':color(200)..heading:color(167)
         ..' -> ':color(200)..detail:color(0))
     return true

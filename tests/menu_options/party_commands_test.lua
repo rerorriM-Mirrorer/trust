@@ -38,7 +38,7 @@ local function use(name)
  return c
 end
 local c=use('Cioara');assert(c:handle_ready('ready'))
-assert(c.enabled and c.assist=='Cioara' and c.changes==1)
+assert(not c.enabled and c.assist=='Cioara' and c.changes==0,'Ready started its initiating client')
 assert(#messages==1 and messages[1].target=='Myrr' and messages[1].command=='trust partyrequest ready Cioara')
 assert(#acks==1 and acks[1]:find('[167]Party standing ready',1,true) and acks[1]:find('unconfirmed',1,true))
 local m=use('Myrr');receiving=true;assert(m:handle_party_request('partyrequest','ready','Cioara'));receiving=false
@@ -62,6 +62,12 @@ use('Cioara');env.state.IpcMode.value='Receive';local count=#messages
 assert(not c:handle_ready('ready'));assert(#messages==count and #acks==2)
 assert(not c:handle_ready('ready','extra') and not c:handle_standdown('standdown','extra'))
 assert(not Feedback.is_quiet(),'feedback scope leaked')
+-- Ready preserves both possible initiating states, without firing its relay.
+env.state.IpcMode.value='All';use('Cioara')
+local localChanges=c.changes;c.enabled=true;assert(c:handle_ready('ready'))
+assert(c.enabled and c.changes==localChanges)
+c.enabled=false;assert(c:handle_ready('ready'));assert(not c.enabled and c.changes==localChanges)
+
 -- Real Follow handler must not reset a live destination/formation on same leader.
 local FollowTrustCommands={};local resets,starts,sets=0,0,0
 local followenv=setmetatable({FollowTrustCommands=FollowTrustCommands,state={AutoFollowMode={value='Always'}},
