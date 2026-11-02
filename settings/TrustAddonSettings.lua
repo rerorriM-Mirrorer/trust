@@ -26,9 +26,9 @@ default.follow.distance = 1
 default.follow.auto_pause = false
 -- Filled once from the active job, then retained across job/profile switches.
 default.character_modes = {}
-default.movement = {policy='Send',enabled=true,quiet=true,stop_on_movement=false,start_others=false,auto_lockon=true,
-    recovery={mode='Off',pulling=true,following=true,paths=true,interval=2,min_movement=.5,
-        detour_distance=2,attempts=2,pull_cooldown=30,diagnostics=false}}
+default.movement = {policy='Send',enabled=true,quiet=true,stop_on_movement=true,start_others=true,auto_lockon=false,defaults_version=0,
+    recovery={mode='Detour',pulling=true,following=true,paths=true,interval=2,min_movement=.5,
+        detour_distance=2,attempts=2,pull_cooldown=30,diagnostics=true}}
 default.flags = {}
 default.flags.show_death_warning = true
 default.flags.check_files = true
@@ -103,6 +103,17 @@ function TrustAddonSettings:loadSettings()
     settings.menu = settings.menu or {}
     for key, value in pairs(default.menu) do
         if settings.menu[key] == nil then settings.menu[key] = value end
+    end
+    -- A: apply the explicitly requested movement defaults once to existing
+    -- characters too. The saved version keeps later user choices intact.
+    local movement=settings.movement
+    if (tonumber(movement.defaults_version) or 0)<1 then
+        movement.stop_on_movement=true;movement.start_others=true;movement.auto_lockon=false
+        movement.enabled=true;movement.policy='Send';movement.quiet=true
+        movement.recovery.mode='Detour';movement.recovery.pulling=true
+        movement.recovery.following=true;movement.recovery.paths=true
+        movement.recovery.diagnostics=true;movement.defaults_version=1
+        config.save(settings)
     end
     self.settings = settings
     require('settings/shared_preferences').configure(self)

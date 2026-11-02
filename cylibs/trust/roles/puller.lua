@@ -152,8 +152,8 @@ function Puller:get_all_targets()
     local target_names = self.target_names
     local function sort_bucket(mobs)
         table.sort(mobs, function(a, b)
-            local index_a = target_names:indexOf(a.name)
-            local index_b = target_names:indexOf(b.name)
+            local index_a = require('cylibs/util/name_match').index_of(target_names,a.name)
+            local index_b = require('cylibs/util/name_match').index_of(target_names,b.name)
             if index_a == -1 then index_a = math.huge end
             if index_b == -1 then index_b = math.huge end
             return index_a < index_b
@@ -174,7 +174,7 @@ function Puller:get_all_targets()
         all_targets = sort_bucket(self.mob_filter:get_aggroed_mobs(L{ MobFilter.Type.PartyClaimed }))
                 + sort_bucket(self.mob_filter:get_aggroed_mobs(L{ MobFilter.Type.Unclaimed }))
                 + sort_bucket(self.mob_filter:get_nearby_mobs(L{ MobFilter.Type.Unclaimed }):filter(function(mob)
-            return self.target_names:contains(mob.name) or self.target_ids:contains(mob.id)
+            return require('cylibs/util/name_match').contains(self.target_names,mob.name) or self.target_ids:contains(mob.id)
         end))
     elseif state.AutoPullMode.value == 'All' then
         -- 1. All mobs that are party claimed

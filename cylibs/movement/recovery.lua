@@ -5,8 +5,8 @@ local Detector=require('cylibs/movement/stuck_detector')
 local clock=require('socket').gettime
 local M={skips={},last='idle'}
 local detector=Detector.new(clock)
-local defaults={mode='Off',pulling=true,following=true,paths=true,interval=2,
-    min_movement=.5,detour_distance=2,attempts=2,pull_cooldown=30,diagnostics=false}
+local defaults={mode='Detour',pulling=true,following=true,paths=true,interval=2,
+    min_movement=.5,detour_distance=2,attempts=2,pull_cooldown=30,diagnostics=true}
 local function settings()
     local saved=addon_settings and addon_settings:getSettings().movement
     saved=saved and saved.recovery or {}

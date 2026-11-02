@@ -20,7 +20,7 @@ end
 function TargetNamesCondition:is_satisfied(target_index)
     local target = windower.ffxi.get_mob_by_index(target_index)
     if target then
-        return self.names:contains(target.name)
+        return require('cylibs/util/name_match').contains(self.names,target.name)
     end
     return false
 end

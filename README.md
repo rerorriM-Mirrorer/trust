@@ -449,3 +449,10 @@ Main-menu Pulling now opens with Config at the top; job-specific Pulling hides C
 ### Personal development: Recovery Config and Command Suggestions (2026-11-01)
 
 Recovery is now directly under Config. It displays the saved Off/Detour/Pause selection correctly; existing settings are retained. Movement also displays its saved Send/Ready policy. Config > Command Suggestions exposes the existing visibility setting: turn it Off to hide suggestions and skip command matching/list rebuilding while typing. These preferences remain character-wide across jobs.
+
+
+### Personal development: Responsive Approach and Movement defaults (2026-11-01)
+
+Approach no longer waits two seconds before engaging/closing. Already-engaged requests for the same target finish immediately; new requests observe confirmation and time out if it never arrives. Pull target/exclusion names and their priority order now match without regard to capitalization, using whole names only.
+
+The requested movement defaults are applied once as each character reloads: Stop self and Start others On, automatic engage lock-on Off, Recovery Detour for pulling/following/paths and diagnostics On. Later changes are preserved. Existing numeric recovery tuning remains. These settings still belong to each character across jobs; all clients adopt on their own next load rather than through live preference sharing.

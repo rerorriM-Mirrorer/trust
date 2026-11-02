@@ -81,7 +81,7 @@ function Approach:to_action(target_index)
        actions:append(RunToAction.new(target_index, 25))
     end
 
-    actions:append(WaitAction.new(0, 0, 0, 2))
+    -- A: close/engage immediately; EngageAction observes readiness itself.
     actions:append(EngageAction.new(target_index))
     actions:append(FollowAction.new(target_index, L{ ClaimedCondition.new() }))
 

@@ -51,11 +51,14 @@ method('commands/GeneralCommands.lua','function GeneralTrustCommands:handle_hand
 assert(g:handle_handoff(nil,'Cioara'));assert(table.concat(order,',')=='follow,assist,start')
 order={};fail=true;assert(g:handle_handoff(nil,'Cioara')==false and #order==1)
 assert(g:handle_handoff(nil,'Myrr')==false and g:handle_handoff(nil,'bad;command')==false)
--- Execute lock-on guard for both preferences and cursor-only actions.
-local engage=source('cylibs/actions/engage.lua');local lock=assert(engage:match('(                local movement = addon_settings.-\n                end)'))
-local locked=0;e={addon_settings={getSettings=function()return{movement={auto_lockon=false}}end},self={},
+-- Execute actual finish-ready behavior for both explicit lock-on preferences.
+local EngageAction={};local locked=0
+local pref=false
+local env={EngageAction=EngageAction,addon_settings={getSettings=function()return{movement={auto_lockon=pref}}end},
  windower={ffxi={get_player=function()return{target_locked=false}end},send_command=function()locked=locked+1 end}}
-local fn=assert(load(lock,'actual lock-on guard','t',e));fn();assert(locked==0)
-e.addon_settings.getSettings=function()return{movement={auto_lockon=true}}end;fn();assert(locked==1)
-e.self.cursor_only=true;fn();assert(locked==1)
-print('PASS actual Stop relay, stopped follower gates, sequence active-child cancellation, handoff ordering/failure and lock-on preference')
+method('cylibs/actions/engage.lua','function EngageAction:finish_ready()','function EngageAction:perform()',env)
+local action={complete=function(_,success)assert(success)end}
+EngageAction.finish_ready(action);assert(locked==0)
+pref=true;EngageAction.finish_ready(action);assert(locked==1)
+action.cursor_only=true;EngageAction.finish_ready(action);assert(locked==1)
+print('PASS actual Stop relay, stopped follower gates, sequence cancellation, handoff ordering/failure and lock-on preference')
