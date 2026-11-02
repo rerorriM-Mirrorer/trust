@@ -53,7 +53,7 @@ assert(os.rename(path,path..suffix));os.rename=function()return nil,'restore den
 assert(not disk:lock(path..'.lock'));assert(disk:read(path)=='second')
 os.rename=original_rename;release=assert(disk:lock(path..'.lock'));release()
 -- End-to-end: real shared writer + SQLite mutex + compatible file replacement.
-L=function(t)return t end
+L=function(t)t=t or {};t.n=#t;return t end
 assert(disk:write(path,'return {Pulling={Targets={},TargetIds={},Blacklist={},Distance=30,Delay=0},Sounds={disabled=true}}'))
 local serialize=require('cylibs/util/serializer_util').serialize
 local a=Shared.new({disk=disk,path=path,serialize=serialize})

@@ -434,3 +434,8 @@ After failed recovery, pulling skips that individual mob locally for the cooldow
 ### Personal development: Shared Save Compatibility Fix 1 (2026-11-01)
 
 Shared Pulling, Sounds and Job gambit saving now uses Trust's existing SQLite module for writer locking and no longer requires LuaJIT/FFI. Unload/update/reload Trust on every client before editing. Standard-Lua replacement preserves a complete `.shared-previous` copy until the new file is verified; leave that copy in place after an interrupted save so recovery can restore it. Existing backups and stale-editor protection remain. Retry `//trust pull distance 50` or reopen the Pulling menu after installing.
+
+
+### Personal development: Shared Save Compatibility Fix 2 (2026-11-01)
+
+Shared Pulling saves now accept Windower lists' internal length metadata. This fixes `Invalid list index` when saving menu edits such as Distance 50. Existing names, target IDs, exclusions and other preferences are preserved; no settings reset is needed. Reopen the editor after updating and retry the save. Includes the SQLite compatibility fix from Fix 1.

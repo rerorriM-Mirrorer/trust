@@ -41,6 +41,25 @@ assert(job.Targets[1]=='old' and job.Distance==12)
 settings.use_shared_pulling=false;assert(Shared.effective(job).Distance==12)
 settings.use_shared_pulling=true;assert(Shared.effective(job).Distance==42)
 Shared.shared=realShared
+-- Windower List metadata is physically stored on each L{} table. Model its
+-- constructor, append and map behavior rather than identity/plain-table mocks.
+local plainL=L
+L=function(t)t=t or {};t.n=#t;return t end
+local windowerEditor=assert(a:owner('Pulling'))
+local pull=windowerEditor:getSettings().Default.PullSettings
+assert(pull.Targets.n==#pull.Targets and pull.TargetIds.n==#pull.TargetIds and pull.Blacklist.n==#pull.Blacklist)
+pull.Distance=50
+assert(windowerEditor:saveSettings(true))
+local adopted=b:read();assert(adopted.Pulling.Distance==50 and adopted.Pulling.Targets[1]=='Mandragora')
+assert(adopted.Pulling.TargetIds[1].Id==123456 and adopted.Pulling.TargetIds[1].Name=='Mandragora')
+assert(adopted.Pulling.Targets.n==nil and adopted.Pulling.Blacklist.n==nil)
+local empty=adopted.Pulling;empty.Targets=L{};empty.TargetIds=L{};empty.Blacklist=L{}
+assert(a:update('Pulling',empty));assert(#b:read().Pulling.Targets==0)
+local invalid=a:read().Pulling;invalid.Targets={n=0,unexpected='Goblin'}
+assert(not a:update('Pulling',invalid))
+invalid.Targets={[2]='Goblin',n=2};assert(not a:update('Pulling',invalid))
+invalid.Targets={n='bad'};assert(not a:update('Pulling',invalid))
+L=plainL
 assert(disk:write(path,'not valid lua'))
 assert(not a:read() and not a:update('Sounds',{disabled=true}))
 assert(disk:read(path)=='not valid lua','corrupt shared file overwritten')

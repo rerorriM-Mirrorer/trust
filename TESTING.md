@@ -1,3 +1,17 @@
+# Current Development Status — November 1, 2026 — Shared Save Compatibility Fix 2
+
+- User report after Fix 1: `settings/shared_preferences.lua:20 Invalid list index` while saving pull detection distance. Confirmed against Windower's upstream `addons/libs/lists.lua` (`dev`, blob `e393b75782cd53a29178999ad6cabcea2744eac0`): L(t) adds a physical `n` length field to the input table. The shared schema's numeric-key-only validation rejected that normal metadata. Previous plain-table test doubles did not reproduce it. No shared-file deletion/reset is required; this failure occurs before backup/staging/replacement.
+- Parent published `60741262b18f431ef7147e5e89250cab9b0b6172`; branch `test/starter-defaults-20261023`. Runtime fix is confined to shared_preferences.lua. Normalize Targets, TargetIds and Blacklist into plain dense arrays, ignoring valid internal n bookkeeping; preserve target names, Id/Name records and unrelated saved preferences. Keep validation of malformed entries, unknown string keys, malformed metadata and sparse lists. Menu editors still receive normal Windower lists; shared storage does not retain internal length metadata.
+- Tests now model Windower L{}'s physical n on empty and nonempty lists, including owner save, distance 50, ID/name preservation, another store reading changes and rejection of malformed/sparse input. The actual SQLite-backend end-to-end test also uses metadata-bearing lists. All 23 regression suites + real-host-SQLite backend test pass; changed Lua sources parse, whitespace checks pass. Lua 5.4 host tests are not native Windows/Windower acceptance.
+- Package `Trust-Shared-Save-Fix2-Cumulative-20261101.zip` includes Fix 1, stuck recovery, handoff and prior shared-setting changes. Unload Trust on all clients, merge the trust folder into the existing personal installation, reload all clients, reopen the Pulling editor and retry Distance 50 (or `//trust pull distance 50`). Preserve existing settings; do not remove shared-preferences.lua or its backups. No AHK changes. Rollback: previous code backup.
+
+Live checks — PENDING:
+1. Save pulling distance 50 from Cioara's menu, reopen, reload, and check another same-installation client adopts it.
+2. Add/remove a target name and an ID entry, edit exclusions, and save an empty target list. Confirm no invalid-list-index error and entries/order survive.
+3. Confirm sounds still persist and stale-editor protection remains. Capture the exact error if another operation fails.
+
+---
+
 # Current Development Status — November 1, 2026 — Shared Save Compatibility Fix 1
 
 - User report: changing Cioara's shared pull detection distance to 50 fails with `Shared saving requires Windows LuaJIT file support`. The previous shared writer incorrectly required FFI from this Windower 4 session. This is a writer compatibility failure, not distance validation. Source parent published `493260b702bdbc458305e2ac71a4c3e2de7337f4`; branch `test/starter-defaults-20261023`.

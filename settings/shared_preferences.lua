@@ -16,14 +16,27 @@ local function validate(v)
     assert(type(v.Sounds.disabled)=='boolean','Invalid sound preference')
     for _,k in ipairs({'Targets','TargetIds','Blacklist'})do
         assert(type(p[k])=='table','Invalid '..k)
+        -- A: Windower L{} tables carry a physical `n` length field.
+        -- Persist only real entries; keep internal list metadata out of the
+        -- shared schema while still rejecting unknown keys or sparse arrays.
+        local clean,count,maxIndex={},0,0
         for i,x in pairs(p[k])do
-            assert(type(i)=='number' and i>=1 and i%1==0,'Invalid list index')
-            if k=='TargetIds' then
-                assert(type(x)=='table' and type(x.Id)=='number' and x.Id>0 and x.Id%1==0 and (x.Name==nil or type(x.Name)=='string'),'Invalid target ID/name entry')
+            if i=='n' then
+                assert(type(x)=='number' and x>=0 and x%1==0,'Invalid '..k..' list length metadata')
             else
-                assert(type(x)=='string' and #x>0,'Invalid '..k..' entry')
+                assert(type(i)=='number' and i>=1 and i%1==0,'Invalid '..k..' list index: '..tostring(i))
+                if k=='TargetIds' then
+                    assert(type(x)=='table' and type(x.Id)=='number' and x.Id>0 and x.Id%1==0 and (x.Name==nil or type(x.Name)=='string'),'Invalid target ID/name entry')
+                    clean[i]={Id=x.Id,Name=x.Name}
+                else
+                    assert(type(x)=='string' and #x>0,'Invalid '..k..' entry')
+                    clean[i]=x
+                end
+                count=count+1;maxIndex=math.max(maxIndex,i)
             end
         end
+        assert(count==maxIndex,'Invalid '..k..' list: missing entries')
+        p[k]=clean
     end
     return v
 end
