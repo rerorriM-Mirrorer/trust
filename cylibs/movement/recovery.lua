@@ -99,6 +99,7 @@ local function suspended()
     end
     return false
 end
+M.suspended=suspended
 function M.step(action,pos,goal,radius)
     local meta=action.recovery
     if not meta then return false end

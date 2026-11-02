@@ -469,3 +469,5 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - November 1, 2026: Controller movement rearms after 100ms of neutral for local Trust Stop; first movement after switching clients retains party handoff. PS5 Extended mute requests that handoff explicitly. Requires matched AHK companions and Trust receiver. Stop on movement remains configurable; Trust Start resumes automation.
 
 - November 1, 2026: Following distance supports 0.1–18 yalms in 0.1-yalm steps, displayed to one decimal. Saved distances/defaults are preserved; this adjusts stopping radius, not formation.
+
+- November 1, 2026: Auto/All pulling now selects an available action before approaching its range, requests engagement alongside movement/action, and hands movement to combat on party claim. The blanket five-second pull cooldown is removed. Active pulls prioritize routine queued work while retaining higher-priority healing and manual Stop. Pull transitions use Recovery verbosity/logging preferences; see TESTING.md for native acceptance checks. Follow formation remains proposed.

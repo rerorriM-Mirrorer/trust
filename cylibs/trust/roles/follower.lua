@@ -143,7 +143,7 @@ function Follower:start_following(override)
         else return end
     end
     -- A: callbacks remain subscribed while Trust is stopped. Never rearm walking.
-    if self.action_queue.is_enabled == false then return end
+    if self.action_queue.pull_action or self.action_queue.is_enabled == false then return end
     if not override and S{ 'Dead', 'Engaged', 'Resting' }:contains(self:get_party():get_player():get_status()) then
         return
     end
@@ -184,7 +184,7 @@ function Follower:is_valid_target(target_name)
 end
 
 function Follower:check_distance()
-    if self.recovery_paused or self.action_queue.is_enabled == false or self.state_var.value == 'Off' then
+    if self.action_queue.pull_action or self.recovery_paused or self.action_queue.is_enabled == false or self.state_var.value == 'Off' then
         return
     end
     local follow_target = self:get_follow_target()
@@ -286,7 +286,7 @@ end
 
 function Follower:can_zone(zone_id)
     local player = self:get_party():get_player()
-    if self.recovery_paused or self.action_queue.is_enabled == false or state.AutoZoneMode.value == 'Off' or state.AutoFollowMode.value == 'Off' or not player or (os.time() - player:get_last_zone_time()) < self.zone_cooldown
+    if self.action_queue.pull_action or self.recovery_paused or self.action_queue.is_enabled == false or state.AutoZoneMode.value == 'Off' or state.AutoFollowMode.value == 'Off' or not player or (os.time() - player:get_last_zone_time()) < self.zone_cooldown
             or zone_id ~= windower.ffxi.get_info().zone or windower.ffxi.get_info().zone == 0 then
         return false
     end

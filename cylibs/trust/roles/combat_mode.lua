@@ -63,6 +63,7 @@ function CombatMode:on_add()
 end
 
 function CombatMode:face_target(target)
+    if self.action_queue.pull_action then return end
     if not self.addon_enabled:getValue() then
         return
     end
@@ -73,6 +74,12 @@ function CombatMode:face_target(target)
     elseif state.AutoFaceMobMode.value == 'Away' then
         player_util.face_away(target)
     end
+end
+
+-- Pulling owns movement only for the lifetime of its current attempt.
+function CombatMode:check_gambits(...)
+    if self.action_queue.pull_action then return end
+    return Gambiter.check_gambits(self,...)
 end
 
 function CombatMode:allows_duplicates()

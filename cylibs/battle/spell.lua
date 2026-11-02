@@ -285,7 +285,7 @@ end
 -- Return the Action to cast this spell on a target. Optionally first uses job abilities where conditions are satisfied.
 -- @tparam number target_index Target for the spell
 -- @treturn Action Action to cast the spell
-function Spell:to_action(target_index, player, job_abilities)
+function Spell:to_action(target_index, player, job_abilities, pulling)
     local actions = L{}
 
     if player:is_moving() then
@@ -324,7 +324,8 @@ function Spell:to_action(target_index, player, job_abilities)
     end
 
     actions:append(SpellAction.new(0, 0, 0, self:get_spell().id, target_index, player))
-    actions:append(WaitAction.new(0, 0, 0, 2))
+    -- Pulling confirms claim directly; ordinary spell sequences retain their wait.
+    if not pulling then actions:append(WaitAction.new(0, 0, 0, 2)) end
 
     return SequenceAction.new(actions, 'spell_'..self:get_spell().en)
 end

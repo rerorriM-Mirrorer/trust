@@ -228,7 +228,11 @@ function Puller:is_valid_target(target, target_id_blacklist)
     for gambit in pull_abilities:it() do
         max_pull_ability_range = math.max(max_pull_ability_range, gambit:getAbility():get_range())
     end
-    max_pull_ability_range = math.min(max_pull_ability_range, self.distance)
+    if state.AutoPullMode.value=='Auto' or state.AutoPullMode.value=='All' then
+        max_pull_ability_range=self.distance
+    else
+        max_pull_ability_range=math.min(max_pull_ability_range,self.distance)
+    end
 
     local conditions = L{
         MinHitPointsPercentCondition.new(1),
@@ -317,7 +321,7 @@ end
 function Puller:get_default_conditions(gambit)
     local conditions = L{
         GambitCondition.new(UnclaimedCondition.new(), GambitTarget.TargetType.Enemy),
-        GambitCondition.new(MaxDistanceCondition.new(gambit:getAbility():get_range()), GambitTarget.TargetType.Enemy),
+        GambitCondition.new(MaxDistanceCondition.new((state.AutoPullMode.value=='Auto' or state.AutoPullMode.value=='All') and self.distance or gambit:getAbility():get_range()), GambitTarget.TargetType.Enemy),
         GambitCondition.new(MinHitPointsPercentCondition.new(1), GambitTarget.TargetType.Enemy),
         GambitCondition.new(NotCondition.new(L{ HasBuffCondition.new('weakness') }), GambitTarget.TargetType.Self),
     }
@@ -345,6 +349,122 @@ function Puller:get_default_conditions(gambit)
         end
         return condition
     end)
+end
+
+-- Planning omits only automatically supplied standing requirements. User
+-- conditions, MP/recast/job/target filters remain authoritative. Execution
+-- checks the original gambit again after arriving and stopping.
+function Puller:planning_gambit(gambit)
+    local copy=setmetatable({},getmetatable(gambit))
+    for k,v in pairs(gambit) do copy[k]=v end
+    copy.conditions=gambit.conditions:filter(function(wrapped)
+        local condition=wrapped:getCondition()
+        return condition.__class~='IsStandingCondition' or wrapped:is_editable()
+    end)
+    return copy
+end
+
+function Puller:report_pull(text)
+    if self.last_pull_report==text then return end
+    self.last_pull_report=text
+    local config=require('cylibs/movement/recovery').settings()
+    if config.verbose then require('cylibs/ui/chat/status_message').show('Pulling',text) end
+    if config.diagnostics then
+        windower.create_dir(windower.addon_path..'data/movement')
+        local name=windower.ffxi.get_player().name
+        local file=io.open(windower.addon_path..'data/movement/pulling-'..name..'.log','a')
+        if file then file:write(os.date('%Y-%m-%d %H:%M:%S')..' '..text..'\n');file:close() end
+    end
+end
+
+function Puller:check_gambits(gambits,param,ignore_delay)
+    if state.AutoPullMode.value~='Auto' and state.AutoPullMode.value~='All' then
+        return Gambiter.check_gambits(self,gambits,param,ignore_delay)
+    end
+    if not self:is_enabled() or self.action_queue.is_enabled==false then return end
+    if self.action_queue:has_action(self:get_action_identifier()) then return end
+    local target=self:get_target()
+    local mob=target and target:get_mob()
+    if not mob or not self:is_valid_target(mob) then return end
+    if not UnclaimedCondition.new():is_satisfied(mob.index) then return end
+    self.pull_retry=self.pull_retry or {}
+    if require('socket').gettime()<(self.pull_retry[mob.id] or 0) then return end
+    for gambit in (gambits or self:get_all_gambits()):it() do
+        local ability=gambit:getAbility()
+        if gambit:isEnabled() and ability and ability:is_valid() then
+            local plan=self:planning_gambit(gambit)
+            local satisfied=self:is_gambit_satisfied(plan,param)
+            if satisfied then self:queue_pull(gambit,plan,target,param);return end
+        end
+    end
+    self:report_pull('no eligible pull action for '..mob.name)
+end
+
+function Puller:queue_pull(gambit,plan,target,param)
+    local mob=target:get_mob();local id,index=mob.id,mob.index
+    local ability=gambit:getAbility()
+    local melee=ability.__class=='Approach' or ability.__class=='Engage'
+    local range=melee and 2 or ability:get_range()
+    if not melee then
+        for condition in ability:get_conditions():it() do
+            if condition.__class=='MaxDistanceCondition' then range=math.min(range,condition.distance) end
+        end
+        range=math.max(.5,range-.5)
+    end
+    local mode=state.PullActionMode.value
+    local function active()
+        return self:is_enabled() and self.action_queue.is_enabled~=false
+            and (state.AutoPullMode.value=='Auto' or state.AutoPullMode.value=='All')
+            and state.PullActionMode.value==mode and self:get_target()
+            and self:get_target():get_mob() and self:get_target():get_mob().id==id
+    end
+    local function eligible()
+        return active() and gambit:isEnabled() and ability:is_valid()
+            and self:is_valid_target(windower.ffxi.get_mob_by_index(index))
+            and self:is_gambit_satisfied(plan,param)
+    end
+    local action=require('cylibs/actions/pull_attempt').new({
+        index=index,id=id,name=mob.name,ability=ability,player=self:get_player(),
+        range=range,melee=melee,queue=self.action_queue,active=active,eligible=eligible,
+        ready=function()return self:is_gambit_satisfied(gambit,param) end,
+        claimed=function(m)return PartyClaimedCondition.new(true):is_satisfied(m.index) end,
+        start=function()
+            local follower=self.job and player.trust.main_job:role_with_type('follower')
+            if follower then follower:stop_following() end
+        end,
+        report=function(reason)self:report_pull(mob.name..': '..reason) end,
+        finished=function(success)
+            if not success then self.pull_retry[id]=require('socket').gettime()+2 end
+            local combat=player.trust.main_job:role_with_type('combatmode')
+            if success and combat then combat:check_gambits(nil,nil,true) end
+        end,
+    })
+    action.validate=function()return eligible() end
+    require('cylibs/movement/recovery').tag(action,'pulling',id)
+    -- A full five-slot queue must not repeatedly reject the pull behind
+    -- routine work. Retire one queued lower-priority action, never a cast
+    -- already running or higher-priority healing.
+    if self.action_queue:length()>=self.action_queue.max_size then
+        local lowest
+        for queued in self.action_queue.queue:it() do
+            if queued:getpriority()<action:getpriority() and
+                    (not lowest or queued:getpriority()<lowest:getpriority()) then lowest=queued end
+        end
+        if lowest then
+            local queue=Q{}
+            for queued in self.action_queue.queue:it() do
+                if queued==lowest then queued:destroy() else queue:push(queued) end
+            end
+            self.action_queue.queue=queue
+        end
+    end
+    self:report_pull(mob.name..': pull queued; waiting for current action if busy')
+    self.action_queue:push_action(action,true)
+    -- Retire only competing combat movement, after the higher-priority pull
+    -- is queued. Running casts/abilities are allowed to finish normally.
+    local current=self.action_queue.current_action
+    if not action.is_destroyed and current and current~=action
+            and current:getidentifier()=='combatmode_action' then current:cancel() end
 end
 
 function Puller:get_type()
@@ -376,7 +496,7 @@ function Puller:get_camp_position()
 end
 
 function Puller:get_cooldown()
-    return 5
+    return 0
 end
 
 function Puller:allows_duplicates()
