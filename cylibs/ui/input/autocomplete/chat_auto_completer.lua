@@ -10,9 +10,10 @@ function ChatAutoCompleter:onAutoCompleteListChange()
     return self.autoCompleteListChange
 end
 
-function ChatAutoCompleter.new(commands)
+function ChatAutoCompleter.new(commands, isEnabled)
     local self = setmetatable({}, ChatAutoCompleter)
 
+    self.isEnabled = isEnabled or function()return true end
     self.allCommands = commands
     self.commandTrie = CommandTrie.new()
     
@@ -45,6 +46,9 @@ function ChatAutoCompleter:getAllCommands()
 end
 
 function ChatAutoCompleter:onKeyboardEvent(key, pressed, flags, blocked)
+    -- A: disabling suggestions avoids matching and all list-change/render work,
+    -- rather than rebuilding a hidden widget on every keyboard event.
+    if not self.isEnabled() then self.lastChatText=nil;return end
     if windower.ffxi.get_info().chat_open then
         if not pressed then
             local chatText = windower.chat.get_input()

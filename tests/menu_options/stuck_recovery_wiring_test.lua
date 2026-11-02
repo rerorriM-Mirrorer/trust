@@ -43,11 +43,15 @@ for _,n in ipairs({'PickerConfigItem','BooleanConfigItem','ConfigItem'}) do
  package.loaded['ui/settings/editors/config/'..n]={new=constructor}
 end
 L=function(t)return t end
-local options={movement={recovery={mode='Off'}}};local owner={getSettings=function()return options end}
+local options={movement={policy='Ready',recovery={mode='Detour'}}};local owner={getSettings=function()return options end}
 local menu=real_require('ui/settings/menus/MovementSettingsMenuItem').new(owner)
-local sub=assert(menu.children['Stuck Recovery']);assert(sub.title=='Stuck Recovery')
+assert(not menu.children['Stuck Recovery'] and not menu.children.Recovery)
+local sub=real_require('ui/settings/menus/RecoverySettingsMenuItem').new(owner);assert(sub.title=='Recovery')
 local editor=sub.view();assert(editor.data==options.movement.recovery and #editor.items==10)
 local expected={'mode','pulling','following','paths','interval','min_movement','detour_distance','attempts','pull_cooldown','diagnostics'}
 for i,key in ipairs(expected)do assert(editor.items[i].args[1]==key)end
-assert(menu.view().data==options.movement)
-print('PASS actual run/follow/location hooks replace steering and nested Movement config exposes all recovery controls')
+assert(menu.view().data==options.movement and menu.view().items[1].args[2]=='Ready')
+assert(editor.items[1].args[2]=='Detour','saved Recovery selection was reset to Off')
+options.movement.recovery.mode='Pause';assert(sub.view().items[1].args[2]=='Pause')
+options.movement.recovery.mode='Off';assert(sub.view().items[1].args[2]=='Off')
+print('PASS actual run/follow/location hooks replace steering and separate Recovery config preserves saved selections and exposes all controls')

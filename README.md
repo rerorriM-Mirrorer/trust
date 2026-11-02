@@ -444,3 +444,8 @@ Shared Pulling saves now accept Windower lists' internal length metadata. This f
 ### Personal development: Pulling menu Config first (2026-11-01)
 
 Main-menu Pulling now opens with Config at the top; job-specific Pulling hides Config while keeping Actions and Modes. Existing saved values remain. Movement options are character-wide across jobs, including stuck recovery, and do not propagate to other characters; shared Pulling lists/distance/delay and Sounds remain installation-wide.
+
+
+### Personal development: Recovery Config and Command Suggestions (2026-11-01)
+
+Recovery is now directly under Config. It displays the saved Off/Detour/Pause selection correctly; existing settings are retained. Movement also displays its saved Send/Ready policy. Config > Command Suggestions exposes the existing visibility setting: turn it Off to hide suggestions and skip command matching/list rebuilding while typing. These preferences remain character-wide across jobs.

@@ -355,6 +355,7 @@ function load_trust_commands(job_name_short, main_job_trust, sub_job_name_short,
 	local MultiPickerConfigItem = require('ui/settings/editors/config/MultiPickerConfigItem')
 
 	command_widget:getDelegate():didHighlightItemAtIndexPath():addAction(function(indexPath)
+        if not addon_settings:getSettings().autocomplete.visible then return end
 		local term = command_widget:getDataSource():itemAtIndexPath(indexPath)
 		if term and term:getText() then
 			term = "// trust "..term:getText()
@@ -378,12 +379,25 @@ function load_trust_commands(job_name_short, main_job_trust, sub_job_name_short,
 		end
 	end)
 
-	chat_auto_completer = ChatAutoCompleter.new(all_commands)
+    if chat_auto_completer then chat_auto_completer:destroy() end
+    local function hideCommandSuggestions()
+        if command_widget:isVisible() then
+            command_widget:setVisible(false)
+            command_widget:getDataSource():removeAllItems()
+            if not hud.trustMenu:isVisible() then hud.infoBar:setVisible(false);hud.infoBar:layoutIfNeeded() end
+        end
+    end
+    chat_auto_completer = ChatAutoCompleter.new(all_commands,function()
+        return addon_settings:getSettings().autocomplete.visible~=false
+    end)
+    chat_auto_completer.disposeBag:add(addon_settings:onSettingsChanged():addAction(function()
+        if addon_settings:getSettings().autocomplete.visible==false then hideCommandSuggestions() end
+    end),addon_settings:onSettingsChanged())
 	chat_auto_completer:onAutoCompleteListChange():addAction(function(_, terms)
-		command_widget:getDataSource():removeAllItems()
-		if not addon_settings:getSettings().autocomplete.visible then
-			return
-		end
+        if addon_settings:getSettings().autocomplete.visible==false then
+            hideCommandSuggestions();return
+        end
+        command_widget:getDataSource():removeAllItems()
 		if terms:length() > 0 then
 			command_widget:setVisible(true)
 			command_widget:setContentOffset(0, 0)
@@ -776,6 +790,7 @@ function unload_chunk_event()
 end
 
 function unloaded()
+    if chat_auto_completer then chat_auto_completer:destroy();chat_auto_completer=nil end
     local recovery=package.loaded['cylibs/movement/recovery']
     if recovery then recovery.close() end
     if movement_keyboard then windower.unregister_event(movement_keyboard);movement_keyboard=nil end

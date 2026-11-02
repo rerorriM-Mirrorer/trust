@@ -44,6 +44,12 @@ end
 
 function ConfigSettingsMenuItem:reloadSettings(addonSettings, trustSettings, trustSettingsMode)
     self:setChildMenuItem('Movement',require('ui/settings/menus/MovementSettingsMenuItem').new(addonSettings))
+    self:setChildMenuItem('Recovery',require('ui/settings/menus/RecoverySettingsMenuItem').new(addonSettings))
+    self:setChildMenuItem('Command Suggestions',MenuItem.new(L{ButtonItem.default('Save')},{},function(_,info)
+        return ConfigEditor.new(addonSettings,addonSettings:getSettings().autocomplete,L{
+            BooleanConfigItem.new('visible','Show command suggestions while typing'),
+        },info)
+    end,'Command Suggestions','Off hides the suggestion box and skips command matching while typing. Saved for this character.'))
     self:setChildMenuItem('Profiles',require('ui/settings/menus/loading/LoadSettingsMenuItem').new(addonSettings,self.trustModeSettings or trust_mode_settings,main_trust_settings,weapon_skill_settings,sub_trust_settings))
     self:setChildMenuItem('Menu', MenuItem.new(L{
         ButtonItem.default('Save'),
