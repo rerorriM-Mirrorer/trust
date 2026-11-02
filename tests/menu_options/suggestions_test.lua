@@ -60,8 +60,8 @@ local configEnv=setmetatable({ConfigSettingsMenuItem={},L=function(t)return t en
  end,ConfigEditor={new=function(o,v,items)return{owner=o,values=v,items=items}end},
 },{__index=_G})
 assert(load(body,'actual Config routes','t',configEnv))()
-configEnv.ConfigSettingsMenuItem.reloadSettings({setChildMenuItem=function(_,k,v)children[k]=v end,
+configEnv.ConfigSettingsMenuItem.reloadSettings({buttonItems={filter=function()return{}end},setChildMenuItem=function(_,k,v)children[k]=v end,
  getLoggingMenuItem=function()return{}end,getSoundSettingsMenuItem=function()return{}end},owner)
-assert(children.Recovery.module=='ui/settings/menus/RecoverySettingsMenuItem' and children.Movement)
-local suggestions=children['Command Suggestions'].view();assert(suggestions.owner==owner and suggestions.values==opts.autocomplete and suggestions.items[1]=='visible')
+assert(not children.Recovery and not children.Movement)
+local suggestions=children.Autosuggest.view();assert(suggestions.owner==owner and suggestions.values==opts.autocomplete and suggestions.items[1]=='visible')
 print('PASS autocomplete Off skips matching/UI, live visibility change hides popup, reload cleans subscription, and Config exposes Recovery/suggestions')

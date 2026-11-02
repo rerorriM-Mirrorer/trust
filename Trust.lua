@@ -490,7 +490,7 @@ function load_ui()
             return info and info.logged_in and character and character.name or nil
         end,
         path=function(name)return windower.addon_path..'data/movement/'..name..'.lease' end,
-        blocked=function()
+        blocked=function(local_only)
             if not windower.has_focus() then return 'unfocused' end
             local info=windower.ffxi.get_info()
             if not info or not info.logged_in then return 'logged out' end
@@ -500,14 +500,23 @@ function load_ui()
             if not character then return 'no character' end
             if character.status==4 then return 'event/cutscene' end
             if hud.trustMenu:isVisible() then return 'Trust menu' end
-            if state.IpcMode.value~='All' and state.IpcMode.value~='Send' then return 'IpcMode must be All or Send' end
+            if not local_only and state.IpcMode.value~='All' and state.IpcMode.value~='Send' then return 'IpcMode must be All or Send' end
         end,
-        perform=function()
+        perform=function(local_only)
             -- Preserve RC3's actions/order. Direct internal calls avoid a
             -- queued command executing later in a changed client context.
             return require('cylibs/util/command_feedback').run(addon_settings:getSettings().movement.quiet~=false,function()
                 local movement=addon_settings:getSettings().movement
+                if local_only and not movement.stop_on_movement then return false,'local Stop disabled' end
                 if movement.stop_on_movement then handle_stop() end
+                if local_only then
+                    -- Stop is idempotent: clear native motion even if Trust
+                    -- was already stopped and its relay does not fire again.
+                    windower.ffxi.follow()
+                    windower.ffxi.run(false)
+                    shortcuts.follow:get_follower():set_follow_target(nil)
+                    return true
+                end
                 if movement.start_others then
                     shortcuts.follow:get_follower():set_follow_target(nil)
                     local quiet_flag=require('cylibs/util/command_feedback').is_quiet() and ' --quiet' or ''

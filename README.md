@@ -463,3 +463,7 @@ The requested movement defaults are applied once as each character reloads: Stop
 Shared Pulling views now refresh when reopened, so command/other-client changes appear in Exclusions without rebuilding the whole menu. `//trust pull ignore list` shows the saved exclusions with scope/count; ignore feedback identifies shared vs legacy job storage. Legacy list length is maintained correctly.
 
 Config > Recovery > Show recovery messages starts On for this testing batch and announces detours/retries. Turn it Off for quieter recovery; disk diagnostics are separate. New recovery messages use the BattleStations-style Trust prefix and fragment colors. Existing Trust messages have not all been converted.
+
+- November 1, 2026: Movement and Recovery are at the bottom of the main menu; Config uses Autosuggest and places Sounds last. Settings storage is unchanged.
+
+- November 1, 2026: Controller movement rearms after 100ms of neutral for local Trust Stop; first movement after switching clients retains party handoff. PS5 Extended mute requests that handoff explicitly. Requires matched AHK companions and Trust receiver. Stop on movement remains configurable; Trust Start resumes automation.

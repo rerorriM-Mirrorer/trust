@@ -12,7 +12,7 @@ local env=setmetatable({
     windower={addon_path='addon/',trust={},has_focus=function()return focus end,
         create_dir=function()end,unregister_event=function()end,
         register_event=function(name,fn)events[name]=fn;return name end,
-        ffxi={get_info=function()return{logged_in=true}end,get_player=function()return{name='Myrr',status=0}end}},
+        ffxi={follow=function()requests[#requests+1]='native follow cancel'end,run=function(v)assert(v==false);requests[#requests+1]='native run cancel'end,get_info=function()return{logged_in=true}end,get_player=function()return{name='Myrr',status=0}end}},
     shortcuts={follow={handle_follow_me=function()requests[#requests+1]='follow';quiet[#quiet+1]=Feedback.is_quiet();return true end},
         assist={handle_assist_me=function()requests[#requests+1]='assist';quiet[#quiet+1]=Feedback.is_quiet();return true end}},
     io={open=function()return{write=function()end,close=function()end}end},
@@ -52,6 +52,19 @@ assert(table.concat(order,',')=='stop,clear local follow,trust handoff Myrr --qu
 assert(not Feedback.is_quiet())
 menu=true;events.keyboard(0x7B,true);events.keyboard(0x7B,false)
 assert(#order==3,'blocked movement must not stop or start anyone')
+menu=false
+-- Same-client takeover stops/clears locally, even with IPC send disabled.
+order={};env.state.IpcMode.value='Receive'
+events.keyboard(0x79,true);events.keyboard(0x79,true);events.keyboard(0x79,false)
+assert(table.concat(order,',')=='stop,clear local follow','local takeover broadcast or repeated')
+assert(env.windower.trust.movement.last=='local movement takeover')
+assert(requests[#requests-1]=='native follow cancel' and requests[#requests]=='native run cancel')
+options.movement.stop_on_movement=false
+order={};events.keyboard(0x79,true);events.keyboard(0x79,false)
+assert(#order==0 and env.windower.trust.movement.last=='local Stop disabled')
+options.movement.stop_on_movement=true
+menu=true;events.keyboard(0x79,true);events.keyboard(0x79,false)
+assert(#order==0,'menu stick navigation must not take over')
 menu=false
 assert(load(block,'actual receiver replacement','t',env))()
 assert(env.windower.trust.movement.received==0)

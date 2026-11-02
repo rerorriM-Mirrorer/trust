@@ -43,13 +43,11 @@ function ConfigSettingsMenuItem:destroy()
 end
 
 function ConfigSettingsMenuItem:reloadSettings(addonSettings, trustSettings, trustSettingsMode)
-    self:setChildMenuItem('Movement',require('ui/settings/menus/MovementSettingsMenuItem').new(addonSettings))
-    self:setChildMenuItem('Recovery',require('ui/settings/menus/RecoverySettingsMenuItem').new(addonSettings))
-    self:setChildMenuItem('Command Suggestions',MenuItem.new(L{ButtonItem.default('Save')},{},function(_,info)
+    self:setChildMenuItem('Autosuggest',MenuItem.new(L{ButtonItem.default('Save')},{},function(_,info)
         return ConfigEditor.new(addonSettings,addonSettings:getSettings().autocomplete,L{
             BooleanConfigItem.new('visible','Show command suggestions while typing'),
         },info)
-    end,'Command Suggestions','Off hides the suggestion box and skips command matching while typing. Saved for this character.'))
+    end,'Autosuggest','Off hides the suggestion box and skips command matching while typing. Saved for this character.'))
     self:setChildMenuItem('Profiles',require('ui/settings/menus/loading/LoadSettingsMenuItem').new(addonSettings,self.trustModeSettings or trust_mode_settings,main_trust_settings,weapon_skill_settings,sub_trust_settings))
     self:setChildMenuItem('Menu', MenuItem.new(L{
         ButtonItem.default('Save'),
@@ -66,12 +64,14 @@ function ConfigSettingsMenuItem:reloadSettings(addonSettings, trustSettings, tru
     self:setChildMenuItem("Widgets", WidgetSettingsMenuItem.new())
     self:setChildMenuItem("Logging", self:getLoggingMenuItem(addonSettings))
     self:setChildMenuItem("Remote", RemoteCommandsSettingsMenuItem.new(addonSettings))
-    self:setChildMenuItem("Sounds", self:getSoundSettingsMenuItem(addonSettings))
     if require('cylibs/ui/menu/menu_preferences').layout()=='Full' then
         self:setChildMenuItem('GearSwap',self:getGearSwapMenuItem(trustSettings,trustSettingsMode))
         self:setChildMenuItem('Shortcuts',ShortcutListMenuItem.new())
         self:setChildMenuItem('Language',self:getLanguageSettingsMenuItem(addonSettings))
     end
+    -- Keep Sounds last, including entries appended during reload.
+    self.buttonItems=self.buttonItems:filter(function(button) return button:getTextItem().text~='Sounds' end)
+    self:setChildMenuItem('Sounds',self:getSoundSettingsMenuItem(addonSettings))
 end
 
 function ConfigSettingsMenuItem:getGearSwapMenuItem(trustSettings, trustSettingsMode)

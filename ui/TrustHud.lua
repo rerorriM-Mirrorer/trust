@@ -264,6 +264,8 @@ function TrustHud:getMainMenuItem()
         ButtonItem.localized('Paths', i18n.translate('Button_Paths')),
         ButtonItem.localized('Alter Egos', i18n.translate('Button_Alter_Egos')),
         ButtonItem.default('Config', 18),
+        ButtonItem.default('Movement',18),
+        ButtonItem.default('Recovery',18),
     }, {
         Config = ConfigSettingsMenuItem.new(self.addon_settings, main_trust_settings, state.MainTrustSettingsMode, self.mediaPlayer),
     }, nil, "Jobs")
@@ -278,11 +280,16 @@ function TrustHud:getMainMenuItem()
             ButtonItem.localized(player.sub_job_name,i18n.resource('jobs','en',player.sub_job_name)),
             ButtonItem.localized('Profiles',i18n.translate('Button_Profiles')),
             ButtonItem.default('Commands',18),ButtonItem.default('Config',18),
+            ButtonItem.default('Movement',18),ButtonItem.default('Recovery',18),
         }
         mainMenuItem:setChildMenuItem('Commands',require('ui/settings/menus/commands/CommandsMenuItem').new(self.commands))
     end
 
     self:reloadJobMenuItems()
+
+    -- Expose movement experiments at the bottom in both menu layouts.
+    mainMenuItem:setChildMenuItem('Movement',require('ui/settings/menus/MovementSettingsMenuItem').new(self.addon_settings))
+    mainMenuItem:setChildMenuItem('Recovery',require('ui/settings/menus/RecoverySettingsMenuItem').new(self.addon_settings))
 
     return self.mainMenuItem
 end

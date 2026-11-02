@@ -5,27 +5,27 @@ function M.new(options)
     function self:policy()
         return options.settings().policy=='Ready' and 'Ready' or 'Send'
     end
-    function self:reason()
+    function self:reason(local_only)
         if options.settings().enabled==false then return 'disabled' end
-        return options.blocked()
+        return options.blocked(local_only)
     end
-    function self:receive()
+    function self:receive(local_only)
         self.received=self.received+1
-        local reason=self:reason()
+        local reason=self:reason(local_only)
         if not reason then
-            local ok,result,message=pcall(options.perform)
+            local ok,result,message=pcall(options.perform,local_only)
             if not ok then reason=tostring(result)
             elseif result==false then reason=message or 'action unavailable' end
         end
         if reason then self.ignored=self.ignored+1;self.last=reason;return false end
-        self.accepted=self.accepted+1;self.last='follow/assist requested';return true
+        self.accepted=self.accepted+1;self.last=local_only and 'local movement takeover' or 'follow/assist requested';return true
     end
     function self:key(dik,pressed)
-        if dik~=0x7B then return end
+        if dik~=0x7B and dik~=0x79 then return end
         -- Consume both edges; repeat downs never trigger another action.
         if not options.focused() then self.down=false;return true end
         if pressed then
-            if not self.down then self.down=true;self:receive() end
+            if not self.down then self.down=true;self:receive(dik==0x79) end
         else self.down=false end
         return true
     end
@@ -41,7 +41,8 @@ function M.new(options)
         local f=options.open(path,'w')
         if f then
             f:write('name='..name..'\ntimestamp='..options.timestamp()..
-                '\nready='..(self:reason()==nil and '1' or '0')..'\npolicy='..self:policy()..'\n')
+                '\nready='..(self:reason()==nil and '1' or '0')..'\npolicy='..self:policy()..
+                '\ntakeover=neutral1\nlocal_ready='..(self:reason(true)==nil and '1' or '0')..'\n')
             f:close()
         end
     end

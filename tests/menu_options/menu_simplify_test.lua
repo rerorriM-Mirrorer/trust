@@ -81,6 +81,6 @@ local condensedRoot=hud:getMainMenuItem()
 assert(condensedRoot~=fullRoot and fullRoot.dead and not condensedRoot.children.Commands)
 assert(condensedRoot.children.Following and hud.menuLayout=='Condensed')
 local names=condensedRoot.buttons
-assert(names[1]=='Bard' and names[2]=='White Mage' and names[3]=='Pulling' and names[4]=='Following' and names[5]=='Paths' and names[6]=='Alter Egos' and names[7]=='Config' and #names==7)
-assert(condensedRoot.children.Pulling and not condensedRoot.children.Movement and not condensedRoot.children.Profiles)
+assert(names[1]=='Bard' and names[2]=='White Mage' and names[3]=='Pulling' and names[4]=='Following' and names[5]=='Paths' and names[6]=='Alter Egos' and names[7]=='Config' and names[8]=='Movement' and names[9]=='Recovery' and #names==9)
+assert(condensedRoot.children.Pulling and condensedRoot.children.Movement and condensedRoot.children.Recovery and not condensedRoot.children.Profiles)
 print('PASS direct job settings routing, correct owners and Modes-last ordering')
