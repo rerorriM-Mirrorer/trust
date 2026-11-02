@@ -1,3 +1,21 @@
+# Current Development Status — November 1, 2026 — Pulling Menu Config First
+
+- User request: make Config the first item in main-menu Pulling; hide Config from job-specific Pulling for now. Parent published `7a766349a467cbaafeb2cd1d767ca9f3fbe84dcb`; branch `test/starter-defaults-20261023`.
+- Main shared Pulling explicitly orders Config, Targets, Target IDs, Exclusions, Source, Import Job, Clear Targets, Reload. Rebuild/Reload preserves order. Job Pulling omits Config from button list and child routes in shared and legacy modes; Actions/Modes remain, and legacy targets/IDs/blacklist remain. Dormant config constructor/data retained for restoration. RandomizeTarget is still job-owned and accessible by existing pull randomize command. No save scope/default/mode/action-timing changes.
+- Scope clarification: Movement handoff/recovery/lock-on options live in the existing character config XML, persist across job changes, and are NOT shared automatically. Detour on Cioara does not enable it on others. Shared Pulling lists/distance/delay and Sounds remain installation-wide via shared-preferences.lua; job pull actions remain job/profile-specific. Main-menu placement does not change ownership.
+- Cioara pause investigation: current code has a five-second Puller gambit cooldown, ~one-second gambit checks, ~two-second forced waits after local JA/WS/ranged actions, ~three seconds after spell completion/interruption, a two-second explicit wait inside Approach, and standing >=.3s / <=21y conditions for spells. These use code timing clocks and are not party-wide turns. PullActionMode Approach uses the built-in Approach chain; Auto uses configured pull gambits; Target engages. The first eligible pull gambit is chosen, not every listed action. Pull defaults require Unclaimed; an autoattack claim can therefore make a later Dia pull rule ineligible. These are possible explanations, not a diagnosis of Cioara's current data, which has not been supplied in this request.
+- AutoEngage Always applies to an idle player's eligible battle target without requiring the assist player to be engaged; Mirror also requires the assist player engaged and has a rule to disengage when they idle. Claim/range/target/aggro-related conditions still apply. Pulling Approach/Target can request engagement independently. CombatMode governs positioning separately.
+- Verification: four targeted menu/navigation regression suites pass, including actual Config-first order after rebuild and absence of job Config in shared/legacy constructors and reload. Changed Lua sources parse; whitespace checks passed. Native menu confirmation PENDING.
+- Install `Trust-Pulling-Menu-ConfigFirst-Cumulative-20261101.zip` over the existing personal installation with Trust unloaded on all clients, then reload. Includes both shared-save fixes, stuck recovery, handoff and preceding shared settings changes; no user data or AHK replacements. Rollback: restore previous code backup.
+
+Live checks — PENDING:
+1. Open main-menu Pulling: Config first, opens detection distance/delay; Reload and reopen preserve order.
+2. Open main-job Pulling: Actions/Modes accessible, Config absent; no change to saved randomization or job actions. Check Full and Condensed layouts and Source selection if using legacy job lists.
+3. Set Movement > Stuck Recovery > Detour on Cioara; reopen/reload on Cioara and confirm it persists, while another character's selection remains independent.
+4. To diagnose Cioara's pauses, inspect her active job profile PullSettings, AutoPullMode, PullActionMode, AutoEngageMode and CombatMode, plus the corresponding action/recovery log. No delay reductions are included without establishing which action/condition is waiting.
+
+---
+
 # Current Development Status — November 1, 2026 — Shared Save Compatibility Fix 2
 
 - User report after Fix 1: `settings/shared_preferences.lua:20 Invalid list index` while saving pull detection distance. Confirmed against Windower's upstream `addons/libs/lists.lua` (`dev`, blob `e393b75782cd53a29178999ad6cabcea2744eac0`): L(t) adds a physical `n` length field to the input table. The shared schema's numeric-key-only validation rejected that normal metadata. Previous plain-table test doubles did not reproduce it. No shared-file deletion/reset is required; this failure occurs before backup/staging/replacement.

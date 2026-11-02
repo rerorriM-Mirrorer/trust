@@ -439,3 +439,8 @@ Shared Pulling, Sounds and Job gambit saving now uses Trust's existing SQLite mo
 ### Personal development: Shared Save Compatibility Fix 2 (2026-11-01)
 
 Shared Pulling saves now accept Windower lists' internal length metadata. This fixes `Invalid list index` when saving menu edits such as Distance 50. Existing names, target IDs, exclusions and other preferences are preserved; no settings reset is needed. Reopen the editor after updating and retry the save. Includes the SQLite compatibility fix from Fix 1.
+
+
+### Personal development: Pulling menu Config first (2026-11-01)
+
+Main-menu Pulling now opens with Config at the top; job-specific Pulling hides Config while keeping Actions and Modes. Existing saved values remain. Movement options are character-wide across jobs, including stuck recovery, and do not propagate to other characters; shared Pulling lists/distance/delay and Sounds remain installation-wide.

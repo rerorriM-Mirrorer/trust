@@ -46,6 +46,10 @@ function M.new(addonSettings,trust,jobOwner,jobMode,modes)
             if not ok then addon_system_error(err);return end
             rebuild();parent:showMenu(menu)
         end,'Clear shared targets','Empty shared target names and IDs. Exclusions and job actions remain.'))
+        -- A: explicit order also survives Reload, which reuses its own item.
+        menu.buttonItems=L{ButtonItem.default('Config'),ButtonItem.default('Targets'),
+            ButtonItem.default('Target IDs'),ButtonItem.default('Exclusions'),ButtonItem.default('Source'),
+            ButtonItem.default('Import Job'),ButtonItem.default('Clear Targets'),ButtonItem.default('Reload')}
     end
     menu:setChildMenuItem('Reload',MenuItem.action(function(parent)rebuild();parent:showMenu(menu)end,'Reload Pulling','Discard old editor drafts and read the latest shared setup.'))
     rebuild()

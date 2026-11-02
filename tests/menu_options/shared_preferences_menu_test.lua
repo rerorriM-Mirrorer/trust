@@ -26,11 +26,13 @@ local addon={getSettings=function()return{use_shared_pulling=true}end}
 local job={getSettings=function()return{Solo={PullSettings={Targets={'legacy'},Blacklist={},TargetIds={},Distance=12,Delay=2,Gambits={'action'}}}}end}
 local menu=require('ui/settings/menus/pulling/SharedPullSettingsMenuItem').new(addon,{},job,{value='Solo'}, {})
 local c=menu.childMenuItems
+assert(menu.buttonItems[1]=='Config' and menu.buttonItems[8]=='Reload' and #menu.buttonItems==8)
 assert(c.Targets and c['Target IDs'] and c.Exclusions and c.Config and c.Source and c['Import Job'] and c['Clear Targets'] and c.Reload and not c.Actions)
 assert(targetOwners[1]==pullOwner and c.Config.contentViewConstructor().owner==pullOwner)
 assert(c.Source.contentViewConstructor().owner==addon)
 local parent={showMenu=function(_,shown)assert(shown==menu)end}
 c['Import Job'].callback(parent)
+assert(menu.buttonItems[1]=='Config' and #menu.buttonItems==8,'rebuild changed menu order')
 assert(writes[1][1]=='Pulling' and writes[1][2].Targets[1]=='legacy' and writes[1][2].Distance==12 and not writes[1][2].Gambits)
 -- Actual sound menu method must use the shared owner, not addon config.
 local f=assert(io.open('ui/settings/menus/ConfigSettingsMenuItem.lua'));local source=f:read('*a');f:close()
@@ -41,3 +43,33 @@ local soundMenu=env.ConfigSettingsMenuItem:getSoundSettingsMenuItem(addon)
 local editor=soundMenu.contentViewConstructor()
 assert(editor.owner==soundOwner and editor.values==soundValues and soundMenu.titleText=='Sounds (shared)')
 print('PASS actual shared menus: shared target/config/sound owners, per-character source choice, explicit import without actions, scope and reload controls')
+
+-- Actual job Pulling constructor/reload hides Config for shared and legacy scope.
+local file=assert(io.open('ui/settings/menus/pulling/PullSettingsMenuItem.lua'))
+local jobSource=file:read('*a');file:close()
+local Job={};Job.__index=Job
+Job.getBlacklistMenuItem=function()return node()end
+Job.getModesMenuItem=function()return node()end
+local sharedMode=true
+local jobMenuEnv=setmetatable({PullSettingsMenuItem=Job,
+    MenuItem={new=function(buttons,children,...)local m=node(buttons,children,...);m.buttonItems=buttons;return m end},
+    ButtonItem={default=function(k)return k end,localized=function(k)return k end},
+    i18n={translate=function(k)return k end},
+    DisposeBag={new=function()return{}end},
+    PullTargetsMenuItem={new=function()return node()end},PullTargetIDsMenuItem={new=function()return node()end},
+    PullActionMenuItem={new=function()return node()end},
+    require=function(name)assert(name=='settings/shared_preferences');return{enabled=function()return sharedMode end}end,
+},{__index=_G})
+for _,name in ipairs({'new','reloadSettings'})do
+ local body=assert(jobSource:match('(function PullSettingsMenuItem[.:]'..name..'%(.-)\nfunction PullSettingsMenuItem'))
+ assert(load(body,'actual job Pulling '..name,'t',jobMenuEnv))()
+end
+for _,scope in ipairs({true,false})do
+ sharedMode=scope
+ local m=Job.new({}, {role_with_type=function()return{}end},'SMN',{}, {}, {})
+ assert(not m.childMenuItems.Config)
+ for _,button in ipairs(m.buttonItems)do assert(button~='Config')end
+ assert(m.childMenuItems.Actions and m.childMenuItems.Modes)
+ m:reloadSettings();assert(not m.childMenuItems.Config)
+end
+print('PASS main Pulling Config-first rebuild and job Pulling Config hidden in shared/legacy layouts')
