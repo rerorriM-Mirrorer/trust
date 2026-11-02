@@ -33,6 +33,8 @@ function Follower.new(action_queue, follow_distance, addon_settings, state_var)
     self.state_var = state_var or state.AutoFollowMode
     self.walk_action_queue = ActionQueue.new(nil, false, 100, false, false)
     self.action_events = {}
+    self.formation = require('cylibs/movement/follow_formation').new()
+    self.fan_out = addon_settings:getSettings().follow.fan_out ~= false
     self.distance = follow_distance or 1
     self.auto_pause = addon_settings:getSettings().follow.auto_pause or false
     self.maxfollowdistance = 35
@@ -91,8 +93,11 @@ function Follower:on_add()
     end), self:get_party():get_player():on_zone_change())
 
     self.dispose_bag:add(self.addon_settings:onSettingsChanged():addAction(function(settings)
+        local changed=self.fan_out~=(settings.follow.fan_out~=false)
+        self.fan_out=settings.follow.fan_out~=false
         self.distance = settings.follow.distance or 1
         self.auto_pause = settings.follow.auto_pause or false
+        if changed then self:start_following() end
     end, self.addon_settings:onSettingsChanged()))
 
     self.action_events.status = windower.register_event('status change', function(new_status_id, old_status_id)
@@ -203,6 +208,19 @@ function Follower:check_distance()
     if player then
         local distance = player_util.distance(player_util.get_player_position(), follow_target:get_position())
         local deltaZ = math.abs(z - player.z)
+        if self.fan_out and self.state_var.value=='Always' and player.status==0
+                and distance<self.maxfollowdistance and deltaZ<1 then
+            local goal,radius=self.formation:goal(follow_target:get_id(),windower.ffxi.get_info().zone,
+                {x,y,z},self:get_party():get_party_member_ids(),player.id,self:get_distance())
+            if goal then
+                self:follow_formation_goal(goal,radius,follow_target)
+                return
+            end
+        end
+        -- On stairs, missing membership or a mode change, retire the old slot
+        -- before reverting to the ordinary leader/path destination.
+        local current=self.walk_action_queue.current_action
+        if current and current.formation then current:cancel() end
         if distance < self.maxfollowdistance and deltaZ < 6 and (deltaZ > 1 or distance > self:get_distance()) then
             local action=RunToLocation.new(x, y, z, self:get_distance())
             local kind=self.state_var.value=='Path' and 'paths' or 'following'
@@ -211,6 +229,23 @@ function Follower:check_distance()
             self.walk_action_queue:push_action(action)
         end
     end
+end
+
+-- Coalesce the moving slot into one action rather than following stale queued
+-- locations. Recovery and Stop still own the existing tagged walking action.
+function Follower:follow_formation_goal(goal,radius,target)
+    local current=self.walk_action_queue.current_action
+    if current and current.formation and not current:is_cancelled() and not current.completed then
+        current.x=goal[1];current.y=goal[2];current.z=goal[3]
+        current.vector_location=V{goal[1],goal[2],goal[3]}
+        current.distance=radius
+        return
+    end
+    if player_util.distance(player_util.get_player_position(),goal)<=radius+.15 then return end
+    local action=RunToLocation.new(goal[1],goal[2],goal[3],radius)
+    action.formation=true
+    require('cylibs/movement/recovery').tag(action,'following',nil,'following:'..tostring(target))
+    self.walk_action_queue:push_action(action)
 end
 
 function Follower:on_player_status_change(new_status_id, old_status_id)
@@ -265,6 +300,7 @@ function Follower:set_follow_target(target)
     self:on_follow_target_changed():trigger(self, self.follow_target, target)
 
     self.follow_target = target
+    self.formation = require('cylibs/movement/follow_formation').new()
     self.follow_target_dispose_bag:destroy()
 
     if self.follow_target then
