@@ -422,3 +422,10 @@ commands, shared-save behavior and native acceptance still pending. No AHK chang
 Config > Movement offers **Stop my Trust on movement** and **Start others after follow/assist**, both Off initially. Enable both to steer the moved character with its Trust stopped while other IPC receivers follow/assist it and start. Existing first-movement-per-client-switch semantics and guards remain; no AHK update is required. Stop includes walking/native follow and current sequence movement. Start resumes eligible configured following. Whole-addon Stop pauses automated healing/buffs too and leaves game engagement unchanged.
 
 **Automatic lock-on when engaging** defaults On; turn Off to suppress future Trust EngageAction lock-on requests, including Approach pulls. An existing lock must be removed separately. Movement Status reports all three preferences. `//trust handoff <party member name>` applies follow, assist and Start locally in order, refusing Start after setup failure. See TESTING.md for pending in-game tests.
+
+
+### Personal development: Stuck Recovery Test 1 (2026-11-01)
+
+Open **Config > Movement > Stuck Recovery**. Recovery starts **Off**; choose **Detour** to try it. Starting values: two seconds with less than half a yalm of displacement, two-yalm detours, two attempts, thirty-second pull-target cooldown. Pulling, Following and Paths each have a scope switch. **Pause** goes straight to the failure response without a detour.
+
+After failed recovery, pulling skips that individual mob locally for the cooldown; following/path movement pauses with its destination retained. Use `//trust follow start` or `//trust path start` to retry a paused follow/path. Stop cancels recovery; the existing movement handoff still works. Enable diagnostics for short transition records in `data/movement/recovery-<Character>.log`; Stuck Recovery > Status reports the active mode/result. This is a bounded direction-change experiment, not terrain-aware pathfinding. See TESTING.md for installation and pending in-game checks.

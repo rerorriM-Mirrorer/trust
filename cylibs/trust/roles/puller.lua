@@ -217,6 +217,7 @@ function Puller:get_next_target(target_id_blacklist)
 end
 
 function Puller:is_valid_target(target, target_id_blacklist)
+    if target and require('cylibs/movement/recovery').is_skipped(target.id) then return false end
     if not target or target_id_blacklist and target_id_blacklist:contains(target.id) then
         return false
     end

@@ -47,6 +47,7 @@ function load_user_files(main_job_id, sub_job_id)
 			action_queue:enable()
 		else
 			action_queue:disable()
+            require('cylibs/movement/recovery').reset()
             -- A: following owns a separate walking queue; stopping the main
             -- queue alone leaves its movement and event callbacks alive.
             local trust = player and player.trust and player.trust.main_job
@@ -63,7 +64,7 @@ function load_user_files(main_job_id, sub_job_id)
         if isEnabled then
             local trust = player and player.trust and player.trust.main_job
             local follower = trust and trust:role_with_type('follower')
-            if follower then follower:start_following() end
+            if follower then follower.recovery_paused=false;follower:start_following() end
         end
 	end)
 
@@ -128,6 +129,8 @@ function load_user_files(main_job_id, sub_job_id)
 
 	player.trust.main_job = main_job_trust
 	player.trust.sub_job = sub_job_trust
+
+    require('cylibs/movement/recovery').bind(player.player)
 
 	local skillchainer = Skillchainer.new(action_queue, weapon_skill_settings, player.trust.main_job:get_job())
 
@@ -643,6 +646,7 @@ end
 -- Handlers
 
 function handle_stop()
+    require('cylibs/movement/recovery').reset()
 	addon_enabled:setValue(false)
 end
 
@@ -688,6 +692,7 @@ function handle_status_change(new_status_id, old_status_id)
 end
 
 function handle_unload()
+    require('cylibs/movement/recovery').close()
 	windower.chat.input('// lua unload trust')
 end
 
@@ -771,6 +776,8 @@ function unload_chunk_event()
 end
 
 function unloaded()
+    local recovery=package.loaded['cylibs/movement/recovery']
+    if recovery then recovery.close() end
     if movement_keyboard then windower.unregister_event(movement_keyboard);movement_keyboard=nil end
     if movement_receiver then movement_receiver:close();movement_receiver=nil end
     windower.trust.movement=nil

@@ -224,8 +224,12 @@ function Gambiter:perform_gambit(gambit, target, param)
     if logger.isEnabled then
         logger.notice(self.__class, 'perform_gambit', gambit:tostring(), target:get_mob().name)
     end
+    local recovery=require('cylibs/movement/recovery')
+    if recovery.is_skipped(target:get_mob().id) then return end
     local action = gambit:getAbility():to_action(target:get_mob().index, self:get_player())
+    if self:get_type()=='puller' then recovery.tag(action,'pulling',target:get_mob().id) end
     action.validate = function()
+        if recovery.is_skipped(target:get_mob().id) then return false end
         local success, _ = self:is_gambit_satisfied(gambit, param)
         return success
     end

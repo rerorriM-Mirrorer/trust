@@ -22,6 +22,7 @@ function RunToAction.new(target_index, distance, force_perform)
 end
 
 function RunToAction:destroy()
+    windower.ffxi.run(false)
 	Action.destroy(self)
 
 	self.dispose_bag:destroy()
@@ -56,6 +57,9 @@ function RunToAction:perform()
 		end
 
 		local player = windower.ffxi.get_mob_by_id(windower.ffxi.get_player().id)
+
+        if require('cylibs/movement/recovery').step(self,
+            {player.x,player.y,player.z},{target.x,target.y,target.z},self.distance) then return end
 
 		local angle = (math.atan2((target.y - player.y), (target.x - player.x))*180/math.pi)*-1
 

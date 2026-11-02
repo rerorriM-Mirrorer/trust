@@ -42,6 +42,7 @@ end
 -- Unused class dependencies are isolated. Real command/role modules below
 -- are loaded explicitly; this test does not replace their edited methods.
 setmetatable(package.preload,{__index=function(_,name) return function() return {} end end})
+package.preload['cylibs/movement/recovery']=function()return{reset=function()end}end
 package.preload['cylibs/messages/command_message']=function() return {new=function(command) return {command=command} end} end
 package.preload['ui/settings/editors/config/PickerConfigItem']=function() return {new=function() return {} end} end
 package.preload['cylibs/logger/logger']=function() return {error=function() end} end

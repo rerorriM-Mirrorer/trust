@@ -59,6 +59,12 @@ function FollowAction:check_follow(retry_count)
         return
     end
 
+    local character=windower.ffxi.get_player()
+    local position=character and windower.ffxi.get_mob_by_id(character.id)
+    local goal=windower.ffxi.get_mob_by_index(self.target_index)
+    if position and goal and require('cylibs/movement/recovery').step(self,
+        {position.x,position.y,position.z},{goal.x,goal.y,goal.z},2) then return end
+
     if Condition.check_conditions(L{ MaxDistanceCondition.new(2) }, self.target_index) then
         windower.ffxi.follow()
     else

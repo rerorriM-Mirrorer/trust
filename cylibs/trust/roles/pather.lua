@@ -47,6 +47,8 @@ end
 -------
 -- Starts or resumes execution of the current path, if any.
 function Pather:start()
+   require('cylibs/movement/recovery').reset()
+   self.follower.recovery_paused=false
    self.follower:start_following()
 end
 

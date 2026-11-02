@@ -12,6 +12,7 @@ local reaction={react_action_queue={disable=function()note('reaction stopped')en
 local job={role_with_type=function(_,t)return t=='follower' and follower or reaction end}
 local callback
 local env=setmetatable({action_queue=main,player={player={monitor=function()end},trust={main_job=job}},
+ require=function(name)if name=='cylibs/movement/recovery' then return{reset=function()end}end return require(name)end,
  ValueRelay={new=function()return{onValueChanged=function()return{addAction=function(_,fn)callback=fn end}end}end},
  windower={ffxi={run=function(v)assert(v==false);note('run stopped')end,follow=function()note('native follow stopped')end}}},{__index=_G})
 local root=source('Trust.lua');local a=assert(root:find('\taddon_enabled = ValueRelay.new(false)',1,true));local b=assert(root:find('\n\tmain_job_id =',a,true))

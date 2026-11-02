@@ -36,6 +36,12 @@ function EngageAction:destroy()
     Action.destroy(self)
 end
 
+function EngageAction:can_perform()
+    local target=windower.ffxi.get_mob_by_index(self.target_index)
+    return target and not require('cylibs/movement/recovery').is_skipped(target.id)
+        and Action.can_perform(self)
+end
+
 function EngageAction:perform()
     local target = windower.ffxi.get_mob_by_index(self.target_index)
     if not target or not self:can_perform() then

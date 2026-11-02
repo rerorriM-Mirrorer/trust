@@ -73,7 +73,12 @@ function RunToLocationAction:perform()
 	windower.ffxi.follow()
 
 	local player_pos = player_util.get_player_position()
+    local recovery=require('cylibs/movement/recovery')
+    local held=recovery.step(self,player_pos,self.vector_location,self.distance)
+    if not held then
 	windower.ffxi.run(self.x - player_pos[1], self.y - player_pos[2], self.z)
+    end
+    if self:is_cancelled() then return end
 
 	local prerender = Renderer.shared():onPrerender()
 	self.dispose_bag:add(prerender:addAction(function()
@@ -93,6 +98,7 @@ function RunToLocationAction:perform()
 		end
 
 		local player_pos = player_util.get_player_position()
+        if recovery.step(self,player_pos,self.vector_location,self.distance) then return end
 		windower.ffxi.run(self.x - player_pos[1], self.y - player_pos[2], self.z)
 	end), prerender)
 end
@@ -103,7 +109,7 @@ function RunToLocationAction:target_distance()
 end
 
 function RunToLocationAction:get_max_duration()
-    return 10
+    return self.recovery_timeout or 10
 end
 
 function RunToLocationAction:gettype()

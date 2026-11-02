@@ -171,7 +171,7 @@ function Action:tostring()
 end
 
 function Action:get_max_duration()
-    return 5
+    return self.recovery_timeout or 5
 end
 
 function Action:set_start_time(time_in_sec)
