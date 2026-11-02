@@ -19,7 +19,7 @@ function M.new(owner)
             BooleanConfigItem.new('enabled','Movement follow/assist enabled'),
             BooleanConfigItem.new('quiet','Quiet follow/assist feedback'),
             BooleanConfigItem.new('stop_on_movement','Stop my Trust on movement'),
-            BooleanConfigItem.new('start_others','Start others after follow/assist'),
+            BooleanConfigItem.new('start_others','Start others on mute handoff'),
             BooleanConfigItem.new('auto_lockon','Automatic lock-on when engaging'),
         },infoView)
     end,'Movement','Send acts once without waiting; Ready waits for readiness. Follow/assist stays enabled independently of local Stop and others Start. Lock-on controls engaging. Switch clients to rearm.')

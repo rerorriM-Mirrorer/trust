@@ -22,7 +22,7 @@ function PersonalContext(){return context}
 function MovementReceiverReady(){TM.takeoverSupported=supported;return ready}
 function SendEvent(k){sends.push(k)} function MovementRelease(){TM.signalOwner=0}
 function reset(){TM={client:0,fired:false,episode:false,neutralSince:0,signalOwner:0,threshold:.24,policy:'Send',sent:0};sends=[];activeWindow=1;ready=true;context='gameplay';supported=true;now=1000}
-'''+f'function MovementPoll(states,active,observation=false){{let magnitude;{poll}}}\nfunction MovementTick(active){{{tick}}}\nfunction MovementSend(active,localOnly){{{send}}}\nfunction MovementLeader(active){{{leader}}}\n'+'''
+'''+f'function MovementPoll(states,active,observation=false){{let magnitude;{poll}}}\nfunction MovementTick(active){{{tick}}}\nfunction MovementSend(active,localOnly,leader=false){{{send}}}\nfunction MovementLeader(active){{{leader}}}\n'+'''
 function poll(x,y=0){MovementPoll({moveX:x,moveY:y,HasOwnProp(k){return Object.hasOwn(this,k)}},activeWindow)}
 function neutral(){poll(0);now+=100;poll(0)}
 reset();MovementTick(1);poll(.5);assert.equal(sends.length,1);assert.match(sends[0],/sc07B/);
@@ -41,7 +41,7 @@ ready=true;context='menu';poll(.5);assert.equal(sends.length,0);
 context='gameplay';poll(.5);assert.equal(sends.length,1);
 neutral();supported=false;poll(.5);assert.equal(sends.length,1);
 reset();MovementTick(1);ready=false;poll(.5);assert.equal(sends.length,1);poll(.5);assert.equal(sends.length,1);
-neutral();MovementLeader(1);assert.match(sends.at(-1),/sc07B/);assert.equal(TM.fired,true);
+neutral();MovementLeader(1);assert.match(sends.at(-1),/sc077/);assert.equal(TM.fired,true);
 neutral();poll(.5);assert.match(sends.at(-1),/sc079/);
 console.log('PASS actual sender decision branches: hold, neutral hysteresis, local-only repeat, focus change, Ready guards, Send once, older-receiver gate');
 '''

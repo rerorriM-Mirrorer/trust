@@ -1,5 +1,5 @@
 ; A: integrated Trust movement Send/Ready test 1, AutoHotkey v2.
-; First movement per FFXI focus session hands off; later stick episodes stop
+; First movement per FFXI focus session requests follow; later stick episodes stop
 ; only the local Trust. Stable neutral rearms without repeating party handoff.
 MovementInit() {
     global TM
@@ -61,32 +61,32 @@ MovementPoll(states, active, observation := false) {
     MovementSend(active, TM.fired)
 }
 
-; Explicit leader request uses the first-focus handoff regardless of the latch.
+; Explicit leader request has its own signal, separate from travel following.
 MovementLeader(active) {
     global TM
     MovementTick(active)
     ready := MovementReceiverReady(active)
     if (TM.policy = "Ready" and !ready)
         return
-    MovementSend(active, false)
+    MovementSend(active, false, true)
 }
 
-MovementSend(active, localOnly) {
+MovementSend(active, localOnly, leader := false) {
     global TM
     if (!active or WinActive("ahk_class FFXiClass") != active)
         return
-    ; SC079 is a local-only takeover; SC07B preserves first-focus handoff.
+    ; SC079 is local takeover; SC07B is travel follow; SC077 is mute leadership.
     ; Never reuse a held signal edge for a new movement episode.
     if (TM.signalOwner)
         MovementRelease()
-    TM.signalKey := localOnly ? "vk1Csc079" : "vk1Dsc07B"
+    TM.signalKey := leader ? "vk88sc077" : (localOnly ? "vk1Csc079" : "vk1Dsc07B")
     TM.fired := true, TM.episode := true, TM.sent += 1, TM.reason := "sent"
     TM.signalOwner := active
     TM.due := DllCall("GetTickCount64", "UInt64") + 30
     SendEvent("{Blind}{" . TM.signalKey . " down}")
     title := ""
     try title := WinGetTitle("ahk_id " . active)
-    line := A_NowUTC . " hwnd=" . active . " title=" . title . " policy=" . TM.policy . " key=" . TM.signalKey . " sent=" . TM.sent . " x=" . states.moveX . " y=" . states.moveY . "`n"
+    line := A_NowUTC . " hwnd=" . active . " title=" . title . " policy=" . TM.policy . " key=" . TM.signalKey . " sent=" . TM.sent . "`n"
     try {
         DirCreate(A_ScriptDir . "\data\diagnostics")
         FileAppend(line, A_ScriptDir . "\data\diagnostics\trust-movement.log", "CP0")

@@ -9,23 +9,23 @@ function M.new(options)
         if options.settings().enabled==false then return 'disabled' end
         return options.blocked(local_only)
     end
-    function self:receive(local_only)
+    function self:receive(local_only, leader)
         self.received=self.received+1
         local reason=self:reason(local_only)
         if not reason then
-            local ok,result,message=pcall(options.perform,local_only)
+            local ok,result,message=pcall(options.perform,local_only,leader)
             if not ok then reason=tostring(result)
             elseif result==false then reason=message or 'action unavailable' end
         end
         if reason then self.ignored=self.ignored+1;self.last=reason;return false end
-        self.accepted=self.accepted+1;self.last=local_only and 'local movement takeover' or 'follow/assist requested';return true
+        self.accepted=self.accepted+1;self.last=local_only and 'local movement takeover' or (leader and 'leader handoff requested' or 'follow requested');return true
     end
     function self:key(dik,pressed)
-        if dik~=0x7B and dik~=0x79 then return end
+        if dik~=0x7B and dik~=0x79 and dik~=0x77 then return end
         -- Consume both edges; repeat downs never trigger another action.
         if not options.focused() then self.down=false;return true end
         if pressed then
-            if not self.down then self.down=true;self:receive(dik==0x79) end
+            if not self.down then self.down=true;self:receive(dik==0x79,dik==0x77) end
         else self.down=false end
         return true
     end

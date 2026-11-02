@@ -505,7 +505,7 @@ function load_ui()
             if hud.trustMenu:isVisible() then return 'Trust menu' end
             if not local_only and state.IpcMode.value~='All' and state.IpcMode.value~='Send' then return 'IpcMode must be All or Send' end
         end,
-        perform=function(local_only)
+        perform=function(local_only, leader)
             -- Preserve RC3's actions/order. Direct internal calls avoid a
             -- queued command executing later in a changed client context.
             return require('cylibs/util/command_feedback').run(addon_settings:getSettings().movement.quiet~=false,function()
@@ -520,6 +520,15 @@ function load_ui()
                     shortcuts.follow:get_follower():set_follow_target(nil)
                     return true
                 end
+                if not leader then
+                    -- Travel changes following only: receivers retain assist and Start/Stop.
+                    return shortcuts.follow:handle_follow_me()
+                end
+                local function acknowledge()
+                    require('chat')
+                    windower.add_to_chat(0, '[Trust]':color(200)..' -> ':color(200)
+                        ..'Asked party to follow, assist, and stand ready!':color(0))
+                end
                 if movement.start_others then
                     shortcuts.follow:get_follower():set_follow_target(nil)
                     local quiet_flag=require('cylibs/util/command_feedback').is_quiet() and ' --quiet' or ''
@@ -527,11 +536,18 @@ function load_ui()
                     -- receiver, avoiding Start racing ahead of target updates.
                     IpcRelay.shared():send_message(require('cylibs/messages/command_message').new(
                         'trust handoff '..windower.ffxi.get_player().name..quiet_flag))
+                    acknowledge()
                     return true
                 end
                 local ok,message=shortcuts.follow:handle_follow_me()
                 if ok==false then return false,message end
-                return shortcuts.assist:handle_assist_me()
+                local assisted,assist_message=shortcuts.assist:handle_assist_me()
+                if assisted~=false then
+                    require('chat')
+                    windower.add_to_chat(0, '[Trust]':color(200)..' -> ':color(200)
+                        ..'Asked party to follow and assist!':color(0))
+                end
+                return assisted,assist_message
             end)
         end,
     })

@@ -475,3 +475,5 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - November 1, 2026: Following > Fan Out starts On and assigns small stable left/right/rear spots around the chosen follow leader, scaled by each character's follow distance. Last observed travel direction is retained while standing. Turn Off for ordinary following; saved Off persists across jobs/reloads. Recorded paths and combat positioning are unchanged.
 
 - November 2, 2026: `//trust stop` pauses job/pull/reaction actions while ordinary following continues without Fan Out, using the saved follow distance. Start restores Fan Out when enabled. Manual movement/mute takeover still cancels local following; Start or follow start resumes it. Recorded paths remain paused while stopped.
+
+- November 2, 2026: First stick movement after switching characters requests follow only, preserving others' assist target and Start/Stop state. Mute retains explicit leadership (follow/assist/Start when Start others is On) and prints a local request acknowledgment. Later stick episodes remain local takeover. Requires the matching movement_signal.ahk; other AHK companions are unchanged.

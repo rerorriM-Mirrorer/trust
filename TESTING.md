@@ -1,3 +1,20 @@
+# Current Development Status — November 2, 2026 — Stick Travel / Mute Leadership 1
+
+- Repo `rerorriM-Mirrorer/trust`, branch `test/starter-defaults-20261023`; baseline published `54a24e6da176c52aee2905736ac767f49297d005` / identical local tree `015ed2ac`. User authorized separating travel following from explicit leadership.
+- First stick movement after switching FFXI characters sends follow only. Other clients retain assist target and Trust Started/Stopped state. Existing Stop my Trust on movement preference governs local Stop; local follow target is cleared by follow-me. Later neutral-rearmed movements retain local-only cancellation. No automatic repeat while holding input.
+- Mute now sends distinct SC077 signal; SC07B is first-stick follow, SC079 is local cancellation. Receiver retains focus/menu/chat/IPC guards, immediate ignore and no delayed retry. With Start others enabled mute retains follow -> assist -> Start handoff. When disabled mute retains follow/assist only and does not claim to have started anyone. Accepted mute request prints one local BattleStations-style acknowledgment even with movement quiet enabled; it confirms request dispatch, not receiver success.
+- Only bundled `companions/xivcrossbar/movement_signal.ahk` changes; latest personal controls and other five AHK files stay untouched. Also removed that sender's invalid out-of-scope `states.moveX/moveY` access in its diagnostic line; key/time/window diagnostics remain.
+- Delivery `Trust-Stick-Travel-Mute-Leader1-Cumulative-20261102.zip`: unload Trust on all clients and stop wrapper, merge trust/ plus ONLY xivcrossbar/movement_signal.ahk, restart both. Do not replace newer personal_controls/other AHK companions with older copies. Existing addon assets/settings required; no personal settings included. Rollback restore previous Stop Keeps Following code and previous movement_signal.ahk together.
+- Verification: 31 simulated Lua suites pass; translated production sender branches pass for follow/local/mute split, neutral/hold/focus, Ready/Send gates; six companion lexical/helper-closure checks pass. Whitespace review passes. Native AHK v2/Windows/Windower/FFXI acceptance PENDING.
+
+Live tests — PENDING:
+1. On stopped followers, switch client and move: everyone follows chosen traveler, remains stopped with no Fan Out; assist target unchanged. Repeat on started followers: they remain started, with Fan Out preference unchanged.
+2. Same-client movement after neutral cancels local follow/run again, without party broadcast. Holding movement sends once. Menus/chat/cutscenes still block receiver.
+3. Mute requests full handoff with Start others On; one local acknowledgment per press, no repeated requests while held. Test Off preference preserves stopped receiver state and follow/assist acknowledgment. Switch back and repeat.
+4. Confirm newer XIVCrossbar pet/bank behavior survives replacing only movement_signal.ahk. Confirm no movement diagnostic error from undefined states.
+
+---
+
 # Current Development Status — November 2, 2026 — Stop Keeps Following 1
 
 - Repository `rerorriM-Mirrorer/trust`, branch `test/starter-defaults-20261023`; starting published `0b9fa3b7c1966ea72293d3290ef0de8685c84b50` (local equivalent `2007f18f`). User reports Fan Out looks/feels good in game. New request: Stop pauses Trust actions while ordinary following continues, without Fan Out; Start restores enabled Fan Out.
