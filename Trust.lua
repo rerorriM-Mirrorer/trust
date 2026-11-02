@@ -511,6 +511,9 @@ function load_ui()
             return require('cylibs/util/command_feedback').run(addon_settings:getSettings().movement.quiet~=false,function()
                 local movement=addon_settings:getSettings().movement
                 if local_only and not movement.stop_on_movement then return false,'local Stop disabled' end
+                if not local_only and not leader then
+                    return shortcuts.follow:handle_travel()
+                end
                 if movement.stop_on_movement then handle_stop(true) end
                 if local_only then
                     -- Stop is idempotent: clear native motion even if Trust
@@ -519,10 +522,6 @@ function load_ui()
                     windower.ffxi.run(false)
                     shortcuts.follow:get_follower():set_follow_target(nil)
                     return true
-                end
-                if not leader then
-                    -- Travel changes following only: receivers retain assist and Start/Stop.
-                    return shortcuts.follow:handle_follow_me()
                 end
                 local function acknowledge()
                     require('chat')

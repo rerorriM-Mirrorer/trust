@@ -14,12 +14,12 @@ function FollowTrustCommands.new(trust, action_queue)
 
     local party_member_names = trust:get_party():get_party_members(true):map(function(p) return p:get_name() end)
 
-    self:add_command('default', self.handle_follow_party_member, 'Follow a player', L{ PickerConfigItem.new('party_member_name', party_member_names[1], party_member_names, nil, "Party Member Name"), })
+    self:add_command('default', self.handle_follow_party_member, 'Follow a player; bare //trust follow takes over travel', L{ PickerConfigItem.new('party_member_name', party_member_names[1], party_member_names, nil, "Party Member Name"), })
 
     trust:get_party():on_party_members_changed():addAction(function(party_members)
         local party_member_names = party_members:map(function(p) return p:get_name() end)
 
-        self:add_command('default', self.handle_follow_party_member, 'Follow a player', L{ PickerConfigItem.new('party_member_name', party_member_names[1], party_member_names, nil, "Party Member Name") })
+        self:add_command('default', self.handle_follow_party_member, 'Follow a player; bare //trust follow takes over travel', L{ PickerConfigItem.new('party_member_name', party_member_names[1], party_member_names, nil, "Party Member Name") })
     end)
 
     self:add_command('me', self.handle_follow_me, 'Make all players follow me')
@@ -38,6 +38,25 @@ end
 
 function FollowTrustCommands:get_follower()
     return self.trust:role_with_type("follower")
+end
+
+-- Bare //trust follow takes over local travel, then gathers the others.
+function FollowTrustCommands:handle_travel()
+    if state.IpcMode.value ~= 'All' and state.IpcMode.value ~= 'Send' then
+        return false, 'IpcMode must be All or Send to request travel following'
+    end
+    handle_stop(true)
+    -- Explicit release is also required when Trust was already stopped.
+    windower.ffxi.follow()
+    windower.ffxi.run(false)
+    local ok,message = command_feedback.run(true, function()
+        return self:handle_follow_me()
+    end)
+    if ok == false then return false,message end
+    require('chat')
+    windower.add_to_chat(0, '[Trust] ':color(200)..'Follow me':color(167)
+        ..' -> ':color(200)..'requested':color(0))
+    return true
 end
 
 -- // trust follow me
@@ -61,6 +80,7 @@ end
 
 -- // trust follow party_member_name
 function FollowTrustCommands:handle_follow_party_member(party_member_name)
+    if party_member_name == nil then return self:handle_travel() end
     local success
     local message
 

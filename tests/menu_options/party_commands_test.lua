@@ -82,3 +82,19 @@ follower.manual_pause=true;assert(f:handle_follow_party_member('Cioara'));assert
 local Policy=require('cylibs/ui/menu/menu_command_policy')
 for _,command in ipairs({'ready','standdown','partyrequest'})do assert(Policy.effect(command,{})=='immediate') end
 print('PASS production Ready/Standdown IPC ordering/scope, single request acknowledgment, invalid/partial failure, repeated Start/Follow state preservation')
+
+-- Actual bare-command routing and travel: release even when already stopped,
+-- send quietly, acknowledge once, preserve named Follow Me path.
+local travelCalls={};local function call(v)travelCalls[#travelCalls+1]=v end
+string.color=function(s)return s end
+followenv.handle_stop=function(manual)assert(manual);call('stop')end
+followenv.state.IpcMode={value='All'}
+followenv.windower={ffxi={follow=function()call('unfollow')end,run=function(v)assert(v==false);call('run off')end},
+ add_to_chat=function(_,s)assert(s:find('requested',1,true));call('ack')end}
+followenv.require=function(n)if n=='chat' then return{} end return{reset=function()end}end
+methods('commands/FollowCommands.lua','function FollowTrustCommands:handle_travel()','-- // trust follow me',followenv)
+f.handle_follow_me=function()assert(Feedback.is_quiet());call('request');return true end
+assert(f:handle_follow_party_member(nil));assert(table.concat(travelCalls,',')=='stop,unfollow,run off,request,ack')
+travelCalls={};assert(f:handle_travel());assert(#travelCalls==5,'already-stopped release skipped')
+followenv.state.IpcMode.value='Receive';travelCalls={};assert(not f:handle_travel());assert(#travelCalls==0)
+print('PASS bare travel route, explicit local release, quiet Follow Me request, one acknowledgment and IPC guard')

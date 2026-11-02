@@ -490,3 +490,5 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - November 2, 2026: Added coordinated Ready/Standdown party requests with a single truthful request acknowledgment, state-aware Start/Follow, once-per-client-switch stick takeover (no neutral rearm), hidden pet widget by default, and compact hourglass/book alpha 155/230. Mute retains its existing handoff. Requires the matched movement_signal.ahk only; other AHK and L1 bindings unchanged.
 
 - November 2, 2026: Ready now starts only the other participating party clients; the initiating character keeps its current Start/Stop state. Assist leadership and the request acknowledgment remain. Standdown, mute, stick and widgets are unchanged.
+
+- November 2, 2026: Bare `//trust follow` is travel takeover: Stop local Trust, cancel local following/path/run, ask other IPC clients to follow, and print one formatted request acknowledgment. The client-switch stick signal calls this same handler. Explicit Follow Me/named Follow retain their prior meanings; no AHK change.

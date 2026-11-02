@@ -1,3 +1,17 @@
+# Current Development Status — November 2, 2026 — Travel Follow 1
+
+- Repository `rerorriM-Mirrorer/trust`, branch `test/starter-defaults-20261023`, baseline published `f0c838dc4205ff8ccf1760b954fb9b58fa24d0c1` / local `0d27a998`. User authorized bare `//trust follow` as the exclusive travel takeover command, also invoked directly by AHK stick-message receiver.
+- Bare Follow Stops local Trust with manual movement pause, explicitly cancels native follow/run even if already stopped, clears local follow/path target through existing Follow Me, and sends quiet Follow Me to other participating IPC clients. One local BattleStations-style `[Trust] Follow me -> requested` acknowledgment appears even when movement feedback is quiet. Other clients retain assist and Start/Stop state, saved distance and formation preference; existing unchanged-destination guard preserves their active walking/formation.
+- Explicit `//trust follow me` remains the simple target request; `//trust follow <name>` remains local named following. Stick receiver calls the exact same travel handler without a queued console command, retaining focus/menu/chat guards and once-per-client-switch sender latch. Mute, Ready (others only), Standdown, widgets and AHK sender are unchanged. The special travel operation always Stops locally; the older Stop-my-Trust preference still governs mute/legacy local-only takeover, not this explicit travel command.
+- Verification: production travel handler simulation covers bare dispatch, release ordering, already-stopped repeat, quiet remote request, one acknowledgment, IPC send guard and receiver route. Full 33 simulated suites pass under host Lua 5.4 with temporary Windower syntax normalization. Native Windower/FFXI acceptance PENDING.
+- Delivery `Trust-Travel-Follow1-Patch-20261102.zip`: requires current Party Commands + Ready Others Only patches. Unload Trust on all clients, merge trust/, reload. Runtime files Trust.lua and commands/FollowCommands.lua; README/WORKFLOW/TESTING inside trust/. No AHK/assets/settings replacement. Rollback restore these two runtime files from preceding packages.
+
+Live acceptance — PENDING:
+1. Type bare Follow while local Trust Started and while already Stopped: local movement/follow/path releases, others follow, one request acknowledgment. Named Follow and Follow Me retain prior behavior.
+2. Switch FFXI client and move once: same operation/acknowledgment. Neutral does not rearm. Others retain assist and Start/Stop state; repeating while they already follow does not reset formation. Mute remains explicit leadership.
+
+---
+
 # Current Development Status — November 2, 2026 — Ready Others Only 1
 
 - Repository `rerorriM-Mirrorer/trust`, branch `test/starter-defaults-20261023`; baseline published `7e6e0ef5626f7a06148561b2cd2cd36d98cfd374` / identical local tree `b8c1c62a`. User requested Ready to Start only everyone else. Assist leadership and acknowledgment remain; only the local Start is removed. Initiator retains both an existing Started or Stopped state without firing its relay.

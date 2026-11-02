@@ -27,6 +27,10 @@ local env=setmetatable({
         error(name)
     end,
 },{__index=_G})
+env.shortcuts.follow.handle_travel=function(self)
+ if env.handle_stop then env.handle_stop(true) end
+ return self:handle_follow_me()
+end
 assert(load(block,'actual movement integration','t',env))()
 assert(events.keyboard)
 events.keyboard(0x7B,true);events.keyboard(0x7B,false)
