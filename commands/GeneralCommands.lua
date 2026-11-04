@@ -27,13 +27,17 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
 
     -- State
     self:add_command('start', self.handle_start, 'Start Trust')
+    self:add_command('act', self.handle_start, 'Activate Trust job automation (alias for start)')
     self:add_command('ready', self.handle_ready, 'Assist me and start other participating party clients: //trust ready')
     self:add_command('standdown', self.handle_standdown, 'Stop party actions and follow me: //trust standdown')
     self:add_command('partyrequest', self.handle_party_request, 'Internal coordinated party request')
     self:add_command('handoff', self.handle_handoff, 'Follow and assist a party member, then start: //trust handoff <name>')
     self:add_command('startall', self.handle_start_all, 'Start Trust on all characters, or only party members with // trust startall party')
+    self:add_command('actall', self.handle_start_all, 'Activate all Trust clients, or only party members with //trust actall party')
     self:add_command('stop', self.handle_stop, 'Stop Trust actions; keep following without Fan Out')
+    self:add_command('pause', self.handle_stop, 'Pause Trust job automation; continue close following (alias for stop)')
     self:add_command('stopall', self.handle_stop_all, 'Stop Trust on all characters, or only party members with // trust stopall party')
+    self:add_command('pauseall', self.handle_stop_all, 'Pause all Trust clients, or only party members with //trust pauseall party')
     self:add_command('toggle', self.handle_toggle, 'Toggle Trust On and Off')
     self:add_command('reload', self.handle_reload, 'Reload job settings files')
     self:add_command('status', self.handle_status, 'View Trust status')
