@@ -1,4 +1,5 @@
 local CommandMessage = require('cylibs/messages/command_message')
+local party_util = require('cylibs/util/party_util')
 local command_feedback = require('cylibs/util/command_feedback')
 local PickerConfigItem = require('ui/settings/editors/config/PickerConfigItem')
 local TrustCommands = require('cylibs/trust/commands/trust_commands')
@@ -11,6 +12,12 @@ function FollowTrustCommands.new(trust, action_queue)
 
     self.trust = trust
     self.action_queue = action_queue
+    -- A: Follow receipts are session-only; saved follow settings do not change.
+    self.follow_request_sequence = 0
+    self.pending_follow = nil
+    self.follow_receipt_timer = windower.register_event('time change', function()
+        self:check_follow_receipts()
+    end)
 
     local party_member_names = trust:get_party():get_party_members(true):map(function(p) return p:get_name() end)
 
@@ -23,6 +30,8 @@ function FollowTrustCommands.new(trust, action_queue)
     end)
 
     self:add_command('me', self.handle_follow_me, 'Make all players follow me')
+    self:add_command('receipt', self.handle_follow_receipt, 'Internal follow confirmation request')
+    self:add_command('ack', self.handle_follow_ack, 'Internal follow confirmation reply')
     self:add_command('start', self.handle_start, 'Resume following')
     self:add_command('stopall', self.handle_stop_all, 'Pause following for all players')
     self:add_command('stop', self.handle_stop, 'Pause following')
@@ -59,23 +68,145 @@ function FollowTrustCommands:handle_travel()
     return true
 end
 
+-- Human party clients are eligible for receipts; summoned alter egos are not
+-- Windower IPC clients. Keep the existing broadcast for other participating
+-- clients and for backward compatibility with older Trust installations.
+function FollowTrustCommands:get_receipt_recipients()
+    local recipients, seen = {}, {}
+    local party = windower.ffxi.get_party()
+    local self_name = windower.ffxi.get_player().name:lower()
+    for i = 0, 5 do
+        local member = party and party['p'..i]
+        local name = member and member.name
+        if type(name) == 'string' and name:match('^%a+$')
+                and name:lower() ~= self_name and not seen[name:lower()]
+                and not (member.mob and member.mob.is_npc) then
+            seen[name:lower()] = true
+            recipients[#recipients + 1] = name
+        end
+    end
+    table.sort(recipients)
+    return recipients
+end
+
+function FollowTrustCommands:send_follow_receipt(recipient, pending)
+    IpcRelay.shared():send_message(CommandMessage.new(
+        'trust follow receipt '..pending.leader..' '..pending.request_id..' --quiet', recipient))
+end
+
+-- Confirm recipient acceptance, not physical movement: an engaged character
+-- may accept its leader while staying in battle. Unanswered requests are never
+-- counted as successful.
+function FollowTrustCommands:finish_follow_receipts()
+    local pending = self.pending_follow
+    if not pending then return end
+    self.pending_follow = nil
+    local accepted, rejected, missing = {}, {}, {}
+    for name, result in pairs(pending.targets) do
+        if result == 'accepted' then
+            accepted[#accepted + 1] = name
+        elseif result == 'failed' then
+            rejected[#rejected + 1] = name
+        else
+            missing[#missing + 1] = name
+        end
+    end
+    table.sort(accepted)
+    table.sort(rejected)
+    table.sort(missing)
+    local detail = #accepted..'/'..pending.total..' accepted'
+    if #rejected > 0 then detail = detail..'; rejected: '..table.concat(rejected, ', ') end
+    if #missing > 0 then detail = detail..'; unconfirmed: '..table.concat(missing, ', ') end
+    require('chat')
+    windower.add_to_chat(0, '[Trust] ':color(200)..'Follow responses':color(167)
+        ..' -> ':color(200)..detail:color(0))
+end
+
+function FollowTrustCommands:check_follow_receipts()
+    local pending = self.pending_follow
+    if not pending then return end
+    local elapsed = os.time() - pending.started_at
+    if elapsed >= 2 and not pending.retried then
+        pending.retried = true
+        for name, result in pairs(pending.targets) do
+            if result == 'pending' then self:send_follow_receipt(name, pending) end
+        end
+    end
+    if elapsed >= 5 then self:finish_follow_receipts() end
+end
+
 -- // trust follow me
 function FollowTrustCommands:handle_follow_me()
-    local success
-    local message
-
-    if L{'All', 'Send'}:contains(state.IpcMode.value) then
-        self:get_follower():set_follow_target(nil)
-        local quiet_flag = command_feedback.is_quiet() and ' --quiet' or ''
-        IpcRelay.shared():send_message(CommandMessage.new('trust follow '..windower.ffxi.get_player().name..quiet_flag))
-        success = true
-        message = 'Follow set to me on everyone else'
-    else
-        success = false
-        message = 'IpcMode must be set to All or Send to use this command'
+    if not L{'All', 'Send'}:contains(state.IpcMode.value) then
+        return false, 'IpcMode must be set to All or Send to use this command'
     end
+    self:get_follower():set_follow_target(nil)
+    local leader = windower.ffxi.get_player().name
+    local quiet_flag = command_feedback.is_quiet() and ' --quiet' or ''
+    -- The original broadcast remains effective even with an older recipient.
+    IpcRelay.shared():send_message(CommandMessage.new('trust follow '..leader..quiet_flag))
 
+    -- Only All can receive the confirmations. Send retains ordinary following
+    -- and reports that the remote state cannot be verified.
+    if state.IpcMode.value ~= 'All' then
+        self.pending_follow = nil
+        return true, 'Follow request sent; confirmations require IpcMode All'
+    end
+    local recipients = self:get_receipt_recipients()
+    if #recipients == 0 then
+        self.pending_follow = nil
+        return true, 'Follow request sent; no other player clients to confirm'
+    end
+    self.follow_request_sequence = self.follow_request_sequence + 1
+    local pending = {
+        leader = leader,
+        request_id = tostring(os.time())..tostring(self.follow_request_sequence),
+        started_at = os.time(),
+        retried = false,
+        targets = {},
+        total = #recipients,
+    }
+    self.pending_follow = pending
+    for _, name in ipairs(recipients) do pending.targets[name] = 'pending' end
+    for _, name in ipairs(recipients) do self:send_follow_receipt(name, pending) end
+    return true, 'Follow requested; awaiting '..#recipients..' confirmation(s)'
+end
+
+-- The targeted receipt request retries the named follow action idempotently,
+-- so it can recover a dropped initial broadcast without restarting formation.
+function FollowTrustCommands:handle_follow_receipt(_, leader, request_id)
+    if type(leader) ~= 'string' or not leader:match('^%a+$')
+            or type(request_id) ~= 'string' or not request_id:match('^%d+$') then
+        return false, 'Invalid follow receipt request'
+    end
+    local success, message = self:handle_follow_party_member(leader)
+    if L{'All', 'Send'}:contains(state.IpcMode.value) then
+        local response = success == false and 'failed' or 'accepted'
+        local member = windower.ffxi.get_player().name
+        IpcRelay.shared():send_message(CommandMessage.new(
+            'trust follow ack '..leader..' '..request_id..' '..member..' '..response..' --quiet',
+            leader))
+    end
     return success, message
+end
+
+-- Replies are bounded to the current request and a known expected party name.
+-- Duplicate/late replies are harmless, including after a focus switch.
+function FollowTrustCommands:handle_follow_ack(_, leader, request_id, member, result)
+    local pending = self.pending_follow
+    if not pending or type(leader) ~= 'string' or type(request_id) ~= 'string'
+            or type(member) ~= 'string' then return true end
+    if leader:lower() ~= pending.leader:lower() or request_id ~= pending.request_id
+            or not pending.targets[member] or pending.targets[member] ~= 'pending'
+            or (result ~= 'accepted' and result ~= 'failed') then
+        return true
+    end
+    pending.targets[member] = result
+    for _, state_name in pairs(pending.targets) do
+        if state_name == 'pending' then return true end
+    end
+    self:finish_follow_receipts()
+    return true
 end
 
 -- // trust follow party_member_name
