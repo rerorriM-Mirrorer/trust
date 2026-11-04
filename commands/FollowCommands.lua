@@ -1,5 +1,4 @@
 local CommandMessage = require('cylibs/messages/command_message')
-local party_util = require('cylibs/util/party_util')
 local command_feedback = require('cylibs/util/command_feedback')
 local PickerConfigItem = require('ui/settings/editors/config/PickerConfigItem')
 local TrustCommands = require('cylibs/trust/commands/trust_commands')
