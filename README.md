@@ -1,3 +1,5 @@
+Act / Pause / Retreat Test 1 (November 4, 2026, testing branch): `//trust pause` retains following and configured Fan Out; `//trust toggle` switches local Act/Pause. `//trust ready` asks others to assist/follow you and Act while preserving your Active/Paused state. `//trust standdown` Pauses everyone and gathers others around you. **`//trust stop` is now party-wide retreat:** disengage and close-follow the assist/party anchor at 0.3 yalms without Fan Out; `stopall [party]` has the same scope. Act releases retreat. Stick takeover uses local Pause and its existing movement release. Install on every participating client; no AHK changes. Host simulations passed; native FFXI acceptance pending. See [current status, installation, rollback and tests](TESTING.md).
+
 AutoEngage Aggro Test 1 (November 4, 2026, testing branch): opt in with `//trust set AutoEngageMode Aggro`; inspect with `//trust aggro`; return with `//trust set AutoEngageMode Always`. Assist leader targets take priority; otherwise defend observed threats to party members and alter egos. Active pulling retains ownership. Always remains the default. Requires the latest Act/Pause + Follow receipts build (`80b46199`); live combat acceptance pending. See the current status and installation/rollback instructions in [TESTING.md](TESTING.md).
 
 Integrated movement Test 1 (October 25, 2026): main menu > Movement offers Send (default) and Ready, enabled/quiet options and Status counters. Replaces the separate trustmovement receiver; unload that addon before testing. Matching personal xivcrossbar sender required. Preserves RC3 Follow me then Assist me actions. See [install and testing](docs/MOVEMENT-SEND-READY-TEST1.md). Native acceptance pending.
@@ -502,3 +504,10 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 
 - Added opt-in defensive party combat targeting with assist priority, party/alter-ego evidence, bounded event memory, stable selection and claim/validity checks. Existing combat role/queue paths and pull ownership remain in use. Always remains the default.
 - Added read-only `//trust aggro` diagnostics and selector, integration and attacker regression simulations. No personal settings, assets, AHK or positioning changes. Native FFXI acceptance pending; see TESTING.md for exact host verification and known test-harness limits.
+
+
+### November 4, 2026 — Act / Pause / Retreat Test 1
+
+- Split local Pause (following and configured Fan Out retained) from party-wide retreat Stop (disengage request, canceled combat/path work and temporary close-follow). Toggle only uses Act/Pause; stick/mute takeover uses local Pause and existing motion release.
+- Ready now orders assist/follow/Act on others; Standdown Pauses everyone and follows the issuer. Added labeled “Stand ready!” / “Stand down!” request acknowledgments, session control status, menu access and Pause movement labels.
+- Preserved saved follow distance/Fan Out and existing command aliases where compatible; Stopall now shares party-retreat scope. Added production-method regression coverage; paused path waypoint progression is gated. Native disengage, pet and multibox acceptance remain pending.
