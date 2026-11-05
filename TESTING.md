@@ -1,3 +1,7 @@
+# Idle followers and native menus — 2026-11-05
+
+Baseline 23f3bb1 on test/act-pause-retreat-t1. Native inventory menus no longer hold idle ordinary following through movement recovery. Chat, casting, Trust's own menu, status effects and other movement kinds retain their existing checks. Host guard simulation, syntax and pull lifecycle tests passed. Live test pending: leave Sack open on an idle follower and walk the leader out of follow distance.
+
 # Battle menu compatibility — 2026-11-05
 
 Clairvaux's live pulling log confirms the generic Windower menu flag blocked pulls. The relevant check now treats an engaged character with a living monster selected and no subtarget as a battle-menu candidate. This is a heuristic because the flag carries no menu identity. Item menus opened while the same enemy cursor remains active may look identical. Check both the battle panel and Items during combat in-game, including item selection with a subtarget. Idle menu gating remains in effect.

@@ -86,11 +86,12 @@ function M.close()
     if M.dispose_bag then M.dispose_bag:destroy();M.dispose_bag=nil end
     M.reset(true)
 end
-local function suspended(ordinary_follow)
+local function suspended(ordinary_follow, following)
     local info=windower.ffxi.get_info();local character=windower.ffxi.get_player()
     if not info or not info.logged_in or not character then return true, 'character unavailable' end
     if info.chat_open then return true, 'chat input open' end
-    if info.menu_open then
+    -- An idle follower can travel with an ordinary inventory window open.
+    if info.menu_open and not (following and character.status == 0) then
         -- Windower exposes a flag rather than a menu ID. Recognize the
         -- engaged enemy cursor as the battle menu unless subtargeting.
         local target = character.status == 1 and windower.ffxi.get_mob_by_target('t')
@@ -126,7 +127,9 @@ function M.step(action,pos,goal,radius)
     end
     local key=mobkey(meta.key)
     local previous=detector.context and detector.context.key==key and detector.last or ''
-    local decision,offset,started=detector:sample(key,pos,goal,radius,config,suspended(meta.kind=='following' and action.follow_while_stopped==true))
+    local following = meta.kind == 'following'
+    local blocked = suspended(following and action.follow_while_stopped == true, following)
+    local decision,offset,started=detector:sample(key,pos,goal,radius,config,blocked)
     if decision=='normal' then
         M.last=detector.last
         if previous:find('detour',1,true) then
