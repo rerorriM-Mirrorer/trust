@@ -51,8 +51,8 @@ local function new(melee)
 end
 local a,q=new();a:perform();assert(type(runs[#runs])=='number' and not a.completed and q.pull_action==a)
 assert(engages==0,'far target must move before engage request')
-mob.distance=23.7^2;char.status=0;a:step();assert(engages==1 and type(runs[#runs])=='number' and created==0)
--- Engagement ack remains pending; getting into range can still start Dia.
+mob.distance=23.7^2;char.status=0;a:step();assert(engages==0 and type(runs[#runs])=='number' and created==0)
+-- Spell pulling approaches without requesting engagement before Dia.
 mob.distance=19^2;ready=false;now=101;a:step();assert(runs[#runs]==false and created==0)
 ready=true;a:step();assert(created==1 and a.child==children[1])
 -- Claim during casting must not interrupt the running action.
@@ -66,7 +66,14 @@ local count=created;b:step();assert(created==count)
 -- Higher-priority healing yields approach promptly; ordinary work does not.
 mob.distance=30^2;local c,cq=new();c:perform();cq.queue=L{{getpriority=function()return 999 end}};c:step();assert(c.completed and not c.success)
 local d,dq=new();d:perform();dq.queue=L{{getpriority=function()return 1 end}};d:step();assert(not d.completed)
-blocked=true;d:step();assert(runs[#runs]==false);blocked=false
+blocked=true;d:step();assert(runs[#runs]==false)
+now=now+3;d:step();assert(d.completed and not dq.pull_action)
+assert(notes[#notes]:find('pull released after 3s blocked',1,true))
+blocked=false
+mob.distance=9^2
+local near=new();blocked=true;near:perform();assert(not near.child)
+blocked=false;now=now+0.5;near:step();assert(near.child,'Dia should cast immediately when a brief blocker clears')
+near:cancel()
 active=false;d:step();assert(d.completed);active=true
 -- Melee approach remains active until claim, never creates a spell child.
 char.status=1;char.target_index=2;mob.distance=1.5^2;local e=new(true);count=created;e:perform();assert(not e.completed and created==count)

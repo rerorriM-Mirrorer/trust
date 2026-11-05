@@ -364,16 +364,16 @@ function Puller:planning_gambit(gambit)
     return copy
 end
 
-function Puller:report_pull(text)
+function Puller:report_pull(text, diagnostic)
     if self.last_pull_report==text then return end
     self.last_pull_report=text
     local config=require('cylibs/movement/recovery').settings()
-    if config.verbose then require('cylibs/ui/chat/status_message').show('Pulling',text) end
-    if config.diagnostics then
+    if config.verbose then require('cylibs/ui/chat/status_message').show('Pulling', diagnostic and (text..' | '..diagnostic) or text) end
+    if config.diagnostics or diagnostic then
         windower.create_dir(windower.addon_path..'data/movement')
         local name=windower.ffxi.get_player().name
         local file=io.open(windower.addon_path..'data/movement/pulling-'..name..'.log','a')
-        if file then file:write(os.date('%Y-%m-%d %H:%M:%S')..' '..text..'\n');file:close() end
+        if file then file:write(os.date('%Y-%m-%d %H:%M:%S')..' '..text..(diagnostic and (' | '..diagnostic) or '')..'\n');file:close() end
     end
 end
 
@@ -432,7 +432,7 @@ function Puller:queue_pull(gambit,plan,target,param)
             local follower=self.job and player.trust.main_job:role_with_type('follower')
             if follower then follower:stop_following() end
         end,
-        report=function(reason)self:report_pull(mob.name..': '..reason) end,
+        report=function(reason, diagnostic)self:report_pull(mob.name..': '..reason, diagnostic) end,
         finished=function(success)
             if not success then self.pull_retry[id]=require('socket').gettime()+2 end
             local combat=player.trust.main_job:role_with_type('combatmode')

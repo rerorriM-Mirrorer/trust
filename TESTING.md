@@ -1,3 +1,9 @@
+# Dia pull readiness follow-up — 2026-11-05
+
+Baseline: `54087a02`, `test/act-pause-retreat-t1`. Clairvaux's live log showed successful Dia pulls followed by an attempt stuck before cast dispatch. Spell pulls now approach and cast before requesting engagement. A continuous gameplay readiness blocker releases the pull after three seconds. The first blocked state and release record the actual gate and distance in `data/movement/pulling-<character>.log` by default.
+
+Host simulation passed for approach, cast-first ordering, a 9-yalm target after a brief blocker, and release after sustained blockage. Lua syntax and whitespace checks passed. In-game test pending. With PullActionMode Auto and Dia configured, check a nearby unclaimed Mandragora and an out-of-range target. If it stalls, capture the new pulling log. The previous chat log did not identify the exact readiness gate.
+
 # Current Development Status — November 4, 2026 — Act / Pause / Retreat Test 1
 
 - Repository: `rerorriM-Mirrorer/trust`; new working branch `test/act-pause-retreat-t1`, starting published checkpoint `03b874e92abe7e038a8fd72172aea3b5f040f2e9` (Aggro Test 1). Main and the prior Aggro branch are unchanged. Runtime: Trust on Windower Lua; no companion/AHK changes required. Final published SHA is reported with delivery, not embedded as this file's own hash.

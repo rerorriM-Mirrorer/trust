@@ -1,5 +1,5 @@
--- A: one bounded pull owns approach until claim. Engagement runs alongside
--- movement/casting; its acknowledgement must never hold up the pull action.
+-- A: a bounded pull owns approach until claim. Spell pulls cast first
+-- so drawing weapons cannot compete with the opening spell.
 local Action=require('cylibs/actions/action')
 local Timer=require('cylibs/util/timers/timer')
 local Engage=require('cylibs/actions/engage')
@@ -17,16 +17,16 @@ function Pull.new(options)
 end
 function Pull:gettype()return 'pullattempt' end
 function Pull:tostring()return self.display_name end
-function Pull:note(reason)
+function Pull:note(reason, diagnostic)
     if self.reason==reason then return end
-    self.reason=reason;self.options.report(reason)
+    self.reason=reason;self.options.report(reason, diagnostic)
 end
 function Pull:stop_motion()
     windower.ffxi.follow();windower.ffxi.run(false);self.moving=false
 end
-function Pull:finish(success,reason)
+function Pull:finish(success,reason,diagnostic)
     if self.completed then return end
-    self:note(reason);self:stop_motion()
+    self:note(reason,diagnostic);self:stop_motion()
     if self.options.queue.pull_action==self then self.options.queue.pull_action=nil end
     self.options.finished(success)
     if self.timer then self.timer:cancel() end
@@ -72,11 +72,22 @@ function Pull:step()
         if now-self.await_claim>2 then self:finish(false,'claim not confirmed; reassessing') end
         return
     end
-    if Recovery.suspended() then
-        self:stop_motion();self:note('waiting for gameplay/casting readiness');return
+    local blocked, blocker = Recovery.suspended()
+    if blocked then
+        if self.moving then self:stop_motion() end
+        self.blocked_since = self.blocked_since or now
+        local detail = string.format('%s (%.1fy away, %.1fy pull range)', blocker or 'unknown readiness blocker',
+            math.sqrt(mob.distance), o.range)
+        if now - self.blocked_since >= 3 then
+            self:finish(false, 'pull released after 3s blocked: '..(blocker or 'unknown readiness blocker'), detail)
+        else
+            self:note('waiting: '..(blocker or 'unknown readiness blocker'), detail)
+        end
+        return
     end
+    self.blocked_since = nil
     if not o.eligible() then self:finish(false,'pull action no longer available');return end
-    self:engage(mob,now)
+    if o.melee then self:engage(mob,now) end
     local distance=math.sqrt(mob.distance)
     if distance>o.range then
         self.settled=nil

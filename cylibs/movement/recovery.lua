@@ -88,14 +88,18 @@ function M.close()
 end
 local function suspended(ordinary_follow)
     local info=windower.ffxi.get_info();local character=windower.ffxi.get_player()
-    if not info or not info.logged_in or info.chat_open or info.menu_open or not character then return true end
-    if character.status~=0 and character.status~=1 then return true end
-    if not ordinary_follow and addon_enabled and not addon_enabled:getValue() then return true end
-    if clock()<(M.casting_until or 0) then return true end
-    if hud and hud.trustMenu and hud.trustMenu:isVisible() then return true end
+    if not info or not info.logged_in or not character then return true, 'character unavailable' end
+    if info.chat_open then return true, 'chat input open' end
+    if info.menu_open then return true, 'Windower menu_open=true' end
+    if character.status~=0 and character.status~=1 then return true, 'character status '..tostring(character.status) end
+    if not ordinary_follow and addon_enabled and not addon_enabled:getValue() then return true, 'Trust paused' end
+    if clock()<(M.casting_until or 0) then return true, 'cast completion pending' end
+    if hud and hud.trustMenu and hud.trustMenu:isVisible() then return true, 'Trust menu open' end
     for _,id in ipairs(character.buffs or {}) do
         local buff=res and res.buffs[id]
-        if buff and ({Sleep=true,Stun=true,Petrification=true,Terror=true,Bind=true,Lullaby=true})[buff.en] then return true end
+        if buff and ({Sleep=true,Stun=true,Petrification=true,Terror=true,Bind=true,Lullaby=true})[buff.en] then
+            return true, 'status effect '..buff.en
+        end
     end
     return false
 end
