@@ -1,3 +1,5 @@
+AutoEngage Aggro Test 1 (November 4, 2026, testing branch): opt in with `//trust set AutoEngageMode Aggro`; inspect with `//trust aggro`; return with `//trust set AutoEngageMode Always`. Assist leader targets take priority; otherwise defend observed threats to party members and alter egos. Active pulling retains ownership. Always remains the default. Requires the latest Act/Pause + Follow receipts build (`80b46199`); live combat acceptance pending. See the current status and installation/rollback instructions in [TESTING.md](TESTING.md).
+
 Integrated movement Test 1 (October 25, 2026): main menu > Movement offers Send (default) and Ready, enabled/quiet options and Status counters. Replaces the separate trustmovement receiver; unload that addon before testing. Matching personal xivcrossbar sender required. Preserves RC3 Follow me then Assist me actions. See [install and testing](docs/MOVEMENT-SEND-READY-TEST1.md). Native acceptance pending.
 
 Menu layout (October 25, 2026): Config > Menu > Menu layout offers Condensed (default) and Full. Save, close and reopen the menu to apply. Condensed opens job Settings directly, with Modes last and Status hidden. Full restores job landing pages and the hidden Commands/GearSwap/Shortcuts/Language entries, with character tools accessible through jobs. Mode persistence is identical in both layouts.
@@ -494,3 +496,9 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - November 2, 2026: Bare `//trust follow` is travel takeover: Stop local Trust, cancel local following/path/run, ask other IPC clients to follow, and print one formatted request acknowledgment. The client-switch stick signal calls this same handler. Explicit Follow Me/named Follow retain their prior meanings; no AHK change.
 
 - November 4, 2026: Added `//trust act`, `//trust pause`, `//trust actall [party]`, and `//trust pauseall [party]` as direct aliases for Start/Stop. Stop still disables job actions but preserves close ordinary following without Fan Out; Toggle still switches Start/Stop. `//trust follow me` and bare `//trust follow` keep their established broadcasts and now request per-player follow receipts in IpcMode All. Replies distinguish accepted, rejected, and unconfirmed targets; one bounded retry can recover a missed initial request. A receipt confirms that the follow destination was accepted, not that the character physically moved. No changes to saved settings, AHK, combat targeting, or positioning.
+
+
+### November 4, 2026 — AutoEngage Aggro Test 1
+
+- Added opt-in defensive party combat targeting with assist priority, party/alter-ego evidence, bounded event memory, stable selection and claim/validity checks. Existing combat role/queue paths and pull ownership remain in use. Always remains the default.
+- Added read-only `//trust aggro` diagnostics and selector, integration and attacker regression simulations. No personal settings, assets, AHK or positioning changes. Native FFXI acceptance pending; see TESTING.md for exact host verification and known test-harness limits.
