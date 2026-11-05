@@ -48,7 +48,7 @@ function M.new(options)
     end
     function self:status()
         local settings=options.settings()
-        return self:policy()..' | local Stop '..tostring(settings.stop_on_movement==true)..
+        return self:policy()..' | local Pause '..tostring(settings.stop_on_movement==true)..
             ' | others Start '..tostring(settings.start_others==true)..
             ' | engage lock-on '..tostring(settings.auto_lockon~=false)..' | received '..self.received..' | accepted '..self.accepted..
             ' | ignored '..self.ignored..' | current: '..(self:reason() or 'ready')..' | last: '..self.last

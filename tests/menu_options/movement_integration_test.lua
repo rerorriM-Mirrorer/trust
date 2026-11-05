@@ -28,7 +28,7 @@ local env=setmetatable({
     end,
 },{__index=_G})
 env.shortcuts.follow.handle_travel=function(self)
- if env.handle_stop then env.handle_stop(true) end
+ if env.handle_pause then env.handle_pause(true) end
  return self:handle_follow_me()
 end
 assert(load(block,'actual movement integration','t',env))()
@@ -45,7 +45,7 @@ assert(#requests==1 and env.windower.trust.movement.ignored==2)
 menu=false;env.state.IpcMode.value='All'
 local order={}
 options.movement.stop_on_movement=true;options.movement.start_others=true
-env.handle_stop=function()order[#order+1]='stop'end
+env.handle_pause=function()order[#order+1]='pause'end
 env.shortcuts.follow.get_follower=function()return{set_follow_target=function(_,target)
     assert(target==nil);order[#order+1]='clear local follow'end}end
 env.IpcRelay={shared=function()return{send_message=function(_,m)
@@ -56,11 +56,11 @@ env.require=function(name)
     return original_require(name)
 end
 events.keyboard(0x7B,true);events.keyboard(0x7B,false)
-assert(table.concat(order,',')=='stop' and requests[#requests]=='follow' and #acknowledgments==0)
+assert(table.concat(order,',')=='pause' and requests[#requests]=='follow' and #acknowledgments==0)
 -- Mute alone requests the ordered full handoff and emits one local acknowledgment.
 order={}
 events.keyboard(0x77,true);events.keyboard(0x77,true);events.keyboard(0x77,false)
-assert(table.concat(order,',')=='stop,clear local follow,trust handoff Myrr --quiet')
+assert(table.concat(order,',')=='pause,clear local follow,trust handoff Myrr --quiet')
 assert(#acknowledgments==1 and acknowledgments[1]:find('stand ready',1,true))
 assert(not Feedback.is_quiet())
 menu=true;events.keyboard(0x7B,true);events.keyboard(0x7B,false)
@@ -69,12 +69,12 @@ menu=false
 -- Same-client takeover stops/clears locally, even with IPC send disabled.
 order={};env.state.IpcMode.value='Receive'
 events.keyboard(0x79,true);events.keyboard(0x79,true);events.keyboard(0x79,false)
-assert(table.concat(order,',')=='stop,clear local follow','local takeover broadcast or repeated')
+assert(table.concat(order,',')=='pause,clear local follow','local takeover broadcast or repeated')
 assert(env.windower.trust.movement.last=='local movement takeover')
 assert(requests[#requests-1]=='native follow cancel' and requests[#requests]=='native run cancel')
 options.movement.stop_on_movement=false
 order={};events.keyboard(0x79,true);events.keyboard(0x79,false)
-assert(#order==0 and env.windower.trust.movement.last=='local Stop disabled')
+assert(#order==0 and env.windower.trust.movement.last=='local Pause disabled')
 options.movement.stop_on_movement=true
 menu=true;events.keyboard(0x79,true);events.keyboard(0x79,false)
 assert(#order==0,'menu stick navigation must not take over')

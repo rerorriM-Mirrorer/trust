@@ -101,6 +101,7 @@ function Pather:set_path(path)
     end)
 
     self.path_target.timer:onTimeChange():addAction(function()
+        if self.action_queue.is_enabled == false then return end
         local position = self.path_target:get_position()
 
         local dist = math.floor(player_util.distance(player_util.get_player_position(), position))

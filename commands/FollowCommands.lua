@@ -53,8 +53,8 @@ function FollowTrustCommands:handle_travel()
     if state.IpcMode.value ~= 'All' and state.IpcMode.value ~= 'Send' then
         return false, 'IpcMode must be All or Send to request travel following'
     end
-    handle_stop(true)
-    -- Explicit release is also required when Trust was already stopped.
+    handle_pause(true)
+    -- Explicit release is also required when Trust was already paused.
     windower.ffxi.follow()
     windower.ffxi.run(false)
     local ok,message = command_feedback.run(true, function()
@@ -122,6 +122,7 @@ function FollowTrustCommands:finish_follow_receipts()
 end
 
 function FollowTrustCommands:check_follow_receipts()
+    if self.action_queue.control_state == 'Retreat' then self.pending_follow = nil; return end
     local pending = self.pending_follow
     if not pending then return end
     local elapsed = os.time() - pending.started_at
@@ -211,6 +212,10 @@ end
 -- // trust follow party_member_name
 function FollowTrustCommands:handle_follow_party_member(party_member_name)
     if party_member_name == nil then return self:handle_travel() end
+    if self.action_queue and self.action_queue.control_state == 'Retreat'
+            and (not self.action_queue.retreat_leader or party_member_name:lower() ~= self.action_queue.retreat_leader:lower()) then
+        return false, 'Retreat active; use Act or Pause before changing the follow leader'
+    end
     local success
     local message
 

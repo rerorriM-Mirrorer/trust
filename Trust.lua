@@ -39,9 +39,12 @@ function load_user_files(main_job_id, sub_job_id)
 	end
 
 	action_queue = ActionQueue.new(nil, true, 5, false, true, true)
+    action_queue.control_state = 'Paused'
 
 	addon_enabled = ValueRelay.new(false)
 	addon_enabled:onValueChanged():addAction(function(_, isEnabled)
+        if isEnabled then action_queue.control_state = 'Active'
+        elseif action_queue.control_state ~= 'Retreat' then action_queue.control_state = 'Paused' end
 		if isEnabled then
 			player.player:monitor()
 			action_queue:enable()
@@ -510,14 +513,14 @@ function load_ui()
             -- queued command executing later in a changed client context.
             return require('cylibs/util/command_feedback').run(addon_settings:getSettings().movement.quiet~=false,function()
                 local movement=addon_settings:getSettings().movement
-                if local_only and not movement.stop_on_movement then return false,'local Stop disabled' end
+                if local_only and not movement.stop_on_movement then return false,'local Pause disabled' end
                 if not local_only and not leader then
                     return shortcuts.follow:handle_travel()
                 end
-                if movement.stop_on_movement then handle_stop(true) end
+                if movement.stop_on_movement then handle_pause(true) end
                 if local_only then
-                    -- Stop is idempotent: clear native motion even if Trust
-                    -- was already stopped and its relay does not fire again.
+                    -- Pause is idempotent: clear native motion even if Trust
+                    -- was already paused and its relay does not fire again.
                     windower.ffxi.follow()
                     windower.ffxi.run(false)
                     shortcuts.follow:get_follower():set_follow_target(nil)
@@ -686,15 +689,17 @@ end
 
 -- Handlers
 
-function handle_stop(cancel_follow)
-    -- Manual input must remain authoritative even if Trust was already stopped.
-    if cancel_follow then
-        local trust=player and player.trust and player.trust.main_job
-        local follower=trust and trust:role_with_type('follower')
-        if follower then follower.manual_pause=true;follower:stop_following() end
-    end
+function handle_pause(cancel_follow)
+    local trust = player and player.trust and player.trust.main_job
+    require('cylibs/trust/control_state').set(action_queue, addon_enabled, trust, 'Paused', cancel_follow)
     require('cylibs/movement/recovery').reset()
-	addon_enabled:setValue(false)
+end
+
+-- Internal lifecycle/death/timeout guards remain local pauses. The public Stop
+-- command is a separate coordinated retreat, never called by lifecycle events.
+function handle_stop(cancel_follow)
+    if action_queue.control_state == 'Retreat' then return end
+    handle_pause(cancel_follow)
 end
 
 function handle_tic(old_time, new_time)

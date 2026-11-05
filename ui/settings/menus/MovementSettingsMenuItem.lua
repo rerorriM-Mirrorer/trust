@@ -18,10 +18,10 @@ function M.new(owner)
             PickerConfigItem.new('policy',values.policy or 'Send',L{'Send','Ready'},nil,'First movement signal'),
             BooleanConfigItem.new('enabled','Movement follow/assist enabled'),
             BooleanConfigItem.new('quiet','Quiet follow/assist feedback'),
-            BooleanConfigItem.new('stop_on_movement','Stop my Trust on movement'),
+            BooleanConfigItem.new('stop_on_movement','Pause my Trust on movement'),
             BooleanConfigItem.new('start_others','Start others on mute handoff'),
             BooleanConfigItem.new('auto_lockon','Automatic lock-on when engaging'),
         },infoView)
-    end,'Movement','Send acts once without waiting; Ready waits for readiness. Follow/assist stays enabled independently of local Stop and others Start. Lock-on controls engaging. Switch clients to rearm.')
+    end,'Movement','Send acts once without waiting; Ready waits for readiness. Follow/assist stays enabled independently of local Pause and others Act. Lock-on controls engaging. Switch clients to rearm.')
 end
 return M

@@ -219,7 +219,8 @@ function Follower:check_distance()
     if player then
         local distance = player_util.distance(player_util.get_player_position(), follow_target:get_position())
         local deltaZ = math.abs(z - player.z)
-        if self.fan_out and self.action_queue.is_enabled ~= false and self.state_var.value=='Always' and player.status==0
+        if self.fan_out and self.action_queue.control_state ~= 'Retreat'
+                and (self.action_queue.is_enabled ~= false or self.action_queue.control_state == 'Paused') and self.state_var.value=='Always' and player.status==0
                 and distance<self.maxfollowdistance and deltaZ<1 then
             local goal,radius=self.formation:goal(follow_target:get_id(),windower.ffxi.get_info().zone,
                 {x,y,z},self:get_party():get_party_member_ids(),player.id,self:get_distance())
@@ -256,6 +257,7 @@ function Follower:follow_formation_goal(goal,radius,target)
     if player_util.distance(player_util.get_player_position(),goal)<=radius+.15 then return end
     local action=RunToLocation.new(goal[1],goal[2],goal[3],radius)
     action.formation=true
+    action.follow_while_stopped=true
     require('cylibs/movement/recovery').tag(action,'following',nil,'following:'..tostring(target))
     self.walk_action_queue:push_action(action)
 end
@@ -287,6 +289,7 @@ function Follower:get_type()
 end
 
 function Follower:get_distance()
+    if self.action_queue.control_state == 'Retreat' then return 0.3 end
     if state.AutoFollowMode.value == 'Path' then
         return 1
     else

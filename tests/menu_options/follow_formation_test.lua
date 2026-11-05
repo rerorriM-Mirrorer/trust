@@ -45,7 +45,9 @@ self:check_distance();assert(dest.formation and created==1 and tags==1)
 target.get_position=function()return{11,0,0}end
 self:check_distance();assert(created==1 and pushed==1 and dest.vector_location,'moving slot was queued instead of updated')
 self.action_queue.pull_action={};self:check_distance();assert(created==1);self.action_queue.pull_action=nil
-self.action_queue.is_enabled=false;self:check_distance();assert(created==2 and not dest.formation,'Stop must switch to ordinary follow');self.action_queue.is_enabled=true
+self.action_queue.is_enabled=false;self.action_queue.control_state='Paused';self:check_distance();assert(dest.formation,'Pause must retain Fan Out')
+self.action_queue.control_state='Retreat';self:check_distance();assert(created==2 and not dest.formation,'Retreat must switch to ordinary follow')
+self.action_queue.is_enabled=true;self.action_queue.control_state='Active'
 self.manual_pause=true;local paused=created;self:check_distance();assert(created==paused);self.manual_pause=false
 queue.current_action=nil;self.fan_out=false;self:check_distance();assert(not dest.formation and dest.distance==1)
 queue.current_action=nil;self.fan_out=true;self.state_var.value='Path';self:check_distance();assert(not dest.formation)
