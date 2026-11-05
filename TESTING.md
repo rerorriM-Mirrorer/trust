@@ -1,3 +1,7 @@
+# Battle menu compatibility — 2026-11-05
+
+Clairvaux's live pulling log confirms the generic Windower menu flag blocked pulls. The relevant check now treats an engaged character with a living monster selected and no subtarget as a battle-menu candidate. This is a heuristic because the flag carries no menu identity. Item menus opened while the same enemy cursor remains active may look identical. Check both the battle panel and Items during combat in-game, including item selection with a subtarget. Idle menu gating remains in effect.
+
 # Dia pull readiness follow-up — 2026-11-05
 
 Baseline: `54087a02`, `test/act-pause-retreat-t1`. Clairvaux's live log showed successful Dia pulls followed by an attempt stuck before cast dispatch. Spell pulls now approach and cast before requesting engagement. A continuous gameplay readiness blocker releases the pull after three seconds. The first blocked state and release record the actual gate and distance in `data/movement/pulling-<character>.log` by default.

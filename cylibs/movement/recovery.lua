@@ -90,7 +90,14 @@ local function suspended(ordinary_follow)
     local info=windower.ffxi.get_info();local character=windower.ffxi.get_player()
     if not info or not info.logged_in or not character then return true, 'character unavailable' end
     if info.chat_open then return true, 'chat input open' end
-    if info.menu_open then return true, 'Windower menu_open=true' end
+    if info.menu_open then
+        -- Windower exposes a flag rather than a menu ID. Recognize the
+        -- engaged enemy cursor as the battle menu unless subtargeting.
+        local target = character.status == 1 and windower.ffxi.get_mob_by_target('t')
+        local battle_menu = target and target.spawn_type == 16 and target.hpp > 0
+            and not windower.ffxi.get_mob_by_target('st')
+        if not battle_menu then return true, 'Windower menu_open=true' end
+    end
     if character.status~=0 and character.status~=1 then return true, 'character status '..tostring(character.status) end
     if not ordinary_follow and addon_enabled and not addon_enabled:getValue() then return true, 'Trust paused' end
     if clock()<(M.casting_until or 0) then return true, 'cast completion pending' end
