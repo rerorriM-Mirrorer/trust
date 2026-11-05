@@ -21,6 +21,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('version', self.handle_version, 'Trust version')
     self:add_command('help', self.handle_help, 'Learn more on the wiki')
     self:add_command('commands', self.handle_command_list, 'See all Trust commands')
+    self:add_command('aggro', self.handle_aggro_status, 'Show defensive targeting diagnostics: //trust aggro')
     self:add_command('debug', self.handle_debug, 'Show debug info')
     self:add_command('timeout', self.handle_timeout, 'Unload Trust after a specified number of minutes, // trust timeout num_minutes or // trust timeout clear')
     self:add_command('item', self.handle_use_item, 'Use an item by name, // trust item item_name')
@@ -448,6 +449,23 @@ function GeneralTrustCommands:handle_use_item(_, ...)
     self.action_queue:push_action(CommandAction.new(0, 0, 0, '/item "' .. item_name .. '" <me>'), true)
 
     return true, "Using " .. item_name
+end
+
+-- Read-only: mode selection remains the standard set command / Modes menu.
+function GeneralTrustCommands:handle_aggro_status()
+    local target = player.party and player.party.party_target
+    local evidence_count = 0
+    for _ in pairs(target and target.aggro and target.aggro.evidence or {}) do evidence_count = evidence_count + 1 end
+    local mob = target and target:get_target_index() and windower.ffxi.get_mob_by_index(target:get_target_index())
+    local detail = string.format('Test 1; mode=%s; decision=%s; target=%s (%s); event memories=%d; range=30y; memory=8s',
+            state.AutoEngageMode.value, target and target.aggro_decision or 'inactive',
+            mob and mob.name or 'none', mob and tostring(mob.id) or 'nil', evidence_count)
+    local rejected = target and target.aggro and target.aggro.rejected
+    if rejected then
+        detail = detail .. string.format('; rejected foreign=%d invalid=%d unrelated=%d', rejected.foreign, rejected.invalid, rejected.unrelated)
+    end
+    windower.add_to_chat(0, ('[Trust] '):color(200)..('Aggro '):color(167)..('-> '):color(200)..detail:color(0))
+    return true, nil
 end
 
 -- // trust debug

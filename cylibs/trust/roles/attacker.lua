@@ -16,7 +16,8 @@ local Attacker = setmetatable({}, {__index = Gambiter })
 Attacker.__index = Attacker
 Attacker.__class = "Attacker"
 
-state.AutoEngageMode = M{['description'] = 'Auto Engage Mode', 'Always', 'Off', 'Mirror'}
+state.AutoEngageMode = M{['description'] = 'Auto Engage Mode', 'Always', 'Off', 'Mirror', 'Aggro'}
+state.AutoEngageMode:set_description('Aggro', "Assist first; otherwise defend party members and alter egos from observed threats.")
 state.AutoEngageMode:set_description('Off', "Manually engage and disengage.")
 state.AutoEngageMode:set_description('Always', "Automatically engage when targeting a claimed mob.")
 state.AutoEngageMode:set_description('Mirror', "Mirror the engage status of the party member you are assisting.")
@@ -78,7 +79,7 @@ function Attacker:set_attacker_settings(attacker_settings)
     local gambit_settings = {
         Gambits = L{
             Gambit.new(GambitTarget.TargetType.Enemy, L{
-                GambitCondition.new(ModeCondition.new('AutoEngageMode', 'Always'), GambitTarget.TargetType.Self),
+                GambitCondition.new(ConditionalCondition.new(L{ ModeCondition.new('AutoEngageMode', 'Always'), ModeCondition.new('AutoEngageMode', 'Aggro') }, Condition.LogicalOperator.Or), GambitTarget.TargetType.Self),
                 GambitCondition.new(StatusCondition.new('Idle'), GambitTarget.TargetType.Self),
                 GambitCondition.new(MaxDistanceCondition.new(self.engage_distance), GambitTarget.TargetType.Enemy),
                 GambitCondition.new(AggroedCondition.new(), GambitTarget.TargetType.Enemy),

@@ -1,0 +1,7 @@
+# Combat observation — AutoEngage Aggro Test 1 (November 4, 2026)
+
+No new packet parsing or injection. Source-confirmed existing `cylibs/Cylibs-Windower-Events.lua` parses incoming 0x028 with Windower's action parser and emits `WindowerEvents.Action`. Aggro subscribes to that existing event alongside MobTracker. It reads actor_id, category and targets[].id; entity ID/index, claim_id, status, distance, valid_target and target_index come from existing Windower entity APIs.
+
+Accepted categories: 1 melee, 2 ranged finish, 3 weaponskill finish, 4 spell finish, 7 ability/weaponskill start, 8 spell start, 11 monster TP finish, 12 ranged start. Meanings were checked against `cylibs/conditions/action.lua`, `cylibs/util/action_message_util.lua` and the existing event dispatcher. Observation requires a valid monster actor and a current living party victim. No action-message numeric values, damage thresholds or hidden hate ranking are inferred.
+
+This is evidence of an observable threat, not proof of server hate. A targeted attempt, miss or interrupted windup can still justify a bounded eight-second defensive memory. No controlled live captures were collected in this batch; category coverage and action-target completeness in live aggro, AoE and alter-ego scenarios remain unresolved. All verification is source inspection or host simulation. Record repeated live variations and confidence here when available.

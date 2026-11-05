@@ -64,7 +64,7 @@ function Party.new(party_chat)
     self.assist_target_change = Event.newEvent()
 
     self.target_tracker = MobTracker.new(self:on_party_member_added(), self:on_party_member_removed(), function() return self.party_target end)
-    self.party_target = PartyTarget.new(self.target_tracker)
+    self.party_target = PartyTarget.new(self.target_tracker, nil, self)
 
     self.dispose_bag:addAny(L{ self.target_tracker, self.party_target })
 
@@ -322,6 +322,9 @@ end
 -- Returns the current party target.
 -- @treturn Monster Current party target, or nil if none.
 function Party:get_current_party_target()
+    if self.party_target.aggro_active then
+        return self:get_target_by_index(self.party_target:get_target_index())
+    end
     local assist_target = self:get_assist_target()
     if assist_target and assist_target:is_valid() and assist_target:get_target_index() then
         local current_target = self.target_tracker:get_mob(monster_util.id_for_index(assist_target:get_target_index()))
