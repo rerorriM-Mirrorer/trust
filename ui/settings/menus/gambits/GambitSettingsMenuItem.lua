@@ -379,6 +379,7 @@ function GambitSettingsMenuItem:getEditGambitMenuItem()
             --self.conditionSettingsMenuItem:setTargetTypes(S{ newGambit:getConditionsTarget() })
         end), gambitEditor:onGambitChanged())
 
+        gambitEditor.focusOnOpen = true
         return gambitEditor
     end, self:getTitleText(), "Edit the selected "..self.editorConfig:getDescription()..".", false, function()
         return self.selectedGambit ~= nil
@@ -398,6 +399,7 @@ function GambitSettingsMenuItem:getEditGambitMenuItem()
         if not configItems:empty() then
             local editAbilityEditor = ConfigEditor.new(self.trustSettings, self.selectedGambit:getAbility(), configItems, infoView, nil, showMenu)
             editAbilityEditor:setSaveOnExit(false)
+            editAbilityEditor.focusOnOpen = true
 
             self.disposeBag:add(editAbilityEditor:onConfigConfirm():addAction(function(newSettings, oldSettings)
                 if self.selectedGambit:getAbility().on_config_changed then

@@ -164,6 +164,10 @@ end
 function GambitSettingsEditor:setHasFocus(focus)
     ConfigEditor.setHasFocus(self, focus)
 
+    if focus and not self.didFocusEditor then
+        self.didFocusEditor = true
+        return
+    end
     if focus then
         -- TODO: validate in memory config items
         local selectedIndexPath = self:getDelegate():getCursorIndexPath()

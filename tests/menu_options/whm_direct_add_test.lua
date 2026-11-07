@@ -60,7 +60,9 @@ package.loaded['cylibs/ui/collection_view/index_path'].new = function(section, r
 end
 package.loaded['cylibs/ui/collection_view/items/button_item'].localized = function(label) return label end
 package.loaded['cylibs/ui/menu/menu_item'].new = function(buttons, _, content)
-    return { buttons = buttons, content = content }
+    return { buttons = buttons, content = content, setChildMenuItem = function(self, name, child)
+        self[name] = child
+    end }
 end
 package.loaded['ui/settings/editors/config/PickerConfigItem'].new = function(key, initial, choices)
     return { key = key, initial = initial, choices = choices }
@@ -92,6 +94,8 @@ library.getGambitCategoryMenuItem = function(item, add)
     return { add = add }
 end
 
+library.new = function(_, add) return { add = add } end
+package.loaded['ui/settings/menus/gambits/GambitEditorStyle'].Permissions = { New = 'New' }
 local GambitSettingsMenuItem = dofile(menu_path)
 local save_count, cursor, selected, offset, focused, shown = 0
 local gambits = L{ 'existing' }
@@ -140,6 +144,22 @@ addon_system_error = function(message) assert(message == 'write failed') end
 shown = false
 menu.Add.add({ conditions = L{} }, show_menu)
 assert(#gambits == 4 and not shown and selected == 4)
+
+menu.directAddCategory = nil
+menu.editorConfig.hasEditPermission = function() return true end
+menu.abilityTargets = L{ 'Enemy', 'Self' }
+menu.trustSettings.saveSettings = function() save_count = save_count + 1 end
+local add = menu:getAddAbilityMenuItem()
+assert(add.Self and add.Enemy and add.Browse and not add.New and not add.Ally)
+local targetPicker = add.Enemy.content(nil, nil, show_menu)
+assert(targetPicker.pickOnSelect)
+pick:trigger(targetPicker, L{ 'Dia' })
+assert(gambits[5].ability == 'Dia' and cursor == 5 and selected == 5 and not focused)
+add.Browse.add(preset, show_menu)
+assert(gambits[6] == preset and cursor == 6 and selected == 6)
+menu.editorConfig.hasEditPermission = function() return false end
+add = menu:getAddAbilityMenuItem()
+assert(add.Browse and not add.Self and not add.Enemy)
 
 local Editor = dofile(editor_path)
 local function target_choices(ability, current)

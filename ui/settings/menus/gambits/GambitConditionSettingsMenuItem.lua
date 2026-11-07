@@ -1,6 +1,8 @@
 local ButtonItem = require('cylibs/ui/collection_view/items/button_item')
 local ConfigEditor = require('ui/settings/editors/config/ConfigEditor')
 local DisposeBag = require('cylibs/events/dispose_bag')
+local FFXIFastPickerView = require('ui/themes/ffxi/FFXIFastPickerView')
+local IndexPath = require('cylibs/ui/collection_view/index_path')
 local FFXIClassicStyle = require('ui/themes/FFXI/FFXIClassicStyle')
 local FFXIPickerView = require('ui/themes/ffxi/FFXIPickerView')
 local MenuItem = require('cylibs/ui/menu/menu_item')
@@ -57,6 +59,16 @@ function GambitConditionSettingsMenuItem.new(trustSettings, parentMenuItem, enab
         editConditionsView:setAllowsCursorSelection(true)
 
         self.editConditionsView = editConditionsView
+        if self.addedConditionRow then
+            local indexPath = IndexPath.new(1, self.addedConditionRow)
+            self.addedConditionRow = nil
+            editConditionsView:layoutIfNeeded()
+            local bottom = editConditionsView:getContentSize().height + editConditionsView:getPadding().bottom
+                - editConditionsView:getSize().height
+            editConditionsView:setContentOffset(editConditionsView:getContentOffset().x, math.min(0, -bottom))
+            editConditionsView:getDelegate():setCursorIndexPath(indexPath)
+            editConditionsView:getDelegate():selectItemAtIndexPath(indexPath)
+        end
 
         return editConditionsView
     end
@@ -88,31 +100,37 @@ function GambitConditionSettingsMenuItem:getAddConditionMenuItem(parentMenuItem)
 
     local getAddConditionMenuItem = function(targetType)
         local addConditionsMenuItem = MenuItem.new(L{
-            ButtonItem.localized('Confirm', i18n.translate('Button_Confirm')),
+            ButtonItem.localized('Filter', i18n.translate('Button_Filter')),
         }, {}, function(_, _, showMenu)
-            local conditionPickerItems = self:getConditionItemsForTarget(targetType)
-
-            local configItem = MultiPickerConfigItem.new("Conditions", L{}, conditionPickerItems:map(function(conditionClass)
-                return self:getFileForCondition(conditionClass).description()
-            end), function(conditionName)
-                return conditionName
+            local configItem = MultiPickerConfigItem.new("Conditions", L{}, self:getConditionItemsForTarget(targetType), function(conditionType)
+                return self:getFileForCondition(conditionType).description()
             end)
+            configItem:setNumItemsRequired(1, 1)
 
-            local chooseConditionView = FFXIPickerView.new(L{ configItem }, false, FFXIClassicStyle.WindowSize.Editor.ConfigEditor)
-            chooseConditionView:on_pick_items():addAction(function(_, _, selectedIndexPaths)
-                local conditionClass = self:getFileForCondition(conditionPickerItems[selectedIndexPaths[1].row])
-                local newCondition = conditionClass.new()
+            local chooseConditionView = FFXIFastPickerView.new(configItem, FFXIClassicStyle.WindowSize.Editor.ConfigEditor)
+            chooseConditionView:setPickOnSelect(true)
+            chooseConditionView:getDisposeBag():add(chooseConditionView:on_pick_items():addAction(function(_, selected)
+                if not selected[1] then return end
+                local conditionClass = self:getFileForCondition(selected[1])
+                local condition = GambitCondition.new(conditionClass.new(), targetType)
+                local conditions = self:getConditions()
+                conditions:append(condition)
 
-                self:getConditions():append(GambitCondition.new(newCondition, targetType))
-
-                self.trustSettings:saveSettings(true)
-
-                addon_system_message(string.format("Added condition: %s %s.", targetType, newCondition:tostring()))
-
-                if showMenu then
-                    showMenu(parentMenuItem)
+                local saved, err = self.trustSettings:saveSettings(true)
+                if saved == false then
+                    conditions:remove(conditions:length())
+                    addon_system_error(err or "Unable to save condition.")
+                    return
                 end
-            end)
+
+                for row, current in ipairs(self:getConditions()) do
+                    if rawequal(current, condition) then
+                        self.addedConditionRow = row
+                        break
+                    end
+                end
+                showMenu(parentMenuItem)
+            end), chooseConditionView:on_pick_items())
             return chooseConditionView
         end, "Conditions", string.format("Add a new condition for %s.", targetType))
         return addConditionsMenuItem
@@ -139,6 +157,7 @@ function GambitConditionSettingsMenuItem:getEditConditionMenuItem()
         end
         local conditionConfigEditor = ConfigEditor.new(self.trustSettings, selectedCondition, selectedCondition:get_config_items(), infoView, nil, showMenu)
         conditionConfigEditor:setSaveOnExit(false)
+        conditionConfigEditor.focusOnOpen = true
         return conditionConfigEditor
     end, "Conditions", "Edit the selected condition.", false, function()
         local selectedCondition = self:getSelectedCondition():getCondition()
