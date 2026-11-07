@@ -143,7 +143,10 @@ function Gambit:getConditionsDescription()
         conditions_by_type[condition:getTargetType() or self:getConditionsTarget()]:append(condition)
     end
     local ordered_types = L{ GambitTarget.TargetType.Self, GambitTarget.TargetType.Ally, GambitTarget.TargetType.Enemy, GambitTarget.TargetType.CurrentTarget }
-    ordered_types = L{ ordered_types:remove(ordered_types:indexOf(self:getAbilityTarget())) } + ordered_types
+    local target_index = ordered_types:indexOf(self:getAbilityTarget())
+    if target_index > 0 then
+        ordered_types = L{ ordered_types:remove(target_index) } + ordered_types
+    end
 
     local descriptions = L{}
     for type in ordered_types:it() do
@@ -156,7 +159,7 @@ function Gambit:getConditionsDescription()
 end
 
 function Gambit:tostring()
-    local conditionsDescription = "Never"
+    local conditionsDescription = self.target == 'Both' and "Default buff conditions" or "Never"
     if self.conditions:length() > 0 then
         conditionsDescription = self:getConditionsDescription()
     end

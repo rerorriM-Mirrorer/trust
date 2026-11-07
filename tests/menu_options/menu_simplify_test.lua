@@ -8,7 +8,10 @@ function list:filter(fn)local result=setmetatable({},{__index=list});for _,v in 
 local function L(t)return setmetatable(t or {},{__index=list})end
 local function node(buttons,children)
     return {buttons=buttons,children=children or {},
-        setConfigKey=function()end,destroy=function(self)self.dead=true end,
+        setConfigKey=function()end,
+        enableDirectAdd=function(self,target,category,buffTargets)
+            self.directAdd={target=target,category=category,buffTargets=buffTargets}
+        end,destroy=function(self)self.dead=true end,
         getChildMenuItem=function(self,k)return self.children[k]end,
         setChildMenuItem=function(self,k,v)self.children[k]=v end}
 end
@@ -26,7 +29,7 @@ local env=setmetatable({TrustHud=methods,L=L,
     res={jobs={with=function(_,_,job)return {en=job}end}},require=function(path)if path=='settings/shared_preferences' then return {enabled=function()return true end}end;return generic end,
     player={main_job_name='Bard',sub_job_name='White Mage',main_job_name_short='BRD',sub_job_name_short='WHM',trust={main_job={role_with_type=function()return{}end},sub_job={role_with_type=function()return nil end}}},
     main_trust_settings={},sub_trust_settings={},weapon_skill_settings={},trust_mode_settings={}}, {__index=_G})
-for _,name in ipairs({'getSettingsMenuItem','reloadJobMenuItems','getMainMenuItem'}) do
+for _,name in ipairs({'getSettingsMenuItem','reloadJobMenuItems','getMainMenuItem','getBufferMenuItem','getHealerMenuItem','getStatusRemoverMenuItem','getNukerMenuItem'}) do
     local body=assert(source:match('(function TrustHud:'..name..'%(.-)\nfunction TrustHud:'))
     assert(load(body,'actual '..name,'t',env))()
 end
@@ -42,14 +45,24 @@ assert(not settings.children.Following and not settings.children.Paths and not s
 assert(settings.children.Food and settings.children.Pulling and settings.children.Modes)
 assert(settings.children.Gambits.buttons[1]=='BRD' and settings.children.Gambits.buttons[2]=='Custom')
 local subSettings=hud:getSettingsMenuItem(job,{},env.state.SubTrustSettingsMode,nil,nil,{},'WHM')
+assert(subSettings.children.Debuffs.directAdd.target=='Enemy')
+assert(not settings.children.Debuffs.directAdd and not subSettings.children.Gambits.children.Custom.directAdd)
+assert(hud:getBufferMenuItem(job,'WHM').directAdd.buffTargets)
+assert(not hud:getBufferMenuItem(job,'BRD').directAdd)
+assert(hud:getHealerMenuItem(job,nil,nil,nil,'WHM').directAdd.category=='Heals')
+assert(hud:getStatusRemoverMenuItem(job,nil,nil,nil,'WHM').directAdd.category=='Ailments')
+assert(hud:getNukerMenuItem(job,nil,nil,nil,'WHM').directAdd.target=='Enemy')
 assert(not subSettings.children.Food and not subSettings.children.Pulling and not subSettings.children.Modes)
 local pullingOwner
 env.player.trust.sub_job.role_with_type=function(_,name)if name=='puller' then return {}end end
 hud.getMenuItemForRole=function(_,role,ws,wsm,trust,jobName,view,owner,mode)
-    pullingOwner={owner,mode,jobName};return node()
+    pullingOwner={owner,mode,jobName};return node(nil,{Actions=node()})
 end
-hud:getSettingsMenuItem(job,{},env.state.MainTrustSettingsMode,nil,nil,{},'BRD')
+local bardPulling=hud:getSettingsMenuItem(job,{},env.state.MainTrustSettingsMode,nil,nil,{},'BRD').children.Pulling
+assert(not bardPulling.children.Actions.directAdd)
 assert(pullingOwner[1]==env.sub_trust_settings and pullingOwner[2]==env.state.SubTrustSettingsMode and pullingOwner[3]=='WHM')
+local whmPulling=hud:getSettingsMenuItem(job,{},env.state.MainTrustSettingsMode,nil,nil,{},'WHM').children.Pulling
+assert(whmPulling.children.Actions.directAdd.target=='Enemy')
 env.player.trust.sub_job.role_with_type=function()return nil end
 local calls={}
 hud.mainMenuItem=node()

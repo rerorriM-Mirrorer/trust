@@ -21,21 +21,63 @@ function Buffer:destroy()
     Gambiter.destroy(self)
 end
 
-function Buffer:set_buff_settings(buff_settings)
-    for gambit in buff_settings.Gambits:it() do
-        if gambit:getAbility().__type == Buff.__type then
-            gambit:getAbility():reload()
+-- Ally priority follows the party slots exposed by Windower.
+local function party_order(left, right)
+    local party = windower.ffxi.get_party() or {}
+    local function slot(member)
+        for index = 1, 5 do
+            local entry = party['p'..index]
+            if entry and entry.mob and entry.mob.id == member:get_id() then
+                return index
+            end
         end
+        return 6
+    end
+    local left_slot, right_slot = slot(left), slot(right)
+    if left_slot == right_slot then
+        return left:get_id() < right:get_id()
+    end
+    return left_slot < right_slot
+end
+
+function Buffer:set_buff_settings(buff_settings)
+    local runtime_gambits = L{}
+    local apply_default_conditions = function(gambit)
         gambit.conditions = gambit.conditions:filter(function(condition)
             return condition:is_editable()
         end)
-        local conditions = self:get_default_conditions(gambit)
-        for condition in conditions:it() do
+        for condition in self:get_default_conditions(gambit):it() do
             condition:set_editable(false)
             gambit:addCondition(condition)
         end
     end
-    self:set_gambit_settings(buff_settings)
+
+    for gambit in buff_settings.Gambits:it() do
+        if gambit:getAbility().__type == Buff.__type then
+            gambit:getAbility():reload()
+        end
+        if gambit:getAbilityTarget() == 'Both' then
+            -- Keep one settings row and give each runtime target its own default
+            -- conditions. The ordinary gambit queue still evaluates in order.
+            gambit.conditions = gambit.conditions:filter(function(condition)
+                return condition:is_editable()
+            end)
+            local self_gambit, ally_gambit = gambit:copy(), gambit:copy()
+            self_gambit.target = GambitTarget.TargetType.Self
+            self_gambit.conditions_target = self_gambit.target
+            ally_gambit.target = GambitTarget.TargetType.Ally
+            ally_gambit.conditions_target = ally_gambit.target
+            ally_gambit:setPriorityComparator(party_order)
+            apply_default_conditions(self_gambit)
+            apply_default_conditions(ally_gambit)
+            runtime_gambits:append(self_gambit)
+            runtime_gambits:append(ally_gambit)
+        else
+            apply_default_conditions(gambit)
+            runtime_gambits:append(gambit)
+        end
+    end
+    self:set_gambit_settings({ Gambits = runtime_gambits, Default = buff_settings.Default })
 end
 
 function Buffer:get_default_conditions(gambit)

@@ -198,14 +198,19 @@ end
 function GambitSettingsMenuItem:reloadSettings()
     self:setChildMenuItem("Add", self:getAddAbilityMenuItem())
     self:setChildMenuItem("Edit", self:getEditGambitMenuItem())
-    self:setChildMenuItem("Remove", self:getRemoveAbilityMenuItem())
-    self:setChildMenuItem("Copy", self:getCopyGambitMenuItem())
+    if self.buffTargetEditor then
+        self:setChildMenuItem("Copy", self:getCopyGambitMenuItem())
+        self:setChildMenuItem("Remove", self:getRemoveAbilityMenuItem())
+    else
+        self:setChildMenuItem("Remove", self:getRemoveAbilityMenuItem())
+        self:setChildMenuItem("Copy", self:getCopyGambitMenuItem())
+    end
     self:setChildMenuItem("Move Up", self:getMoveUpGambitMenuItem())
     self:setChildMenuItem("Move Down", self:getMoveDownGambitMenuItem())
     self:setChildMenuItem("Toggle", self:getToggleMenuItem())
     self:setChildMenuItem("Reset", self:getResetGambitsMenuItem())
     self:setChildMenuItem("Modes", self:getModesMenuItem())
-    if self:getConfigKey() then
+    if self:getConfigKey() and not self.buffTargetEditor then
         self:setChildMenuItem("Shortcuts", ShortcutMenuItem.new(string.format("shortcut_%s", self:getConfigKey()), "Open the gambit editor.", false, string.format("// trust menu %s", self:getConfigKey())))
     end
 end
@@ -246,15 +251,61 @@ function GambitSettingsMenuItem:getAbilitiesByTargetType()
             abilitiesByTargetType[abilityTarget] = L{}
         end
     end
+    if self.buffTargetEditor then
+        abilitiesByTargetType.Both = abilitiesByTargetType.Self:filter(function(ability)
+            return abilitiesByTargetType.Ally:contains(ability)
+        end)
+    end
     return abilitiesByTargetType
+end
+
+-- White Mage menus opt in individually. The shared Gambits menus keep their
+-- existing multi-step Add flow.
+function GambitSettingsMenuItem:enableDirectAdd(targetType, categoryName, buffTargetEditor)
+    self.directAddTarget = targetType
+    self.directAddCategory = categoryName
+    self.buffTargetEditor = buffTargetEditor
+
+    if buffTargetEditor then
+        self.buttonItems:clear()
+        self.childMenuItems.Shortcuts = nil
+        self:reloadSettings()
+    else
+        self:setChildMenuItem("Add", self:getAddAbilityMenuItem())
+    end
+end
+
+function GambitSettingsMenuItem:appendGambit(gambit, showMenu)
+    self:onGambitCreated():trigger(gambit)
+    local gambits = self:getSettings().Gambits
+    gambits:append(gambit)
+    local saved, err = self.trustSettings:saveSettings(true)
+    if saved == false and (self.directAddTarget or self.directAddCategory) then
+        gambits:remove(gambits:length())
+        addon_system_error(err or "Unable to save settings.")
+        return
+    end
+    showMenu(self)
+
+    local editor = self.gambitSettingsEditor
+    local indexPath = IndexPath.new(1, self:getSettings().Gambits:length())
+    if self.directAddTarget or self.directAddCategory then
+        local bottom = editor:getContentSize().height + editor:getPadding().bottom - editor:getSize().height
+        editor:setContentOffset(editor:getContentOffset().x, math.min(0, -bottom))
+        editor:requestFocus()
+        editor:getDelegate():setCursorIndexPath(indexPath)
+    end
+    editor:getDelegate():selectItemAtIndexPath(indexPath)
 end
 
 function GambitSettingsMenuItem:getAddAbilityMenuItem()
     local newAbilityMenuItem = function(targetType)
-        local blankGambitMenuItem = MenuItem.new(L{
-            ButtonItem.localized('Confirm', i18n.translate('Button_Confirm')),
-            ButtonItem.localized('Filter', i18n.translate('Button_Filter')),
-        }, {}, function(_, _, showMenu)
+        local buttons = L{}
+        if not self.directAddTarget then
+            buttons:append(ButtonItem.localized('Confirm', i18n.translate('Button_Confirm')))
+        end
+        buttons:append(ButtonItem.localized('Filter', i18n.translate('Button_Filter')))
+        local blankGambitMenuItem = MenuItem.new(buttons, {}, function(_, _, showMenu)
             local abilitiesByTargetType = self:getAbilitiesByTargetType()
 
             local abilityPickerItem = MultiPickerConfigItem.new('abilities', L{}, abilitiesByTargetType[targetType], function(ability)
@@ -269,26 +320,30 @@ function GambitSettingsMenuItem:getAddAbilityMenuItem()
             local FFXIFastPickerView = require('ui/themes/ffxi/FFXIFastPickerView')
 
             local abilityPickerView = FFXIFastPickerView.new(abilityPickerItem)
+            if self.directAddTarget then
+                abilityPickerView:setPickOnSelect(true)
+            end
             abilityPickerView:getDisposeBag():add(abilityPickerView:on_pick_items():addAction(function(_, selectedItems)
                 if selectedItems:length() > 0 then
-                    local newGambit = Gambit.new(targetType, L{}, selectedItems[1], targetType, self.defaultGambitTags)
-
-                    self:onGambitCreated():trigger(newGambit)
-
-                    local currentGambits = self:getSettings().Gambits
-                    currentGambits:append(newGambit)
-
-                    self.trustSettings:saveSettings(true)
-                    local currentGambits = self:getSettings().Gambits
-
-                    showMenu(self)
-                    self.gambitSettingsEditor:getDelegate():selectItemAtIndexPath(IndexPath.new(1, currentGambits:length()))
+                    self:appendGambit(Gambit.new(targetType, L{}, selectedItems[1], targetType, self.defaultGambitTags), showMenu)
                 end
             end), abilityPickerView:on_pick_items())
 
             return abilityPickerView
         end, self:getTitleText(), "Add a new "..targetType.." "..self.editorConfig:getDescription()..".")
         return blankGambitMenuItem
+    end
+
+    if self.directAddTarget then
+        return newAbilityMenuItem(self.directAddTarget)
+    end
+    if self.directAddCategory then
+        local category = GambitLibraryMenuItem.getGambitCategories():firstWhere(function(item)
+            return item:getName() == self.directAddCategory
+        end)
+        return GambitLibraryMenuItem.getGambitCategoryMenuItem(category, function(gambit, showMenu)
+            self:appendGambit(gambit, showMenu)
+        end)
     end
 
     local abilityTargetButtonItems = L(self.abilityTargets):map(function(targetType)
@@ -320,8 +375,7 @@ function GambitSettingsMenuItem:getEditGambitMenuItem()
         local abilitiesByTargetType = self:getAbilitiesByTargetType()
         local gambitEditor = GambitSettingsEditor.new(self.selectedGambit, self.trustSettings, self.trustSettingsMode, abilitiesByTargetType, self.conditionTargets, showMenu, Gambit.Tags.AllTags:filter(function(t) return not self.gambitTagBlacklist:contains(t)  end), function(ability, index)
             return self.editorConfig:getItemDescription(ability, index) or ability:get_localized_name()
-            --return ability:get_localized_name()
-        end)
+        end, self.buffTargetEditor)
 
         gambitEditor:getDisposeBag():add(gambitEditor:onGambitChanged():addAction(function(newGambit, oldGambit)
             self:onGambitChanged():trigger(newGambit, oldGambit)
@@ -457,7 +511,10 @@ function GambitSettingsMenuItem:getMoveUpGambitMenuItem()
 
                 self.trustSettings:saveSettings(true)
 
-                self.gambitSettingsEditor:getDelegate():selectItemAtIndexPath(IndexPath.new(selectedIndexPath.section, selectedIndexPath.row - 1))
+                if self.directAddTarget or self.directAddCategory then
+                    self.gambitSettingsEditor:getDelegate():setCursorIndexPath(newIndexPath)
+                end
+                self.gambitSettingsEditor:getDelegate():selectItemAtIndexPath(newIndexPath)
             end
         end
     end, self:getTitleText(), "Move the selected "..self.editorConfig:getDescription().." up. "..self.editorConfig:getDescription(true).." get evaluated in order.",  false, function()
@@ -484,7 +541,10 @@ function GambitSettingsMenuItem:getMoveDownGambitMenuItem()
 
                 self.trustSettings:saveSettings(true)
 
-                self.gambitSettingsEditor:getDelegate():selectItemAtIndexPath(IndexPath.new(selectedIndexPath.section, selectedIndexPath.row + 1))
+                if self.directAddTarget or self.directAddCategory then
+                    self.gambitSettingsEditor:getDelegate():setCursorIndexPath(newIndexPath)
+                end
+                self.gambitSettingsEditor:getDelegate():selectItemAtIndexPath(newIndexPath)
             end
         end
     end, self:getTitleText(), "Move the selected "..self.editorConfig:getDescription().." down. "..self.editorConfig:getDescription(true).." get evaluated in order.", false, function()
@@ -531,7 +591,7 @@ end
 function GambitSettingsMenuItem:setConfigKey(configKey)
     MenuItem.setConfigKey(self, configKey)
 
-    if self:getConfigKey() then
+    if self:getConfigKey() and not self.buffTargetEditor then
         self:setChildMenuItem("Shortcuts", ShortcutMenuItem.new(string.format("shortcut_%s", self:getConfigKey()), "Open the gambit editor.", false, string.format("// trust menu %s", self:getConfigKey())))
     end
 end

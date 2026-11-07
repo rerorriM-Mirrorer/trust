@@ -1,3 +1,25 @@
+# White Mage menu Test 1 — 2026-11-07
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/whm-menu-t1`, based on published `d658249f` (Act / Pause / Retreat plus the latest pull and idle follow fixes). The fresh install ZIP is `Trust-WHM-Menu-Test1-<commit>.zip` and identifies its exact source in `trust/FRESH-BUILD.json`. Unload Trust, back up the existing addon folder, then extract `trust/` into `Windower/addons`. For a clean test, keep the old folder aside. To test an existing profile, merge the addon files over the backed-up installation while keeping `data/`. Roll back by restoring the backup, including WHM profiles saved before using Both.
+
+| White Mage menu | Add opens | Initial target |
+| --- | --- | --- |
+| Buffs | Self-eligible buff picker | Self |
+| Debuffs | Enemy debuff picker | Enemy |
+| Healing | Heals presets | Preset-defined |
+| Ailments | Ailments presets | Preset-defined |
+| Nukes | Existing nuke picker | Enemy |
+| Pulling → Actions | Existing pull action picker, including Approach and Ranged Attack | Enemy |
+
+The picker opens on the first result. Press Enter with a row focused or click the row to append it and return to the list with the new bottom row focused. Healing and Ailments copy the original preset conditions. Buffs shows Add, Edit, Copy, Remove, Move Up, Move Down, Toggle, Reset and Modes. Edit's Ability target offers the compatible choices from Self, Ally and Both for the selected buff. Both saves one list row. At runtime the Buffer evaluates Self first, then eligible party slots in order, using target-specific default conditions and the existing action queue. Explicit custom conditions keep their assigned condition targets. The WHM menu scope includes a WHM subjob menu when present. In Full layout, the job's existing Settings step remains in the path. Gambits and other jobs retain their existing flows. Pulling target lists and pull modes retain their existing behavior.
+
+Host verification passed. All ten changed Lua files compiled on Lua 5.4 with Windower string-literal method syntax normalized where needed. All 37 menu, movement, pull and Aggro suites passed, including the direct Add, profile-save failure, row selection, WHM scope and Both ordering regressions. The shared settings writer passed against host SQLite. Native Windower rendering, controller input and live FFXI behavior are pending.
+
+1. Start on WHM and open Buffs. Verify the button order, the initial picker cursor, and that mouse click or Enter appends exactly one buff with Self selected. Try adding to an empty list and to a list long enough to scroll. Verify Copy, Move Up, Move Down, Toggle and Remove act on the highlighted row.
+2. Add a party-capable buff such as Protect. In Edit change Ability target to Ally, then Both. Verify the spell stays the same after confirming and reloading. With two eligible allies missing the buff, verify Self receives it first and allies follow in party-slot order. Check that existing buffs, range, custom conditions and a disabled row are respected. Check that a self-only spell offers only valid targeting.
+3. Add a heal and an ailment preset. Check that their thresholds and status conditions are retained after saving and reloading. Add Dia to Debuffs and Pulling → Actions, and an available spell to Nukes. Verify the new rows land at the bottom of their own lists. With Auto pulling and Dia configured, verify the pull still works.
+4. Cancel Add without selecting a row. Check that no row was added. Repeat the navigation with a controller, and compare the Gambits New/Browse flow and a non-WHM job.
+
 # Idle followers and native menus — 2026-11-05
 
 Baseline 23f3bb1 on test/act-pause-retreat-t1. Native inventory menus no longer hold idle ordinary following through movement recovery. Chat, casting, Trust's own menu, status effects and other movement kinds retain their existing checks. Host guard simulation, syntax and pull lifecycle tests passed. Live test pending: leave Sack open on an idle follower and walk the leader out of follow distance.

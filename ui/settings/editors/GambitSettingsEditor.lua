@@ -15,15 +15,26 @@ function GambitSettingsEditor:onGambitChanged()
     return self.gambitChanged
 end
 
-function GambitSettingsEditor.new(gambit, trustSettings, trustSettingsMode, abilitiesByTargetType, conditionTargets, showMenu, validGambitTags, abilityDescription)
+function GambitSettingsEditor.new(gambit, trustSettings, trustSettingsMode, abilitiesByTargetType, conditionTargets, showMenu, validGambitTags, abilityDescription, buffTargetEditor)
     local validTargets = L(GambitTarget.TargetType:keyset()):filter(function(targetType) return abilitiesByTargetType[targetType] and abilitiesByTargetType[targetType]:length() > 0 end)
+    if buffTargetEditor then
+        validTargets = L{ 'Self', 'Ally', 'Both' }
+    end
     local validConditionTargets = conditionTargets or L(Condition.TargetType.AllTargets)
 
-    local configItems = GambitSettingsEditor.configItems(gambit, abilitiesByTargetType, validTargets, validConditionTargets, validGambitTags, abilityDescription)
+    local configItems = GambitSettingsEditor.configItems(gambit, abilitiesByTargetType, validTargets, validConditionTargets, validGambitTags, abilityDescription, buffTargetEditor)
 
-    local self = setmetatable(ConfigEditor.new(trustSettings, gambit, configItems, nil, function(_) return true end, showMenu), GambitSettingsEditor)
+    local function validate(draft)
+        if not buffTargetEditor then return true end
+        local target = draft.target or gambit:getAbilityTarget()
+        local ability = draft.ability or gambit:getAbility()
+        return target == gambit:getAbilityTarget() or abilitiesByTargetType[target]:contains(ability),
+            "That buff cannot use the selected target."
+    end
+    local self = setmetatable(ConfigEditor.new(trustSettings, gambit, configItems, nil, validate, showMenu), GambitSettingsEditor)
 
     self.gambit = gambit
+    self.buffTargetEditor = buffTargetEditor
     self.abilitiesByTargetType = abilitiesByTargetType
     self.validTargets = validTargets
     self.validConditionTargets = validConditionTargets
@@ -48,13 +59,15 @@ function GambitSettingsEditor.new(gambit, trustSettings, trustSettingsMode, abil
         if newSettings['target'] ~= oldSettings['target'] then
             shouldReload = true
 
-            local removed_ability_name = newSettings['ability']:get_localized_name()
-
-            if not abilitiesByTargetType[newSettings['target']]:contains(newSettings['ability']) then
-                addon_system_error("Invalid ability "..removed_ability_name.." for ability target type "..newSettings['target']..".")
+            if buffTargetEditor then
+                newSettings.conditions_target = newSettings.target == 'Both' and 'Self' or newSettings.target
+            else
+                local removed_ability_name = newSettings['ability']:get_localized_name()
+                if not abilitiesByTargetType[newSettings['target']]:contains(newSettings['ability']) then
+                    addon_system_error("Invalid ability "..removed_ability_name.." for ability target type "..newSettings['target']..".")
+                end
+                newSettings.ability = abilitiesByTargetType[newSettings['target']][1]:copy()
             end
-
-            newSettings.ability = abilitiesByTargetType[newSettings['target']][1]:copy()
         end
 
         if newSettings['ability'] ~= oldSettings['ability'] then
@@ -90,16 +103,13 @@ function GambitSettingsEditor.configItemFromGambit(gambit, abilitiesByTargetType
     return abilityConfigItem
 end
 
-function GambitSettingsEditor.configItems(gambit, abilitiesByTargetType, validTargets, validConditionTargets, validGambitTags, abilityDescription)
-    local abilities = abilitiesByTargetType[gambit:getAbilityTarget()]
-    local currentAbility
-    if abilities:indexOf(gambit:getAbility()) ~= -1 then
-        currentAbility = gambit:getAbility()
-    else
-        currentAbility = abilities[1]
-    end
-
+function GambitSettingsEditor.configItems(gambit, abilitiesByTargetType, validTargets, validConditionTargets, validGambitTags, abilityDescription, buffTargetEditor)
     local configItems = L{}
+    if buffTargetEditor then
+        validTargets = validTargets:filter(function(target)
+            return target == gambit:getAbilityTarget() or abilitiesByTargetType[target]:contains(gambit:getAbility())
+        end)
+    end
     if validTargets:length() > 1 then
         configItems:append(PickerConfigItem.new('target', gambit.target or GambitTarget.TargetType.Self, validTargets, nil, "Ability target"))
     end
@@ -128,7 +138,7 @@ function GambitSettingsEditor.configItems(gambit, abilitiesByTargetType, validTa
 end
 
 function GambitSettingsEditor:reloadConfigItems()
-    local configItems = GambitSettingsEditor.configItems(self.gambit, self.abilitiesByTargetType, self.validTargets, self.validConditionTargets, self.validGambitTags, self.abilityDescription)
+    local configItems = GambitSettingsEditor.configItems(self.gambit, self.abilitiesByTargetType, self.validTargets, self.validConditionTargets, self.validGambitTags, self.abilityDescription, self.buffTargetEditor)
     self:setConfigItems(configItems)
 end
 

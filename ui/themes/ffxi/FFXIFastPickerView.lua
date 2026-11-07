@@ -90,11 +90,16 @@ function FFXIFastPickerView.new(configItem, viewSize, itemsPerPage)
     end)
 
     self:getDelegate():didSelectItemAtIndexPath():addAction(function(indexPath)
+        local item = self.visibleItems[indexPath.row]
+        if self.pickOnSelect then
+            self:getDelegate():deselectItemAtIndexPath(indexPath)
+            self:on_pick_items():trigger(self, L{ item })
+            return
+        end
         if not self:getAllowsMultipleSelection() then
             self.selectedItems:getValue():clear()
         end
 
-        local item = self.visibleItems[indexPath.row]
         local selectedItems = self.selectedItems:getValue()
         if not selectedItems:contains(item) then
             selectedItems:append(item)
@@ -102,6 +107,7 @@ function FFXIFastPickerView.new(configItem, viewSize, itemsPerPage)
     end)
 
     self:getDelegate():didDeselectItemAtIndexPath():addAction(function(indexPath)
+        if self.pickOnSelect then return end
         local item = self.visibleItems[indexPath.row]
 
         local selectedItems = self.selectedItems:getValue()
@@ -111,6 +117,14 @@ function FFXIFastPickerView.new(configItem, viewSize, itemsPerPage)
     self:setRange(1, self.maxNumItems + 1)
 
     return self
+end
+
+function FFXIFastPickerView:setPickOnSelect(enabled)
+    self.pickOnSelect = enabled
+    self.focusOnOpen = enabled
+    if enabled then
+        self:setAllowsCursorSelection(false)
+    end
 end
 
 function FFXIFastPickerView:getItemForValue(value, index)
@@ -236,7 +250,8 @@ function FFXIFastPickerView:onKeyboardEvent(key, pressed, flags, blocked)
                         self.mediaPlayer:playSound(self.soundTheme:getSoundForAction(SoundTheme.UI.Menu.Enter))
                     end
                 end
-                self:getDelegate():selectItemAtIndexPath(self:getDelegate():getCursorIndexPath())
+                self:getDelegate():selectItemAtIndexPath(currentIndexPath)
+                if self.pickOnSelect then return true end
             else
                 self.isScrolling = false
             end

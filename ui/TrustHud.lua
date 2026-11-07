@@ -316,6 +316,10 @@ function TrustHud:getSettingsMenuItem(trust, trustSettings, trustSettingsMode, w
 
     local debuffSettingsItem = DebuffSettingsMenuItem.new(trust, trustSettings, trustSettingsMode, trustModeSettings)
 
+    if jobNameShort == 'WHM' then
+        debuffSettingsItem:enableDirectAdd('Enemy')
+    end
+
     -- Modes
     local modeNames=L(T(state):keyset()):sort():filter(function(name)
         return MenuPreferences.layout()=='Full' or not require('settings/character_modes').owns(name)
@@ -407,6 +411,13 @@ function TrustHud:getSettingsMenuItem(trust, trustSettings, trustSettingsMode, w
         end
     end
 
+    if jobNameShort == 'WHM' and childMenuItems.Pulling then
+        local actions = childMenuItems.Pulling:getChildMenuItem("Actions")
+        if actions then
+            actions:enableDirectAdd('Enemy')
+        end
+    end
+
     if trust:role_with_type("shooter") then
         menuItems:append(ButtonItem.default('Shooting', 18))
         childMenuItems.Shooting = self:getMenuItemForRole(trust:role_with_type("shooter"), weaponSkillSettings, weaponSkillSettingsMode, trust, jobNameShort, viewSize, trustSettings, trustSettingsMode, trustModeSettings)
@@ -488,10 +499,10 @@ function TrustHud:getMenuItemForRole(role, weaponSkillSettings, weaponSkillSetti
         return self:getBufferMenuItem(trust, jobNameShort, trustSettings, trustSettingsMode, trustModeSettings)
     end
     if role:get_type() == "healer" then
-        return self:getHealerMenuItem(trust, trustSettings, trustSettingsMode, trustModeSettings)
+        return self:getHealerMenuItem(trust, trustSettings, trustSettingsMode, trustModeSettings, jobNameShort)
     end
     if role:get_type() == "statusremover" then
-        return self:getStatusRemoverMenuItem(trust, trustSettings, trustSettingsMode, trustModeSettings)
+        return self:getStatusRemoverMenuItem(trust, trustSettings, trustSettingsMode, trustModeSettings, jobNameShort)
     end
     if role:get_type() == "skillchainer" then
         return self:getSkillchainerMenuItem(weaponSkillSettings, weaponSkillSettingsMode, trustModeSettings, trust)
@@ -526,18 +537,27 @@ end
 function TrustHud:getBufferMenuItem(trust, jobNameShort, trustSettings, trustSettingsMode, trustModeSettings)
     local BuffSettingsMenuItem = require('ui/settings/menus/buffs/BuffSettingsMenuItem')
     local bufferSettingsMenuItem = BuffSettingsMenuItem.new(trust, trustSettings, trustSettingsMode, trustModeSettings)
+    if jobNameShort == 'WHM' then
+        bufferSettingsMenuItem:enableDirectAdd('Self', nil, true)
+    end
     return bufferSettingsMenuItem
 end
 
-function TrustHud:getHealerMenuItem(trust, trustSettings, trustSettingsMode, trustModeSettings)
+function TrustHud:getHealerMenuItem(trust, trustSettings, trustSettingsMode, trustModeSettings, jobNameShort)
     local HealerSettingsMenuItem = require('ui/settings/menus/healing/HealerSettingsMenuItem')
     local healerSettingsMenuItem = HealerSettingsMenuItem.new(trust, trustSettings, trustSettingsMode, trustModeSettings)
+    if jobNameShort == 'WHM' then
+        healerSettingsMenuItem:enableDirectAdd(nil, 'Heals')
+    end
     return healerSettingsMenuItem
 end
 
-function TrustHud:getStatusRemoverMenuItem(trust, trustSettings, trustSettingsMode, trustModeSettings)
+function TrustHud:getStatusRemoverMenuItem(trust, trustSettings, trustSettingsMode, trustModeSettings, jobNameShort)
     local StatusRemovalSettingsMenuItem = require('ui/settings/menus/healing/StatusRemovalSettingsMenuItem')
     local statusRemoverSettingsMenuItem = StatusRemovalSettingsMenuItem.new(trust, trustSettings, trustSettingsMode, trustModeSettings)
+    if jobNameShort == 'WHM' then
+        statusRemoverSettingsMenuItem:enableDirectAdd(nil, 'Ailments')
+    end
     return statusRemoverSettingsMenuItem
 end
 
@@ -574,6 +594,9 @@ end
 function TrustHud:getNukerMenuItem(trust, trustSettings, trustSettingsMode, trustModeSettings, jobNameShort)
     local NukeSettingsMenuItem = require('ui/settings/menus/nukes/NukeSettingsMenuItem')
     local nukerSettingsMenuItem = NukeSettingsMenuItem.new(trust, trustSettings, trustSettingsMode, trustModeSettings, self.addon_settings, jobNameShort)
+    if jobNameShort == 'WHM' then
+        nukerSettingsMenuItem:enableDirectAdd('Enemy')
+    end
     return nukerSettingsMenuItem
 end
 

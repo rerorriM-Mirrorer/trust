@@ -143,7 +143,14 @@ function Menu:showMenu(menuItem)
     end
 
     self:requestFocus()
-    if opening then self:focusOptionsEditor() end
+    if opening then
+        local view = self.contentViewStack:getCurrentView()
+        if view and view.focusOnOpen and view:getDelegate():getCursorIndexPath() then
+            view:requestFocus()
+        else
+            self:focusOptionsEditor()
+        end
+    end
 end
 
 function Menu:focusOptionsEditor()

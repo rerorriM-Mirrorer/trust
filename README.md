@@ -511,3 +511,9 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - Split local Pause (following and configured Fan Out retained) from party-wide retreat Stop (disengage request, canceled combat/path work and temporary close-follow). Toggle only uses Act/Pause; stick/mute takeover uses local Pause and existing motion release.
 - Ready now orders assist/follow/Act on others; Standdown Pauses everyone and follows the issuer. Added labeled “Stand ready!” / “Stand down!” request acknowledgments, session control status, menu access and Pause movement labels.
 - Preserved saved follow distance/Fan Out and existing command aliases where compatible; Stopall now shares party-retreat scope. Added production-method regression coverage; paused path waypoint progression is gated. Native disengage, pet and multibox acceptance remain pending.
+
+
+### November 7, 2026 — White Mage menu Test 1
+
+- White Mage Buffs, Debuffs, Healing, Ailments, Nukes and Pulling Actions open their relevant picker from Add. One confirmation appends the selection and returns focus to the new row.
+- Buffs default to Self. Edit offers compatible Self, Ally and Both targets. Both checks Self first, followed by eligible party members in party order.
