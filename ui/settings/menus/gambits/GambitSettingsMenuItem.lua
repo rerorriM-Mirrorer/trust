@@ -286,7 +286,7 @@ function GambitSettingsMenuItem:appendGambit(gambit, showMenu)
     local gambits = self:getSettings().Gambits
     gambits:append(gambit)
     local saved, err = self.trustSettings:saveSettings(true)
-    if saved == false and (self.directAddTarget or self.directAddCategory) then
+    if saved == false then
         gambits:remove(gambits:length())
         addon_system_error(err or "Unable to save settings.")
         return
@@ -295,23 +295,17 @@ function GambitSettingsMenuItem:appendGambit(gambit, showMenu)
 
     local editor = self.gambitSettingsEditor
     local indexPath = IndexPath.new(1, self:getSettings().Gambits:length())
-    if self.directAddTarget or self.directAddCategory then
-        local bottom = editor:getContentSize().height + editor:getPadding().bottom - editor:getSize().height
-        editor:setContentOffset(editor:getContentOffset().x, math.min(0, -bottom))
-        editor:requestFocus()
-        editor:getDelegate():setCursorIndexPath(indexPath)
-    end
+    local bottom = editor:getContentSize().height + editor:getPadding().bottom - editor:getSize().height
+    editor:setContentOffset(editor:getContentOffset().x, math.min(0, -bottom))
+    editor:getDelegate():setCursorIndexPath(indexPath)
     editor:getDelegate():selectItemAtIndexPath(indexPath)
 end
 
 function GambitSettingsMenuItem:getAddAbilityMenuItem()
     local newAbilityMenuItem = function(targetType)
-        local buttons = L{}
-        if not self.directAddTarget then
-            buttons:append(ButtonItem.localized('Confirm', i18n.translate('Button_Confirm')))
-        end
-        buttons:append(ButtonItem.localized('Filter', i18n.translate('Button_Filter')))
-        local blankGambitMenuItem = MenuItem.new(buttons, {}, function(_, _, showMenu)
+        return MenuItem.new(L{
+            ButtonItem.localized('Filter', i18n.translate('Button_Filter')),
+        }, {}, function(_, _, showMenu)
             local abilitiesByTargetType = self:getAbilitiesByTargetType()
 
             local abilityPickerItem = MultiPickerConfigItem.new('abilities', L{}, abilitiesByTargetType[targetType], function(ability)
@@ -326,9 +320,7 @@ function GambitSettingsMenuItem:getAddAbilityMenuItem()
             local FFXIFastPickerView = require('ui/themes/ffxi/FFXIFastPickerView')
 
             local abilityPickerView = FFXIFastPickerView.new(abilityPickerItem)
-            if self.directAddTarget then
-                abilityPickerView:setPickOnSelect(true)
-            end
+            abilityPickerView:setPickOnSelect(true)
             abilityPickerView:getDisposeBag():add(abilityPickerView:on_pick_items():addAction(function(_, selectedItems)
                 if selectedItems:length() > 0 then
                     self:appendGambit(Gambit.new(targetType, L{}, selectedItems[1], targetType, self.defaultGambitTags), showMenu)
@@ -337,7 +329,6 @@ function GambitSettingsMenuItem:getAddAbilityMenuItem()
 
             return abilityPickerView
         end, self:getTitleText(), "Add a new "..targetType.." "..self.editorConfig:getDescription()..".")
-        return blankGambitMenuItem
     end
 
     if self.directAddTarget then
@@ -352,24 +343,21 @@ function GambitSettingsMenuItem:getAddAbilityMenuItem()
         end)
     end
 
-    local abilityTargetButtonItems = L(self.abilityTargets):map(function(targetType)
-        return ButtonItem.localized(targetType, i18n.translate('AbilityTarget_'..targetType))
-    end)
-
-    local abilityTargetMenuItem = MenuItem.new(abilityTargetButtonItems, {}, nil, self:getTitleText(), "Add a new "..self.editorConfig:getDescription()..".")
-
-    for targetType in L(self.abilityTargets):it() do
-        abilityTargetMenuItem:setChildMenuItem(targetType, newAbilityMenuItem(targetType))
-    end
-
-    local addGambitMenuItem = MenuItem.new(L{}, {}, nil, self:getTitleText(), "Add a new "..self.editorConfig:getDescription()..".")
-
+    local addMenu = MenuItem.new(L{}, {}, nil, self:getTitleText(), "Choose an ability target or browse presets.")
     if self.editorConfig:hasEditPermission(self.selectedGambit, GambitEditorStyle.Permissions.New) then
-        addGambitMenuItem:setChildMenuItem("New", abilityTargetMenuItem)
+        for _, targetType in ipairs({GambitTarget.TargetType.Self, GambitTarget.TargetType.Ally, GambitTarget.TargetType.Enemy}) do
+            if self.abilityTargets:contains(targetType) then
+                addMenu:setChildMenuItem(targetType, newAbilityMenuItem(targetType))
+            end
+        end
     end
-    addGambitMenuItem:setChildMenuItem("Browse", self:getGambitLibraryMenuItem())
-
-    return addGambitMenuItem
+    local browse = GambitLibraryMenuItem.new(self.libraryCategoryFilter, function(gambit, showMenu)
+        self:appendGambit(gambit, showMenu)
+    end)
+    if browse then
+        addMenu:setChildMenuItem("Browse", browse)
+    end
+    return addMenu
 end
 
 function GambitSettingsMenuItem:getEditGambitMenuItem()
@@ -576,10 +564,6 @@ function GambitSettingsMenuItem:getResetGambitsMenuItem()
             menu:showMenu(self)
         end
     end, self:getTitleText(), "Reset to default "..self.editorConfig:getDescription(true)..".")
-end
-
-function GambitSettingsMenuItem:getGambitLibraryMenuItem()
-    return GambitLibraryMenuItem.new(self.trustSettings, self.trustSettingsMode, self.libraryCategoryFilter, self.settingsKeys)
 end
 
 function GambitSettingsMenuItem:getModesMenuItem()
