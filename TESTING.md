@@ -1,3 +1,16 @@
+# All-job role and Gambit menus — 2026-11-07
+
+Testing branch `test/all-job-gambit-menus` starts at WHM Focus Test 2 (`9f732c7d`). The earlier WHM one-confirm role pickers now apply across jobs that expose those roles. Buffs start with Self-eligible choices and support compatible Self, Ally and Both in Edit. Debuffs, Nukes and Pulling Actions use the Enemy picker. Healing and Ailments go straight to their presets and retain role-specific configuration and blacklist controls. Dedicated role lists omit the Shortcuts button.
+
+Gambits Add shows the allowed targets and Browse together. Browse is a flat list of eligible presets with category labels. One confirm appends an item, selects the new row and returns input to the command column. Edit opens with editor focus. Condition Add uses the target-specific condition picker and returns to the commands with the newly added condition selected. Shared Job gambits and character-local Custom gambits keep their existing settings owners.
+
+Host verification: 38 menu, movement, pull and Aggro suites passed on Lua 5.4 with existing Windower syntax normalization, plus the real SQLite settings writer. Windower/controller and live FFXI checks are pending.
+
+1. On BRD, add an enemy debuff and check the new row and right-column focus. Check Add, Edit, Remove, Copy, Move Up, Move Down, Toggle, Reset and Modes.
+2. On RDM and WHM, check the dedicated Buffs, Debuffs, Healing and Ailments lists. Verify spell and preset restrictions and save/reload.
+3. In Custom Gambits, add a learned Self song and a Browse preset. Confirm one row per press, right-column focus, and automatic focus when opening Edit. Check a shared Job gambit on a disposable install and try Browse in Reactions.
+4. Add a condition using the keyboard and controller, then immediately Edit or Invert it from the right. Verify the action applies to the new condition. Back out of a picker to verify cancellation. Repeat on lists long enough to scroll.
+
 # White Mage menu focus Test 2 — 2026-11-07
 
 Branch `test/whm-menu-focus-t2` starts at White Mage menu Test 1 (`9f914308`). The user reported `collection_view_delegate.lua:328` after adding Protect III, Shell and Haste and then opening their options. Reset hid Move Down and produced the missing vertical scrollbar error. Backing out of Ailments also left a missing job-menu row between Weaponskills and Gambits.
