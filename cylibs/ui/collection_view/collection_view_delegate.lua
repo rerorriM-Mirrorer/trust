@@ -322,11 +322,11 @@ end
 -- @tparam IndexPath indexPath The new value for `cursorIndexPath`
 --
 function CollectionViewDelegate:setCursorIndexPath(indexPath)
-    if indexPath == nil then
+    if indexPath == nil or not self.collectionView then
         return
     end
-    local cell = self.collectionView:getDataSource():cellForItemAtIndexPath(indexPath)
-    if cell then
+    local dataSource = self.collectionView:getDataSource()
+    if dataSource:itemAtIndexPath(indexPath) then
         self.cursorIndexPath = indexPath
 
         if not self.collectionView:getAllowsMultipleSelection() and self.collectionView:getAllowsCursorSelection() then
@@ -347,7 +347,10 @@ function CollectionViewDelegate:setCursorIndexPath(indexPath)
             end
         end
 
-        self:didMoveCursorToItemAtIndexPath():trigger(self.cursorIndexPath)
+        -- Selecting a row can replace this view synchronously.
+        if self.collectionView then
+            self:didMoveCursorToItemAtIndexPath():trigger(self.cursorIndexPath)
+        end
     end
 end
 

@@ -15,6 +15,7 @@ local View = {}
 View.__index = View
 View.__type = "View"
 
+local next_view_id = 0
 num_created = 0
 ---
 -- Creates a new View instance.
@@ -38,7 +39,9 @@ function View.new(frame)
     self.focusLocked = false
     self.focused = false
     self.resignFocusKeys = L{ 1, 205 }
-    self.uuid = os.time()..'-'..math.random(100000)
+    -- Sibling views are stored by ID. A reused ID silently drops a row.
+    next_view_id = next_view_id + 1
+    self.uuid = tostring(next_view_id)
     self.destroyed = false
     self.disposeBag = DisposeBag.new()
     self.disposeBag:addAny(L{ self.backgroundImageView })
@@ -57,6 +60,8 @@ function View:destroy()
         return
     end
     self.destroyed = true
+    self.focused = false
+    FocusManager.shared():removeFocus(self)
 
     self:removeFromSuperview()
     self:removeAllSubviews(true)

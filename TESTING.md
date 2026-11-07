@@ -1,3 +1,17 @@
+# White Mage menu focus Test 2 — 2026-11-07
+
+Branch `test/whm-menu-focus-t2` starts at White Mage menu Test 1 (`9f914308`). The user reported `collection_view_delegate.lua:328` after adding Protect III, Shell and Haste and then opening their options. Reset hid Move Down and produced the missing vertical scrollbar error. Backing out of Ailments also left a missing job-menu row between Weaponskills and Gambits.
+
+A closed picker now removes itself from the focus stack during disposal. The previous live owner can recover focus and a disposed collection no longer receives cursor moves. Fixed-height command lists skip scrollbar operations. View IDs are unique within the addon session so sibling rows cannot collide during a rebuild. The disappearing rows still need to be checked in Windower. The one-confirm Add behavior, saved buff settings and existing reset semantics are preserved.
+
+Install `Trust-WHM-Menu-Focus-Test2-<commit>-Patch.zip` over `9f914308`. Unload Trust, back up the existing addon, merge the archive's `trust/` folder and reload. Keep `data/`. To roll back, restore the five Lua files from the Test 1 backup. No controller companion updates are required by this patch.
+
+Verification on host Lua 5.4: all six changed Lua files compiled using the existing Windower syntax normalization, all 38 menu/movement/pull/Aggro suites passed, and the shared settings writer passed against host SQLite. The new regression exercises production methods for focus restoration after disposal, nested and locked focus, sibling row IDs, retired cursor moves and fixed-menu scrolling. Live FFXI confirmation is pending.
+
+1. Add Protect III, Shell and Haste. After each addition, move to the command list and open Edit on the new row. Confirm the same buff is selected and inspect its Ability target.
+2. On a disposable profile, use Buffs Reset, which restores the factory list. Navigate the full button column in both directions and check Move Down remains visible.
+3. Open Ailments and its Add picker, back out, then navigate between Weaponskills and Gambits. On the standard WHM main-job layout the row between them is Food. Repeat with keyboard and mouse and check that the displayed menu and cursor remain in sync.
+
 # White Mage menu Test 1 — 2026-11-07
 
 Repository `rerorriM-Mirrorer/trust`, branch `test/whm-menu-t1`, based on published `d658249f` (Act / Pause / Retreat plus the latest pull and idle follow fixes). The fresh install ZIP is `Trust-WHM-Menu-Test1-<commit>.zip` and identifies its exact source in `trust/FRESH-BUILD.json`. Unload Trust, back up the existing addon folder, then extract `trust/` into `Windower/addons`. For a clean test, keep the old folder aside. To test an existing profile, merge the addon files over the backed-up installation while keeping `data/`. Roll back by restoring the backup, including WHM profiles saved before using Both.

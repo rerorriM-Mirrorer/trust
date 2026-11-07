@@ -34,6 +34,7 @@ end
 -- @treturn boolean Whether or not the object successfully focused.
 --
 function FocusManager:requestFocus(focusable)
+    if focusable.destroyed then return false end
     for parentFocusable in self.focusStack:it() do
         if parentFocusable == focusable then
             return false
@@ -68,6 +69,22 @@ function FocusManager:resignFocus(focusable)
         currentFocusable = self.focusStack:last()
         if currentFocusable then
             currentFocusable:setHasFocus(true)
+        end
+    end
+end
+
+-- Disposal can remove a covered view or a locked text field. Neither may
+-- receive another focus callback once its resources begin tearing down.
+function FocusManager:removeFocus(focusable)
+    for index = self.focusStack:length(), 1, -1 do
+        if rawequal(self.focusStack[index], focusable) then
+            local wasFocused = index == self.focusStack:length()
+            self.focusStack:remove(index)
+            local previous = self.focusStack:last()
+            if wasFocused and previous then
+                previous:setHasFocus(true)
+            end
+            return
         end
     end
 end

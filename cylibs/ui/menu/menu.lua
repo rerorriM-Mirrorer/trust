@@ -324,7 +324,7 @@ function Menu:setHasFocus(hasFocus)
     self.focused = hasFocus
 
     local currentView = self.viewStack:getCurrentView()
-    if currentView then
+    if currentView and not currentView.destroyed then
         currentView:setHasFocus(hasFocus)
     end
 end

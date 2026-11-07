@@ -517,3 +517,5 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 
 - White Mage Buffs, Debuffs, Healing, Ailments, Nukes and Pulling Actions open their relevant picker from Add. One confirmation appends the selection and returns focus to the new row.
 - Buffs default to Self. Edit offers compatible Self, Ally and Both targets. Both checks Self first, followed by eligible party members in party order.
+
+- White Mage menu Test 2 fixes focus teardown after selecting a buff, guards fixed command menus from missing scrollbars, and gives sibling views unique IDs during menu rebuilds.

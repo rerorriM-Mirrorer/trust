@@ -209,7 +209,7 @@ function ScrollView:canScroll()
 end
 
 function ScrollView:scrollUp()
-    if not self:canScroll() then
+    if not self:isScrollEnabled() or not self.verticalScrollBar or not self:canScroll() then
         return false
     end
     self.lastScrollTime = os.clock()
@@ -218,7 +218,7 @@ function ScrollView:scrollUp()
 end
 
 function ScrollView:scrollDown()
-    if not self:canScroll() then
+    if not self:isScrollEnabled() or not self.verticalScrollBar or not self:canScroll() then
         return false
     end
     self.lastScrollTime = os.clock()
