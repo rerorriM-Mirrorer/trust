@@ -210,7 +210,7 @@ function GambitSettingsMenuItem:reloadSettings()
     self:setChildMenuItem("Toggle", self:getToggleMenuItem())
     self:setChildMenuItem("Reset", self:getResetGambitsMenuItem())
     self:setChildMenuItem("Modes", self:getModesMenuItem())
-    if self:getConfigKey() and not self.buffTargetEditor then
+    if self:getConfigKey() and not self.hideShortcuts then
         self:setChildMenuItem("Shortcuts", ShortcutMenuItem.new(string.format("shortcut_%s", self:getConfigKey()), "Open the gambit editor.", false, string.format("// trust menu %s", self:getConfigKey())))
     end
 end
@@ -267,10 +267,16 @@ function GambitSettingsMenuItem:enableDirectAdd(targetType, categoryName, buffTa
     self.buffTargetEditor = buffTargetEditor
 
     if buffTargetEditor then
+        self.hideShortcuts = true
         self.buttonItems:clear()
         self.childMenuItems.Shortcuts = nil
         self:reloadSettings()
     else
+        self.hideShortcuts = true
+        self.buttonItems = self.buttonItems:filter(function(button)
+            return button:getTextItem():getText() ~= "Shortcuts"
+        end)
+        self.childMenuItems.Shortcuts = nil
         self:setChildMenuItem("Add", self:getAddAbilityMenuItem())
     end
 end
@@ -591,7 +597,7 @@ end
 function GambitSettingsMenuItem:setConfigKey(configKey)
     MenuItem.setConfigKey(self, configKey)
 
-    if self:getConfigKey() and not self.buffTargetEditor then
+    if self:getConfigKey() and not self.hideShortcuts then
         self:setChildMenuItem("Shortcuts", ShortcutMenuItem.new(string.format("shortcut_%s", self:getConfigKey()), "Open the gambit editor.", false, string.format("// trust menu %s", self:getConfigKey())))
     end
 end

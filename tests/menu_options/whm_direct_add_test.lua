@@ -112,6 +112,7 @@ local menu = setmetatable({
     getTitleText = function() return 'Test' end,
     editorConfig = { getDescription = function() return 'action' end },
     gambitCreated = event(),
+    buttonItems = L{}, childMenuItems = {},
     getSettings = function() return { Gambits = gambits } end,
     setChildMenuItem = function(self, name, item) self[name] = item end,
     getAbilitiesByTargetType = function() return { Self = L{ 'Protect' }, Enemy = L{ 'Dia' } } end,

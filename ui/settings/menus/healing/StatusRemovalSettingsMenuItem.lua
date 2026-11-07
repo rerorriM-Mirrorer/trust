@@ -34,7 +34,7 @@ function StatusRemovalSettingsMenuItem.new(trust, trustSettings, trustSettingsMo
         configItem:setNumItemsRequired(1, 1)
         return L{ configItem }
     end, nil, "Status Cure", "Status Cures", nil, function(menuItemName)
-        return L{ 'Add', 'Remove', 'Edit', 'Move Up', 'Move Down', 'Toggle', 'Reset', 'Modes', 'Shortcuts', 'Blacklist' }:contains(menuItemName)
+        return L{ 'Add', 'Remove', 'Edit', 'Copy', 'Move Up', 'Move Down', 'Toggle', 'Reset', 'Modes', 'Shortcuts', 'Blacklist' }:contains(menuItemName)
     end)
     editorStyle:setEditPermissions(
             GambitEditorStyle.Permissions.Edit,

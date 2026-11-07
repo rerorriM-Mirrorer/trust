@@ -46,9 +46,9 @@ assert(settings.children.Food and settings.children.Pulling and settings.childre
 assert(settings.children.Gambits.buttons[1]=='BRD' and settings.children.Gambits.buttons[2]=='Custom')
 local subSettings=hud:getSettingsMenuItem(job,{},env.state.SubTrustSettingsMode,nil,nil,{},'WHM')
 assert(subSettings.children.Debuffs.directAdd.target=='Enemy')
-assert(not settings.children.Debuffs.directAdd and not subSettings.children.Gambits.children.Custom.directAdd)
+assert(settings.children.Debuffs.directAdd.target=='Enemy' and not subSettings.children.Gambits.children.Custom.directAdd)
 assert(hud:getBufferMenuItem(job,'WHM').directAdd.buffTargets)
-assert(not hud:getBufferMenuItem(job,'BRD').directAdd)
+assert(hud:getBufferMenuItem(job,'BRD').directAdd.buffTargets)
 assert(hud:getHealerMenuItem(job,nil,nil,nil,'WHM').directAdd.category=='Heals')
 assert(hud:getStatusRemoverMenuItem(job,nil,nil,nil,'WHM').directAdd.category=='Ailments')
 assert(hud:getNukerMenuItem(job,nil,nil,nil,'WHM').directAdd.target=='Enemy')
@@ -59,7 +59,7 @@ hud.getMenuItemForRole=function(_,role,ws,wsm,trust,jobName,view,owner,mode)
     pullingOwner={owner,mode,jobName};return node(nil,{Actions=node()})
 end
 local bardPulling=hud:getSettingsMenuItem(job,{},env.state.MainTrustSettingsMode,nil,nil,{},'BRD').children.Pulling
-assert(not bardPulling.children.Actions.directAdd)
+assert(bardPulling.children.Actions.directAdd.target=='Enemy')
 assert(pullingOwner[1]==env.sub_trust_settings and pullingOwner[2]==env.state.SubTrustSettingsMode and pullingOwner[3]=='WHM')
 local whmPulling=hud:getSettingsMenuItem(job,{},env.state.MainTrustSettingsMode,nil,nil,{},'WHM').children.Pulling
 assert(whmPulling.children.Actions.directAdd.target=='Enemy')
