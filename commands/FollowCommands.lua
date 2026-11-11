@@ -234,7 +234,7 @@ function FollowTrustCommands:handle_follow_party_member(party_member_name)
         if state.AutoFollowMode.value == 'Always' and current
                 and current:get_name():lower() == party_member_name:lower()
                 and not follower.manual_pause and not follower.recovery_paused then
-            return true, 'Already following '..party_member_name
+            return true, 'Following: '..party_member_name
         end
         self:handle_set_mode('AutoFollowMode', 'Always', command_feedback.is_quiet())
 
@@ -247,7 +247,7 @@ function FollowTrustCommands:handle_follow_party_member(party_member_name)
             message = error_message
         else
             success = true
-            message = 'Now following '..party_member_name
+            message = 'Following: '..party_member_name
         end
     else
         success = false
@@ -270,7 +270,7 @@ function FollowTrustCommands:handle_set_follow_distance(_, distance)
             addon_settings:getSettings().follow.distance = distance
         end
         success = true
-        message = 'Follow distance set to '..distance
+        message = 'Follow distance: '..distance
     else
         success = false
         message = 'Invalid distance '..tostring(distance)..' (expected 0-50)'
@@ -285,7 +285,7 @@ function FollowTrustCommands:handle_start()
     self:get_follower().manual_pause=false
     self:get_follower().recovery_paused=false
     local success = true
-    local message = 'Following resumed'
+    local message = 'Following: Active'
 
     self:get_follower():start_following()
 
@@ -295,7 +295,7 @@ end
 -- // trust follow stop
 function FollowTrustCommands:handle_stop()
     local success = true
-    local message = 'Following paused'
+    local message = 'Following: Paused'
 
     self:get_follower().manual_pause=true
     self:get_follower():stop_following()
@@ -306,7 +306,7 @@ end
 -- // trust follow clear
 function FollowTrustCommands:handle_clear()
     local success = true
-    local message = 'Follow target cleared'
+    local message = 'Follow target: Cleared'
 
     self:get_follower():set_follow_target(nil)
 
@@ -321,7 +321,7 @@ function FollowTrustCommands:handle_stop_all()
     if L{'All', 'Send'}:contains(state.IpcMode.value) then
         IpcRelay.shared():send_message(CommandMessage.new('trust set AutoFollowMode Off'))
         success = true
-        message = 'Follow disabled on everyone else'
+        message = 'Follow OFF - Requested on other clients.'
     else
         success = false
         message = 'IpcMode must be set to All or Send to use this command'

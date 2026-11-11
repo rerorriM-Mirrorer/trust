@@ -83,7 +83,7 @@ local General=actual(source('commands/GeneralCommands.lua'),'commands/GeneralCom
 state.CombatMode={value='Off'};handle_set=function(name,v) state[name].value=v end
 local commands=setmetatable({},General)
 ok,message=commands:handle_combat(nil,nil)
-check(ok and message=='CombatMode: Off','bare combat command reports mode')
+check(ok and message=='Combat positioning: Off','bare combat command reports mode')
 ok=commands:handle_combat(nil,'mIRroR');check(ok and state.CombatMode.value=='Mirror','combat alias accepts case-insensitive modes')
 ok=commands:handle_combat(nil,'wrong');check(not ok and state.CombatMode.value=='Mirror','invalid combat value never mutates mode')
 print('PASS: '..checks..' save trace / menu command assertions (OS and I/O mocked)')

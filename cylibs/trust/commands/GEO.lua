@@ -54,7 +54,7 @@ function GeomancerTrustCommands:handle_set_indi(_, ...)
     self.trust_settings:saveSettings(true)
 
     success = true
-    message = localization_util.translate(spell_name).." will now be used"
+    message = localization_util.translate(spell_name).." - Selected"
 
     return success, message
 end
@@ -94,7 +94,7 @@ function GeomancerTrustCommands:handle_set_geo(_, ...)
     self.trust_settings:saveSettings(true)
 
     success = true
-    message = localization_util.translate(spell_name).." will now be used"
+    message = localization_util.translate(spell_name).." - Selected"
 
     return success, message
 end
@@ -120,7 +120,7 @@ function GeomancerTrustCommands:handle_set_entrust(_, ...)
     self.trust_settings:saveSettings(true)
 
     success = true
-    message = localization_util.translate(spell_name).." will now be used with entrust (all jobs)"
+    message = localization_util.translate(spell_name).." - Entrust (all jobs)"
 
     return success, message
 end

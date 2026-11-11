@@ -97,12 +97,12 @@ function MagicBurstTrustCommands:handle_toggle_element(_, element_name)
             blacklist:remove(element_util[element_name])
 
             success = true
-            message = "Magic bursts of type "..element_name.." are enabled"
+            message = "Magic Burst: "..element_name.." ON"
         else
             blacklist:add(element_util[element_name])
 
             success = true
-            message = "Magic bursts of type "..element_name.." are disabled"
+            message = "Magic Burst: "..element_name.." OFF"
         end
 
         current_settings.Blacklist = L(blacklist)
@@ -140,14 +140,14 @@ function MagicBurstTrustCommands:handle_set_element(element_name, enabled)
             blacklist = blacklist:filter(function(e) return e:get_name() ~= element_name end)
 
             success = true
-            message = "Magic bursts of type "..element_name.." are enabled"
+            message = "Magic Burst: "..element_name.." ON"
         else
             if not blacklist:contains(element_util[element_name]) then
                 blacklist:append(element_util[element_name])
             end
 
             success = true
-            message = "Magic bursts of type "..element_name.." are disabled"
+            message = "Magic Burst: "..element_name.." OFF"
         end
 
         current_settings.Blacklist = L(blacklist)
@@ -172,7 +172,7 @@ function MagicBurstTrustCommands:handle_reset_blacklist()
     self.trust_settings:saveSettings(true)
 
     success = true
-    message = "Magic bursts of all types are enabled"
+    message = "Magic Burst: All ON"
 
     return success, message
 end

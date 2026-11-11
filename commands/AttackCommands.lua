@@ -55,7 +55,7 @@ function AttackTrustCommands:handle_set_mirror_distance(_, distance)
 
         self.trust_settings:saveSettings(true)
 
-        message = string.format("Mirror distance set to %.1f yalms", distance)
+        message = string.format("Mirror distance: %.1f yalms", distance)
     end
 
     local success, _ = self:handle_set_mode('AutoEngageMode', 'Mirror')
@@ -93,7 +93,7 @@ function AttackTrustCommands:handle_set_combat_distance(_, distance)
         self.trust_settings:saveSettings(true)
 
         success = true
-        message = 'Combat distance set to '..distance
+        message = 'Combat distance: '..distance
     else
         success = false
         message = 'Invalid distance '..distance

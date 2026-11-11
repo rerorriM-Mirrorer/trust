@@ -29,9 +29,9 @@ function LoggingTrustCommands:handle_toggle()
 
     logger.isEnabled = not logger.isEnabled
     if logger.isEnabled then
-        message = "Debug logging enabled"
+        message = "Logging: ON"
     else
-        message = "Debug logging disabled"
+        message = "Logging: OFF"
     end
 
     return success, message
@@ -40,7 +40,7 @@ end
 -- // trust log filter filter_pattern
 function LoggingTrustCommands:handle_set_filter(_, filter_pattern)
     local success = true
-    local message = "Filtering by logs containing the text "..filter_pattern
+    local message = "Log filter: "..filter_pattern
 
     logger.filterPattern = filter_pattern
 
@@ -50,7 +50,7 @@ end
 -- // trust log all
 function LoggingTrustCommands:handle_clear_filter()
     local success = true
-    local message = "Cleared all log filters"
+    local message = "Log filter: None"
 
     logger.filterPattern = nil
 

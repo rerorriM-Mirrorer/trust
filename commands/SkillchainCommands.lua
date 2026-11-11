@@ -128,7 +128,7 @@ end
 -- // trust sc clear
 function SkillchainTrustCommands:handle_clear()
     local success = true
-    local message = "Skillchains will be automatically determined"
+    local message = "Skillchains: Auto"
 
     local current_settings = self:get_settings()
     for i = 1, current_settings.Skillchain.Gambits:length() do
@@ -142,7 +142,7 @@ end
 -- // trust sc reload
 function SkillchainTrustCommands:handle_reload()
     local success = true
-    local message = "Reloaded skillchain settings from "..self.weapon_skill_settings:getSettingsFilePath()
+    local message = "Skillchain settings loaded: "..self.weapon_skill_settings:getSettingsFilePath()
 
     self.weapon_skill_settings:loadSettings()
 
@@ -152,7 +152,7 @@ end
 -- // trust sc save
 function SkillchainTrustCommands:handle_save()
     local success = true
-    local message = "Skillchain settings saved to "..self.weapon_skill_settings:getSettingsFilePath()
+    local message = "Skillchain settings saved: "..self.weapon_skill_settings:getSettingsFilePath()
 
     self.weapon_skill_settings:saveSettings(true)
 
@@ -177,7 +177,7 @@ function SkillchainTrustCommands:handle_set_spam(_, ...)
             skill:set_default_ability(ability_name)
 
             success = true
-            message = localization_util.translate(ability_name).." will now be used when spamming"
+            message = localization_util.translate(ability_name).." - Spam ability"
 
             self:handle_toggle_mode('AutoSkillchainMode', 'Spam', 'Off', true)
         else
@@ -216,7 +216,7 @@ function SkillchainTrustCommands:handle_set_mintp(_, min_tp)
     spammer:set_conditions(L{ MinTacticalPointsCondition.new(min_tp) })
 
     success = true
-    message = "Minimum tp for spamming is now "..min_tp
+    message = "Spam minimum TP: "..min_tp
 
     return success, message
 end
@@ -387,7 +387,7 @@ function SkillchainTrustCommands:handle_clear_default(_)
         end
     end
 
-    message = "Default abilities have been cleared for the current equipped weapons."
+    message = "Default abilities: Cleared for equipped weapons"
 
     return success, message
 end

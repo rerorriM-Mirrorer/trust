@@ -90,7 +90,7 @@ function BardTrustCommands:handle_presing()
     singer.song_tracker:reset()
 
     success = true
-    message = "Song tracker has been cleared"
+    message = "Song tracker: Cleared"
 
     return success, message
 end
@@ -149,7 +149,7 @@ function BardTrustCommands:handle_clear_songs()
     singer.song_tracker:reset()
 
     success = true
-    message = "Song tracker has been cleared"
+    message = "Song tracker: Cleared"
 
     return success, message
 end
@@ -164,7 +164,7 @@ function BardTrustCommands:handle_resing_songs(_)
     self.action_queue:clear()
 
     success = true
-    message = "Resinging songs"
+    message = "Songs: Resinging"
 
     return success, message
 end
@@ -181,7 +181,7 @@ function BardTrustCommands:handle_validate_songs()
     song_validator:validate()
 
     success = true
-    message = "Starting song validation"
+    message = "Song validation: Started"
 
     return success, message
 end

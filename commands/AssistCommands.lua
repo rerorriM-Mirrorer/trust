@@ -50,7 +50,7 @@ function AssistTrustCommands:handle_assist_player(party_member_name, mirror)
     local alliance_member = self.trust:get_alliance():get_alliance_member_named(party_member_name)
     if alliance_member then
         success = true
-        message = "Now assisting "..party_member_name
+        message = "Assisting: "..party_member_name
 
         self.trust:get_party():set_assist_target(alliance_member)
 
@@ -60,7 +60,7 @@ function AssistTrustCommands:handle_assist_player(party_member_name, mirror)
                     self:handle_set_mode(mode_name, 'Mirror', command_feedback.is_quiet())
                 end
             end
-            message = message.." (mirroring combat distance)"
+            message = message.." - Mirror distance"
         end
 
         if state.AutoPullMode and state.AutoPullMode.value ~= 'Off' then
@@ -86,7 +86,7 @@ function AssistTrustCommands:handle_assist_me()
         local quiet_flag = command_feedback.is_quiet() and ' --quiet' or ''
         IpcRelay.shared():send_message(CommandMessage.new('trust assist '..windower.ffxi.get_player().name..quiet_flag))
         success = true
-        message = 'Assist set to me on everyone else'
+        message = 'Assist - Requested on other clients.'
     else
         success = false
         message = 'IpcMode must be set to All or Send to use this command'
@@ -124,7 +124,7 @@ function AssistTrustCommands:handle_lock_target()
         self.trust:get_party():set_assist_target(self.target_lock)
 
         success = true
-        message = 'Target locked to '..battle_target.name
+        message = 'Target locked: '..battle_target.name
     else
         success = false
         message = 'The party must be fighting something to lock onto a target'

@@ -120,7 +120,7 @@ function PullTrustCommands:handle_camp(_)
     self:get_puller():set_camp_position(V{ position[1], position[2] })
 
     success = true
-    message = "Return to the current position after battle"
+    message = "Pull return: Current position"
 
     return success, message
 end
@@ -177,7 +177,7 @@ function PullTrustCommands:handle_set_randomize(_, value)
     self:get_settings().PullSettings.RandomizeTarget = enabled
     self:get_pull_owner():saveSettings(true)
 
-    return true, 'Pull target randomization '..(enabled and 'enabled' or 'disabled')
+    return true, 'Pull randomization: '..(enabled and 'ON' or 'OFF')
 end
 
 -- // trust pull [auto, party, all]

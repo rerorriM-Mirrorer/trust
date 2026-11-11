@@ -38,9 +38,9 @@ function SoundCommands:handle_set_sound_enabled(is_enabled)
     local message
 
     if is_enabled then
-        message = "Sound effects from Trust are now enabled"
+        message = "Sounds: ON"
     else
-        message = "Sound effects from Trust are now disabled"
+        message = "Sounds: OFF"
     end
     local ok,err=require('settings/shared_preferences').shared():update('Sounds',{disabled=not is_enabled})
     if not ok then return false,err end

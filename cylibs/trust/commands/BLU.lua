@@ -57,7 +57,7 @@ function BlueMageTrustCommands:handle_equip_set(_, set_name)
         if spell_set_name:lower() == set_name:lower() then
             self:get_job():equip_spells(spell_set:getSpells())
             success = true
-            message = string.format("Equipping %s", spell_set_name)
+            message = string.format("Spell set: %s - Requested", spell_set_name)
             break
         end
     end

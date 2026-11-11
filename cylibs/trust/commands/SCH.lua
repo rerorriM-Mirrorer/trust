@@ -138,7 +138,7 @@ function ScholarTrustCommands:handle_skillchain(_, element)
 
             self.action_queue:push_action(skillchain_action, true)
 
-            message = "Starting skillchain "..localization_util.translate(spell1).." > "..localization_util.translate(spell2).." = "..localization_util.translate(element)
+            message = "Skillchain starting: "..localization_util.translate(spell1).." > "..localization_util.translate(spell2).." = "..localization_util.translate(element)
         end
     end
 
@@ -162,7 +162,7 @@ function ScholarTrustCommands:handle_set_skillchain(_, element)
             current_settings.Skillchain.Gambits[2] = Gambit.new(GambitTarget.TargetType.Enemy, L{ StrategemCountCondition.new(1, Condition.Operator.GreaterThanOrEqualTo) }, ElementalMagic.new(spell2), Condition.TargetType.Self)
 
             success = true
-            message = "Setting skillchain to "..localization_util.translate(spell1).." > "..localization_util.translate(spell2)
+            message = "Skillchain: "..localization_util.translate(spell1).." > "..localization_util.translate(spell2)
 
             self.weapon_skill_settings:saveSettings(true)
         end
@@ -229,7 +229,7 @@ function ScholarTrustCommands:handle_storm(_, element, include_party)
         storm = Gambit.new(GambitTarget.TargetType.Self, L{}, storm, Condition.TargetType.Self, L{"Buffs"})
 
         success = true
-        message = "Setting storm to "..storm:getAbility():get_spell().en
+        message = "Storm: "..storm:getAbility():get_spell().en
 
         local current_settings = self:get_settings()
 

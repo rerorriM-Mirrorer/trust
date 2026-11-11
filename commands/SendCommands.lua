@@ -40,7 +40,7 @@ function SendTrustCommands:handle_send_command(...)
         if L{'All', 'Send'}:contains(state.IpcMode.value) then
             IpcRelay.shared():send_message(CommandMessage.new(windower_command, target_name))
             success = true
-            message = 'Executing command: '..windower_command..' on '..target_name
+            message = 'Send: '..target_name..' - Requested: '..windower_command
         else
             success = false
             message = 'IpcMode must be set to All or Send to use this command'

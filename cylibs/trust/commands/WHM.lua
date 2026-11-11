@@ -36,7 +36,7 @@ function WhiteMageTrustCommands:handle_report()
     local tracker = healer:get_tracker()
     if tracker then
         success = true
-        message = "Reporting healer statistics"
+        message = "Healing statistics:"
 
         tracker:report()
     else

@@ -127,11 +127,11 @@ end
 
 function GeneralTrustCommands:handle_combat(_, mode)
     if not state.CombatMode then return false,'CombatMode is unavailable' end
-    if mode==nil then return true,'CombatMode: '..state.CombatMode.value end
+    if mode==nil then return true,'Combat positioning: '..state.CombatMode.value end
     local selected=type(mode)=='string' and ({auto='Auto',mirror='Mirror',off='Off'})[mode:lower()]
     if not selected then return false,'Usage: //trust combat [auto|mirror|off]' end
     handle_set('CombatMode',selected)
-    return true,'CombatMode: '..state.CombatMode.value
+    return true,'Combat positioning: '..state.CombatMode.value
 end
 
 function GeneralTrustCommands:get_command_name()
@@ -200,7 +200,7 @@ function GeneralTrustCommands:handle_status()
     end
 
     if player.party:get_assist_target() then
-        addon_message(209, 'Assisting '..player.party:get_assist_target():get_name())
+        addon_message(209, 'Assisting: '..player.party:get_assist_target():get_name())
     end
 
     return success, message
@@ -242,7 +242,7 @@ end
 -- occur after this timing ends and should be tracked separately in live tests.
 function GeneralTrustCommands:handle_menuperf(_, mode)
     if mode == nil then
-        return true, 'Menu CPU timings '..(windower.trust.menu_perf_enabled and 'ON' or 'OFF')
+        return true, 'Menu CPU timings: '..(windower.trust.menu_perf_enabled and 'ON' or 'OFF')
     end
     if type(mode) ~= 'string' then
         return false, 'Usage: //trust menuperf [on|off]'
@@ -252,7 +252,7 @@ function GeneralTrustCommands:handle_menuperf(_, mode)
         return false, 'Usage: //trust menuperf [on|off]'
     end
     windower.trust.menu_perf_enabled = mode == 'on'
-    return true, 'Menu CPU timings '..(windower.trust.menu_perf_enabled and 'ON' or 'OFF')
+    return true, 'Menu CPU timings: '..(windower.trust.menu_perf_enabled and 'ON' or 'OFF')
 end
 
 -- A: one receiver-side operation preserves handoff ordering on each client.
@@ -364,12 +364,12 @@ function GeneralTrustCommands:handle_start(_, include_party)
 
     if include_party then
         if state.IpcMode.value ~= 'All' and state.IpcMode.value ~= 'Send' then
-            return true, 'Trust active locally; IPC sending unavailable'
+            return true, 'Active - Local only. IPC sending unavailable.'
         end
-        message = "Trust Act requested on all clients"
+        message = "Act - Requested on all clients."
         IpcRelay.shared():send_message(CommandMessage.new('trust start'))
     else
-        message = "Trust active"
+        message = "Active"
     end
 
     return success, message
@@ -385,10 +385,10 @@ function GeneralTrustCommands:handle_pause(_, include_party)
     Control.set(self.action_queue, self.addon_enabled, self.trust, 'Paused')
     if include_party then
         if state.IpcMode.value ~= 'All' and state.IpcMode.value ~= 'Send' then
-            return true, 'Trust paused locally; IPC sending unavailable'
+            return true, 'Paused - Local only. IPC sending unavailable.'
         end
         IpcRelay.shared():send_message(CommandMessage.new('trust pause'))
-        return true, 'Trust Pause requested on all clients'
+        return true, 'Pause - Requested on all clients.'
     end
     return true, 'Trust paused'
 end
@@ -502,13 +502,13 @@ function GeneralTrustCommands:handle_all(_, command, ...)
         end
     end
 
-    return success, message..' on party members'
+    return success, message..' - Requested on party members.'
 end
 
 -- // trust toggle
 function GeneralTrustCommands:handle_toggle(_)
     local success = true
-    local message = "Trust paused"
+    local message = "Paused"
 
     if self.addon_enabled:getValue() then
         success, message = self:handle_pause(_)
@@ -591,7 +591,7 @@ function GeneralTrustCommands:handle_timeout(_, num_minutes)
         success = true
         if num_minutes == 'clear' then
             _addon.timeout = nil
-            message = "Timeout cleared"
+            message = "Unload timer: OFF"
         else
             _addon.timeout = tonumber(num_minutes)
             message = string.format("Trust will unload after %d minutes", num_minutes)

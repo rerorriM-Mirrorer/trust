@@ -26,10 +26,10 @@ function WarpCommands:handle_warp(include_party)
     local message
 
     if include_party then
-        message = "Using /warp on all party members"
+        message = "Warp - Requested on party members."
         IpcRelay.shared():send_message(CommandMessage.new('/warp'))
     else
-        message = "Using /warp"
+        message = "Warp - Requested."
     end
     self.action_queue:push_action(CommandAction.new(0, 0, 0, '/warp'), true)
 

@@ -71,7 +71,7 @@ function HealCommands:handle_toggle_alliance(_)
 
     healer:set_heal_settings(cure_settings)
 
-    return true, "Alliance healing "..(cure_settings.IncludeAlliance and "enabled" or "disabled")
+    return true, "Alliance healing: "..(cure_settings.IncludeAlliance and "ON" or "OFF")
 end
 
 function HealCommands:handle_blacklist_all(_, ...)

@@ -65,7 +65,7 @@ function PuppetmasterTrustCommands:handle_equip_set(_, set_name)
         if attachment_set_name:lower() == set_name:lower() then
             self:get_job():equip_attachment_set(attachment_set:getHeadName(), attachment_set:getFrameName(), attachment_set:getAttachments(), true)
             success = true
-            message = string.format("Equipping %s", attachment_set_name)
+            message = string.format("Attachment set: %s - Requested", attachment_set_name)
             break
         end
     end

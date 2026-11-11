@@ -51,14 +51,14 @@ function PathTrustCommands:handle_record_path(_, cancel)
 
     if cancel then
         success = true
-        message = "Discarded the current recording"
+        message = "Path recording: Discarded"
 
         self.path_recorder:stop_recording()
     else
         self.path_recorder:start_recording()
 
         success = true
-        message = "Started recording the player's actions"
+        message = "Path recording: Started"
     end
 
     return success, message
@@ -76,7 +76,7 @@ function PathTrustCommands:handle_save_path(_, path_name)
         self.path_recorder:stop_recording(path_name)
 
         success = true
-        message = "Path saved to "..self.path_recorder:get_output_folder()..path_name..'.lua'
+        message = "Path saved: "..self.path_recorder:get_output_folder()..path_name..'.lua'
     else
         success = false
         message = "Not recording a path, use // trust path record"
@@ -101,7 +101,7 @@ function PathTrustCommands:handle_start_path(_, path_name, reverse)
                 message = path_name..' is only usable in '..res.zones[path:get_zone_id()].name
             else
                 success = true
-                message = "Starting path "..path_name
+                message = "Path: "..path_name
 
                 if reverse then
                     path = path:reverse()
@@ -127,7 +127,7 @@ function PathTrustCommands:handle_stop_path()
     self:get_pather():stop(true)
 
     success = true
-    message = 'Stopped the current path'
+    message = 'Path: Stopped'
 
     return success, message
 end
