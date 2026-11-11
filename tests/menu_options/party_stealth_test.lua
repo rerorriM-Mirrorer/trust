@@ -217,6 +217,13 @@ s.clients.Alice.engine:start('sneak');s.flush();s.clients.Bob.state.IpcMode.valu
 s.clients.Alice.engine:cancel();s.flush();s.step(195)
 check(s.clients.Bob.engine.lease==nil and s.clients.Bob.enabled.value,'lease expires if release IPC is lost')
 
+s=scenario({Alice={}})
+s.step(181)
+s.clients.Alice.engine:handle('Alice','100_1','hold',{})
+check(s.clients.Alice.engine.lease==nil,'expired request cannot acquire a hold after replay cache cleanup')
+s.clients.Alice.engine:handle('Alice','999999_1','hold',{})
+check(s.clients.Alice.engine.lease==nil,'future-dated hold rejected')
+
 -- Command handler is exercised from production source, not a copied parser.
 local f=assert(io.open('commands/GeneralCommands.lua'));local source=f:read('*a');f:close()
 local a=assert(source:find('function GeneralTrustCommands:handle_stealth',1,true))

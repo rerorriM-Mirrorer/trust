@@ -133,6 +133,8 @@ function Stealth:snapshot()
 end
 
 function Stealth:hold(owner, token)
+    local issued = tonumber(token:match('^(%d+)_'))
+    if not issued or os.time()-issued > 180 or issued > os.time()+5 then return false end
     if self.completed[owner..':'..token] then return false end
     if self.lease then return self.lease.owner == owner and self.lease.token == token end
     local p = windower.ffxi.get_player()
