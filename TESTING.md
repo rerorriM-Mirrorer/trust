@@ -1,3 +1,7 @@
+# Follow response ASCII punctuation - 2026-11-10
+
+The user reported that the em dash in rejected responses renders as a Japanese character in FFXI. Both rejected and unconfirmed separators now use an ASCII hyphen. Only commands/FollowCommands.lua changes at runtime. The partial-response host regression passes. Live FFXI text rendering remains pending.
+
 # Follow response message — 2026-11-10
 
 Branch `test/follow-response` starts at `237fdbff`. One runtime file, `commands/FollowCommands.lua`, removes the immediate travel Follow me/requested message and formats the existing final receipt as `[Trust] Following: X/X`. Partial responses append rejected or unconfirmed names. Counts cover other party player clients, excluding alter egos. A receipt means the client accepted the follow destination. Solo travel reports 0/0, while IpcMode Send reports unconfirmed because it cannot receive receipts.

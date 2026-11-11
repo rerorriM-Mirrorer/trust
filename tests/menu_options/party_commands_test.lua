@@ -119,8 +119,8 @@ f:finish_follow_receipts()
 assert(#responses==1)
 f.pending_follow={targets={Myrr='pending',Clairvaux='accepted'},total=2}
 f:finish_follow_receipts()
-assert(responses[2]=='[Trust] Following: 1/2 — unconfirmed: Myrr')
+assert(responses[2]=='[Trust] Following: 1/2 - unconfirmed: Myrr')
 f.pending_follow={targets={Myrr='failed'},total=1}
 f:finish_follow_receipts()
-assert(responses[3]=='[Trust] Following: 0/1 — rejected: Myrr')
+assert(responses[3]=='[Trust] Following: 0/1 - rejected: Myrr')
 print('PASS final follow count, partial names and once-only completion')

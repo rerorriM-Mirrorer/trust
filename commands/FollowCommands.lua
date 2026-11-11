@@ -111,8 +111,8 @@ function FollowTrustCommands:finish_follow_receipts()
     table.sort(rejected)
     table.sort(missing)
     local detail = #accepted..'/'..pending.total
-    if #rejected > 0 then detail = detail..' — rejected: '..table.concat(rejected, ', ') end
-    if #missing > 0 then detail = detail..' — unconfirmed: '..table.concat(missing, ', ') end
+    if #rejected > 0 then detail = detail..' - rejected: '..table.concat(rejected, ', ') end
+    if #missing > 0 then detail = detail..' - unconfirmed: '..table.concat(missing, ', ') end
     require('chat')
     windower.add_to_chat(0, '[Trust] ':color(200)..'Following: ':color(167)..detail:color(0))
 end
