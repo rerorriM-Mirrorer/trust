@@ -134,7 +134,47 @@ function M.step(action,pos,goal,radius)
     local key=mobkey(meta.key)
     local previous=detector.context and detector.context.key==key and detector.last or ''
     local following = meta.kind == 'following'
-    local blocked = suspended(following and action.follow_while_stopped == true, following)
+    local blocked, reason = suspended(following and action.follow_while_stopped == true, following)
+    if following then
+        -- Log transitions, not every frame. Input/status holds remain authoritative.
+        if reason ~= meta.follow_block_reason then
+            if reason then
+                report('following held: '..reason, {diagnostics=config.diagnostics,verbose=false}, false)
+            elseif meta.follow_block_reason then
+                report('following resumed after '..meta.follow_block_reason, {diagnostics=config.diagnostics,verbose=false}, false)
+            end
+            meta.follow_block_reason = reason
+        end
+        if not blocked then
+            local dx,dy=goal[1]-pos[1],goal[2]-pos[2]
+            local near=math.sqrt(dx*dx+dy*dy)<=math.max(radius,config.detour_distance)
+            if near then
+                -- A cosmetic slot correction must never send the follower farther
+                -- sideways than its actual destination. Keep steering directly.
+                if not meta.follow_near then
+                    report(string.format('following near goal; direct steering without detours; formation=%s distance=%.2f radius=%.2f goal=%.2f,%.2f', tostring(action.formation==true),math.sqrt(dx*dx+dy*dy),radius,goal[1],goal[2]), {diagnostics=config.diagnostics,verbose=false}, false)
+                end
+                meta.follow_near=true;meta.follow_retry=nil;detector:reset()
+                return false
+            end
+            meta.follow_near=false
+            if meta.follow_retry then
+                local retry=meta.follow_retry
+                local gx,gy=goal[1]-retry.goal[1],goal[2]-retry.goal[2]
+                local moved=math.sqrt(gx*gx+gy*gy)>=math.max(config.min_movement,radius)
+                if clock()<retry.until_time and not moved then
+                    M.last='following waiting to retry'
+                    windower.ffxi.run(false)
+                    return true
+                end
+                meta.follow_retry=nil;detector:reset()
+                report('following retrying current leader destination',config,false)
+            end
+        elseif meta.follow_retry then
+            -- Cast/menu/status time is not time spent trying to move.
+            meta.follow_retry.until_time=clock()+config.interval
+        end
+    end
     local decision,offset,started=detector:sample(key,pos,goal,radius,config,blocked)
     if decision=='normal' then
         M.last=detector.last
@@ -153,6 +193,15 @@ function M.step(action,pos,goal,radius)
                 meta.kind..': detour '..detector.context.attempts..' '..(detector.context.attempts%2==1 and 'left' or 'right')..' ('..config.detour_distance..' yalms)')
         end
         windower.ffxi.run(offset[1]-pos[1],offset[2]-pos[2],pos[3])
+    elseif decision=='failed' and following then
+        -- Ordinary following remains live. Wait briefly, then retry the current
+        -- goal; a changed leader destination can release the wait immediately.
+        meta.follow_retry={until_time=clock()+config.interval,goal={goal[1],goal[2],goal[3]}}
+        detector:reset()
+        -- Start a fresh bounded attempt budget so the queue timeout cannot
+        -- silently retire the live action during repeated recovery cycles.
+        if meta.root.set_start_time then meta.root:set_start_time(os.time()) end
+        report('following waiting to retry; target retained',config,false)
     elseif decision=='failed' and not meta.handled then
         meta.handled=true
         if meta.kind=='pulling' then

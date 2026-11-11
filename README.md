@@ -551,3 +551,8 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - `//trust mount all` chooses from your state: mounted requests dismount everywhere; on foot requests mounting Raptor. Clients already in the desired state do nothing.
 - `//trust mount all Raptor` always requests mounting; `//trust mount dismount all` always requests dismounting. Names with spaces are supported. All means receiving Trust clients, including clients outside the party.
 - Group requests continue when the issuer cannot comply locally. Known local failures are reported; request feedback does not claim confirmed server completion.
+
+### November 11, 2026 - Recoverable follow
+
+- Ordinary following avoids recovery detours for small destination corrections and retries after farther obstruction instead of permanently pausing. Recorded-path and pull failure behavior is preserved.
+- Recovery diagnostics record near-goal steering and follow blocker/retry transitions. Existing steep-drop height limits remain unchanged.

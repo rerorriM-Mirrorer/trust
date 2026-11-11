@@ -170,3 +170,37 @@ for _,status in ipairs({2,3,4,33,44,47}) do
 end
 character.status=0
 print('PASS Mount/Chocobo travel, overlays, cast preference, incapacitation and non-follow status guards')
+
+-- Ordinary following must not detour away from small formation corrections.
+config.mode='Detour';config.following=true;config.verbose=false;config.interval=.5
+character.status=0;character.buffs={};info.chat_open=false;info.menu_open=false;hud=nil
+R.reset(true);local near=action();near.follow_while_stopped=true;R.tag(near,'following',nil,'leader')
+for i=1,80 do now=now+.1;assert(not R.step(near,{0,0,0},{.63,0,0},.2),'near formation correction detoured/paused')end
+assert(not near.cancelled)
+-- Far obstruction may detour, but it must not permanently cancel ordinary follow.
+R.reset(true);follower.recovery_paused=false;local old_stopped=stopped
+local renewed=0
+local far=action();far.set_start_time=function()renewed=renewed+1 end;far.follow_while_stopped=true;R.tag(far,'following',nil,'leader')
+local waiting=false
+for i=1,150 do
+ now=now+.1;R.step(far,{0,0,0},{10,0,0},.2)
+ if R.status():find('waiting',1,true)then waiting=true;break end
+end
+assert(renewed>0,'walking queue timeout budget was not renewed')
+assert(waiting and not far.cancelled and not follower.recovery_paused and stopped==old_stopped,'ordinary following permanently gave up')
+-- A moved leader resumes immediately; otherwise the bounded wait also expires.
+now=now+.1;assert(not R.step(far,{0,0,0},{12,0,0},.2),'new leader goal did not release retry wait')
+for i=1,150 do now=now+.1;R.step(far,{0,0,0},{12,0,0},.2);if R.status():find('waiting',1,true)then break end end
+now=now+config.interval+.1;assert(not R.step(far,{0,0,0},{12,0,0},.2),'timed retry did not resume')
+assert(not far.cancelled)
+-- A deliberate cast/input/status hold is still respected, even close to goal.
+follow_settings.auto_pause=true;R.casting_until=now+10
+assert(R.step(far,{0,0,0},{.63,0,0},.2));R.casting_until=0;follow_settings.auto_pause=false
+print('PASS near-goal follow without detours, recoverable far obstruction, goal/timed retry and cast guard')
+-- Recovery Pause mode still avoids detours but ordinary follow can retry.
+config.mode='Pause';R.reset(true);local gentle=action();gentle.follow_while_stopped=true;R.tag(gentle,'following',nil,'leader')
+waiting=false
+for i=1,30 do now=now+.1;R.step(gentle,{0,0,0},{12,0,0},.2);if R.status():find('waiting',1,true)then waiting=true;break end end
+assert(waiting and not gentle.cancelled)
+now=now+config.interval+.1;assert(not R.step(gentle,{0,0,0},{12,0,0},.2))
+print('PASS ordinary follow retry in recovery Pause mode')
