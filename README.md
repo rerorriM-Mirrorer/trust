@@ -361,6 +361,47 @@ the shared AHK wrapper. At installation, `trustmovement`, `xivcrossbar` and
 `trust` are sibling folders under `Windower/addons`. Trust owns the optional
 quiet follow/assist API; the companion owns movement-triggered invocation.
 
+## Party Sneak and Invisible (testing)
+
+Run one command on one party client:
+
+- `//trust sneak` prepares Sneak.
+- `//trust invisible` prepares Invisible.
+- `//trust stealth` prepares Sneak first, then Invisible.
+- `//trust stealth status` shows preparation state.
+- `//trust stealth cancel` cancels preparation; on the issuer it releases the party.
+
+Install the same testing patch on your participating clients and use IpcMode All
+(`//trust set IpcMode All`). Stand nearby, unmounted and out of combat. Trust
+briefly holds participating clients still and pauses job automation, restoring
+their previous Act/Pause and follow behavior afterward. Stick takeover and newer
+control commands take precedence. This is a one-shot preparation, with no ongoing
+travel upkeep. It does not purchase items, dismount, approach distant members or
+cancel existing protection.
+
+Available methods are Accession with Sneak/Invisible when already in Light Arts
+or Addendum: White, individual Sneak/Invisible, self Monomi/Tonko, Spectral Jig,
+and finally Silent Oil/Prism Powder from inventory/temporary inventory. Normal
+spell recasts up to 30 seconds are allowed to finish before using items. Ninja
+tools must be available; universal tools require NIN main. Spectral Jig is skipped
+when Sneak is already active. Hide and Camouflage are distinct effects and are
+not substituted for Invisible. Other event/equipment consumables are not included.
+
+Existing buffs are skipped. A caster covers others before themselves. Area
+casting is chosen only when every uncovered recipient is within a conservative
+9-yalm radius of the caster. Individual spells use a 20-yalm planning range.
+An already-invisible character is not asked to act and lose that protection;
+missing Sneak may therefore need a different caster or a manual adjustment.
+Unresponsive party members may receive spells, but cannot be asked to use their
+own items/abilities. Alter egos are excluded from travel preparation.
+
+The final `[Trust] Stealth: Covered X/X` response counts observed buffs and names
+missing coverage. Individual attempts are bounded at 15 seconds, the issuer
+stops at 180 seconds, and a receiver releases a lost session at 190 seconds.
+`//trust log` toggles existing diagnostics; `//trust log filter PartyStealth`
+limits them to provider, method, target and buff-observation messages. In-game
+behavior remains to be tested.
+
 ## Fork development changelog
 
 - **2026-10-19 — Party song gambits test 1:** remove the inherited beneficial-song
@@ -569,3 +610,8 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 ### November 11, 2026 - BRD support-job singing
 
 - Song tracking/capacity/expiry conditions find the main- or support-job Singer. BRD subjob uses one-song capacity; main-BRD capacity behavior and saved song order are unchanged.
+
+### November 11, 2026 - Party stealth preparation
+
+- Added one-shot party Sneak, Invisible and combined Stealth commands, plus status/cancel. Coordinated magic/ability methods precede oil/powder fallback; real buff observations determine coverage.
+- Preparation temporarily holds follow movement separately from manual takeover and restores prior control only if no newer control command supersedes it. No settings or ongoing travel upkeep are added.
