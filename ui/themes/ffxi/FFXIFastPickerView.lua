@@ -90,6 +90,7 @@ function FFXIFastPickerView.new(configItem, viewSize, itemsPerPage)
     end)
 
     self:getDelegate():didSelectItemAtIndexPath():addAction(function(indexPath)
+        if self.rebuilding then return end
         local item = self.visibleItems[indexPath.row]
         if self.pickOnSelect then
             self:getDelegate():deselectItemAtIndexPath(indexPath)
@@ -107,11 +108,12 @@ function FFXIFastPickerView.new(configItem, viewSize, itemsPerPage)
     end)
 
     self:getDelegate():didDeselectItemAtIndexPath():addAction(function(indexPath)
-        if self.pickOnSelect then return end
+        if self.pickOnSelect or self.rebuilding then return end
         local item = self.visibleItems[indexPath.row]
 
         local selectedItems = self.selectedItems:getValue()
-        selectedItems:remove(selectedItems:indexOf(item))
+        local index = selectedItems:indexOf(item)
+        if index then selectedItems:remove(index) end
     end)
 
     self:setRange(1, self.maxNumItems + 1)
@@ -153,6 +155,10 @@ function FFXIFastPickerView:setRange(startIndex, endIndex, shouldReload)
             or range.startIndex == self.range.startIndex and range.endIndex == self.range.endIndex) then
         return
     end
+    -- Rebuilding pages must not reinterpret old selected row indices as songs
+    -- on the new page, or remove logical selections during visual teardown.
+    self.rebuilding = true
+    self:getDelegate():deselectAllItems()
     self.range = range
 
     local visibleItems = L{}
@@ -189,6 +195,7 @@ function FFXIFastPickerView:setRange(startIndex, endIndex, shouldReload)
         self:getDelegate():setCursorIndexPath(IndexPath.new(1, 1))
     end
 
+    self.rebuilding = false
     self:layoutIfNeeded()
 end
 
@@ -320,16 +327,8 @@ function FFXIFastPickerView:onSelectMenuItemAtIndexPath(textItem, _)
 end
 
 function FFXIFastPickerView:setFilter(filter)
-    self:setRange(1, self.maxNumItems + 1, true)
-
-    local selectedValues = L(self:getDelegate():getSelectedIndexPaths():map(function(indexPath)
-        return self:getDataSource():itemAtIndexPath(indexPath):getText()
-    end)):compact_map()
-
     if self.configItem.setFilter then
-        self.configItem:setFilter(function(value)
-            return selectedValues:contains(value) or filter(value)
-        end)
+        self.configItem:setFilter(filter)
         self:setRange(1, self.maxNumItems + 1, true)
     end
 end
@@ -343,7 +342,7 @@ function FFXIFastPickerView:setSearchEnabled(searchEnabled)
 
             self.searchBarView:onSearchQueryChanged():addAction(function(_, query, _)
                 self:setFilter(function(value)
-                    return self.configItem:getTextFormat()(value):contains(query)
+                    return tostring(self.configItem:getTextFormat()(value)):lower():find(query:lower(), 1, true) ~= nil
                 end)
             end)
 

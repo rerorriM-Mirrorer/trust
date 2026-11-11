@@ -351,7 +351,7 @@ function ConfigEditor:getCellItemForConfigItem(configItem)
             local is_valid, error = configItem:getPickerValidator()(newValue)
             if not is_valid then
                 addon_system_error(error)
-                return
+                return false
             end
             if class(newValue) == 'List' then
                 self.configSettings[configItem:getKey()]:clear()
@@ -364,6 +364,7 @@ function ConfigEditor:getCellItemForConfigItem(configItem)
             addon_system_message("Your choices have been updated.")
 
             configItem:getOnConfirm()(newValue)
+            return true
         end)
         return pickerItem
     elseif configItem.__type == TextInputConfigItem.__type then

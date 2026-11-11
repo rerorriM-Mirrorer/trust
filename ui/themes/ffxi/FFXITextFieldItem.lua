@@ -12,7 +12,6 @@ function FFXITextFieldItem.new(placeholderText, validator, width, height)
     height = height or 32
 
     local buttonHeight = height
-    local textHeight = 16
 
     local centerImageItem = ImageItem.new(windower.addon_path..'assets/backgrounds/text_field_background_middle.png', width, buttonHeight)
     centerImageItem:setRepeat(150 / 10, 1)
@@ -26,7 +25,8 @@ function FFXITextFieldItem.new(placeholderText, validator, width, height)
     )
 
     local textItem = TextItem.new(placeholderText, ButtonItem.DefaultStyle)
-    textItem:setOffset(0, (buttonHeight - textHeight) / 2)
+    textItem:setOffset(0, 0)
+    textItem:setShouldTruncateText(true)
 
     local textFieldItem = TextFieldItem.new(
             textItem,

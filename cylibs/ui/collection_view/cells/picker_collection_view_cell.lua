@@ -117,10 +117,13 @@ function PickerCollectionViewCell:showPickerView()
             local pickerView = FFXIPickerView.new(configItem)
 
             pickerView:on_pick_items():addAction(function(pickerView, selectedItems)
-                self:getItem():setCurrentValue(selectedItems:map(function(item) return item end))
-                self:setItem(self:getItem())
-
-                self:getItem():getOnPickItems()(self:getItem():getCurrentValue())
+                local item = self:getItem()
+                local previous = item:getCurrentValue()
+                item:setCurrentValue(selectedItems:map(function(value) return value end))
+                if item:getOnPickItems()(item:getCurrentValue()) == false then
+                    item:setCurrentValue(previous)
+                end
+                self:setItem(item)
             end)
             return pickerView
         end, item:getPickerTitle() or "Choose", item:getPickerDescription() or "Choose one or more values.")

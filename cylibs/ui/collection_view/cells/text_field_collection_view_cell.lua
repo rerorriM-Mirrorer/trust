@@ -49,7 +49,7 @@ function TextFieldCollectionViewCell:updateCursor()
     if self:hasFocus() then
         local textView = self.textView.textView
 
-        self.cursorTextView:pos(textView:pos_x() + textView:extents(), textView:pos_y() - 1)
+        self.cursorTextView:pos(textView:pos_x() + math.min(textView:extents(), math.max(0, self.textView:getSize().width - 4)), textView:pos_y() - 1)
         self.cursorTextView:visible(textView:visible())
 
         if os.clock() - self.lastCursorUpdate >= 0.5 then
@@ -67,50 +67,50 @@ function TextFieldCollectionViewCell:updateCursor()
     end
 end
 
+-- Bound rendered text to the field artwork, reserving room for the caret.
+function TextFieldCollectionViewCell:layoutIfNeeded()
+    if not ButtonCollectionViewCell.layoutIfNeeded(self) then return false end
+    local size = self:getItem():getSize()
+    self.textView:setSize(math.max(1, math.min(self:getSize().width, size.width) - 14), self.textView:getSize().height)
+    self.textView:setNeedsLayout()
+    self.textView:layoutIfNeeded()
+    return true
+end
+
 function TextFieldCollectionViewCell:onKeyboardEvent(key, pressed, flags, blocked, resolved_key)
-    local blocked = blocked or ButtonCollectionViewCell.onKeyboardEvent(self, key, pressed, flags, blocked, resolved_key)
-    if blocked then
-        return true
-    end
-    if pressed then
-        local key = Keyboard.input():getKey(key, flags)
-        if key then
-            local textItem = self:getItem():getTextItem()
-            if textItem and not self:getKeyBlacklist():contains(key) then
-                local currentText = textItem:getText()
-                local newText
-                if key == "Backspace" then
-                    newText = currentText:slice(1, currentText:length()-1)
-                elseif key == "Escape" then
-                    newText = currentText
-                elseif not S{ 'LShift', 'RShift' }:contains(key) then
-                    local nextChar = key:lower()
-                    if S{ 'Minus', 'Numpad-' }:contains(key) then
-                        nextChar = '-'
-                    elseif key == '"' then
-                        nextChar = "'"
-                    end
-                    if flags == 1 then
-                        nextChar = nextChar:ucfirst()
-                    end
-                    newText = (currentText..nextChar):ucfirst()
-                else
-                    newText = currentText
-                end
-                if self:getItem():isValid(newText) then
-                    textItem:setText(newText)
-                    self:setNeedsLayout()
-                    self:layoutIfNeeded()
-                end
-            end
+    if blocked then return true end
+    local item = self:getItem()
+    if pressed and key == 28 and item.onTextSubmit then item.onTextSubmit();return true end
+    if pressed and key == 1 and item.onTextCancel then item.onTextCancel();return true end
+    if ButtonCollectionViewCell.onKeyboardEvent(self, key, pressed, flags, blocked, resolved_key) then return true end
+    if not pressed then return true end
+    local name = Keyboard.input():getKey(key, flags)
+    local textItem = item:getTextItem()
+    if not name or not textItem then return true end
+    local currentText = textItem:getText()
+    local newText
+    if name == 'Backspace' then
+        newText = currentText:sub(1, -2)
+    elseif flags == 0 or flags == 1 then
+        -- Keyboard names (Up, Down, Shift, Control...) are never characters.
+        local punctuation = {Minus='-', ['Numpad-']='-', ['Numpad+']='+', ['Numpad/']='/', Equals='='}
+        local char = punctuation[name] or name
+        if #char == 1 and char:byte() >= 32 and char:byte() <= 126 then
+            if char:match('%a') then char = flags == 1 and char:upper() or char:lower() end
+            if char == '"' and flags == 0 then char = "'" end
+            newText = currentText..char
         end
-        return true
+    end
+    if newText and item:isValid(newText) then
+        textItem:setText(newText)
+        self:setNeedsLayout()
+        self:layoutIfNeeded()
     end
     return true
 end
 
 function TextFieldCollectionViewCell:getKeyBlacklist()
-    return S{ 'Left', 'Right', 'Escape', 'LShift', 'RRhift', 'Enter' }
+    return S{ 'Left', 'Right', 'Up', 'Down', 'Escape', 'LShift', 'RShift', 'LControl', 'RControl', 'Enter' }
 end
 
 function TextFieldCollectionViewCell:acceptsTextInput()
