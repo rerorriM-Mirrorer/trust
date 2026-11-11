@@ -58,12 +58,9 @@ function FollowTrustCommands:handle_travel()
     windower.ffxi.follow()
     windower.ffxi.run(false)
     local ok,message = command_feedback.run(true, function()
-        return self:handle_follow_me()
+        return self:handle_follow_me(true)
     end)
     if ok == false then return false,message end
-    require('chat')
-    windower.add_to_chat(0, '[Trust] ':color(200)..'Follow me':color(167)
-        ..' -> ':color(200)..'requested':color(0))
     return true
 end
 
@@ -113,12 +110,11 @@ function FollowTrustCommands:finish_follow_receipts()
     table.sort(accepted)
     table.sort(rejected)
     table.sort(missing)
-    local detail = #accepted..'/'..pending.total..' accepted'
-    if #rejected > 0 then detail = detail..'; rejected: '..table.concat(rejected, ', ') end
-    if #missing > 0 then detail = detail..'; unconfirmed: '..table.concat(missing, ', ') end
+    local detail = #accepted..'/'..pending.total
+    if #rejected > 0 then detail = detail..' — rejected: '..table.concat(rejected, ', ') end
+    if #missing > 0 then detail = detail..' — unconfirmed: '..table.concat(missing, ', ') end
     require('chat')
-    windower.add_to_chat(0, '[Trust] ':color(200)..'Follow responses':color(167)
-        ..' -> ':color(200)..detail:color(0))
+    windower.add_to_chat(0, '[Trust] ':color(200)..'Following: ':color(167)..detail:color(0))
 end
 
 function FollowTrustCommands:check_follow_receipts()
@@ -136,7 +132,7 @@ function FollowTrustCommands:check_follow_receipts()
 end
 
 -- // trust follow me
-function FollowTrustCommands:handle_follow_me()
+function FollowTrustCommands:handle_follow_me(response_only)
     if not L{'All', 'Send'}:contains(state.IpcMode.value) then
         return false, 'IpcMode must be set to All or Send to use this command'
     end
@@ -150,11 +146,22 @@ function FollowTrustCommands:handle_follow_me()
     -- and reports that the remote state cannot be verified.
     if state.IpcMode.value ~= 'All' then
         self.pending_follow = nil
+        if response_only == true then
+            require('chat')
+            windower.add_to_chat(0, '[Trust] ':color(200)..'Following: ':color(167)
+                ..'unconfirmed (IpcMode Send)':color(0))
+            return true
+        end
         return true, 'Follow request sent; confirmations require IpcMode All'
     end
     local recipients = self:get_receipt_recipients()
     if #recipients == 0 then
         self.pending_follow = nil
+        if response_only == true then
+            require('chat')
+            windower.add_to_chat(0, '[Trust] ':color(200)..'Following: ':color(167)..'0/0':color(0))
+            return true
+        end
         return true, 'Follow request sent; no other player clients to confirm'
     end
     self.follow_request_sequence = self.follow_request_sequence + 1

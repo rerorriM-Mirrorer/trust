@@ -104,8 +104,23 @@ followenv.windower={ffxi={follow=function()call('unfollow')end,run=function(v)as
  add_to_chat=function(_,s)assert(s:find('requested',1,true));call('ack')end}
 followenv.require=function(n)if n=='chat' then return{} end return{reset=function()end}end
 methods('commands/FollowCommands.lua','function FollowTrustCommands:handle_travel()','-- // trust follow me',followenv)
-f.handle_follow_me=function()assert(Feedback.is_quiet());call('request');return true end
-assert(f:handle_follow_party_member(nil));assert(table.concat(travelCalls,',')=='pause,unfollow,run off,request,ack')
-travelCalls={};assert(f:handle_travel());assert(#travelCalls==5,'already-stopped release skipped')
+f.handle_follow_me=function(_,response_only)assert(response_only==true);assert(Feedback.is_quiet());call('request');return true end
+assert(f:handle_follow_party_member(nil));assert(table.concat(travelCalls,',')=='pause,unfollow,run off,request')
+travelCalls={};assert(f:handle_travel());assert(#travelCalls==4,'already-stopped release skipped')
 followenv.state.IpcMode.value='Receive';travelCalls={};assert(not f:handle_travel());assert(#travelCalls==0)
-print('PASS bare travel route, explicit local release, quiet Follow Me request, one acknowledgment and IPC guard')
+print('PASS bare travel route, explicit local release, quiet Follow Me request, response-only output and IPC guard')
+
+local responses={}
+followenv.windower.add_to_chat=function(_,message)responses[#responses+1]=message end
+f.pending_follow={targets={Myrr='accepted',Clairvaux='accepted'},total=2}
+f:finish_follow_receipts()
+assert(responses[1]=='[Trust] Following: 2/2' and f.pending_follow==nil)
+f:finish_follow_receipts()
+assert(#responses==1)
+f.pending_follow={targets={Myrr='pending',Clairvaux='accepted'},total=2}
+f:finish_follow_receipts()
+assert(responses[2]=='[Trust] Following: 1/2 — unconfirmed: Myrr')
+f.pending_follow={targets={Myrr='failed'},total=1}
+f:finish_follow_receipts()
+assert(responses[3]=='[Trust] Following: 0/1 — rejected: Myrr')
+print('PASS final follow count, partial names and once-only completion')

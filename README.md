@@ -521,3 +521,5 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - White Mage menu Test 2 fixes focus teardown after selecting a buff, guards fixed command menus from missing scrollbars, and gives sibling views unique IDs during menu rebuilds.
 
 - All-job menu test extends the direct role pickers and adds one-confirm Gambit and condition picking with command-column focus on return.
+
+- Travel following now reports only the final [Trust] Following: X/X acknowledgment count.

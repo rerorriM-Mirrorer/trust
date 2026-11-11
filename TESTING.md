@@ -1,3 +1,9 @@
+# Follow response message — 2026-11-10
+
+Branch `test/follow-response` starts at `237fdbff`. One runtime file, `commands/FollowCommands.lua`, removes the immediate travel Follow me/requested message and formats the existing final receipt as `[Trust] Following: X/X`. Partial responses append rejected or unconfirmed names. Counts cover other party player clients, excluding alter egos. A receipt means the client accepted the follow destination. Solo travel reports 0/0, while IpcMode Send reports unconfirmed because it cannot receive receipts.
+
+Host command regression and syntax checks passed. Live stick travel and IPC checks are pending. Switch characters and move once, check there is one final response, then repeat with an unavailable recipient. Keep the existing bounded retry and timeout. Install the one-file overlay over the all-job menus batch, unload/reload Trust, and keep data. Roll back by restoring FollowCommands.lua from 237fdbff.
+
 # All-job role and Gambit menus — 2026-11-07
 
 Testing branch `test/all-job-gambit-menus` starts at WHM Focus Test 2 (`9f732c7d`). The earlier WHM one-confirm role pickers now apply across jobs that expose those roles. Buffs start with Self-eligible choices and support compatible Self, Ally and Both in Edit. Debuffs, Nukes and Pulling Actions use the Enemy picker. Healing and Ailments go straight to their presets and retain role-specific configuration and blacklist controls. Dedicated role lists omit the Shortcuts button.
