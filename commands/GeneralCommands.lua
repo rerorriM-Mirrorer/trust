@@ -58,8 +58,8 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     return self
 end
 
-function GeneralTrustCommands:handle_fan(_, value, ...)
-    if select('#', ...) > 0 or (value ~= nil and
+function GeneralTrustCommands:handle_fan(_, value, quiet, ...)
+    if (quiet ~= nil and quiet ~= '--quiet') or (quiet and value == nil) or select('#', ...) > 0 or (value ~= nil and
             (type(value) ~= 'string' or not ({on=true,off=true})[value:lower()])) then
         return false, 'Usage: //trust fan [on|off]'
     end
@@ -71,7 +71,16 @@ function GeneralTrustCommands:handle_fan(_, value, ...)
         follow.fan_out = enabled
         owner:saveSettings(true)
     end
-    return true, 'Fan Out '..(enabled and 'On' or 'Off')
+    if quiet ~= '--quiet' then self:show_fan_feedback(enabled) end
+    return true
+end
+
+function GeneralTrustCommands:show_fan_feedback(enabled, detail)
+    require('chat')
+    local label = enabled and 'ON' or 'OFF'
+    local suffix = detail and ' - '..detail or ''
+    windower.add_to_chat(0, '[Trust] ':color(200)..'Fan Out ':color(167)
+        ..label:color(enabled and 158 or 167)..suffix:color(0))
 end
 
 function GeneralTrustCommands:handle_fan_all(_, value, ...)
@@ -82,14 +91,16 @@ function GeneralTrustCommands:handle_fan_all(_, value, ...)
     local enabled = value == nil and addon_settings:getSettings().follow.fan_out == false or
         (type(value) == 'string' and value:lower() == 'on')
     local setting = enabled and 'on' or 'off'
-    local success, message = self:handle_fan(_, setting)
+    local success, message = self:handle_fan(_, setting, '--quiet')
     if not success then return success, message end
     if state.IpcMode.value ~= 'All' and state.IpcMode.value ~= 'Send' then
-        return true, message..' locally - IPC sending unavailable'
+        self:show_fan_feedback(enabled, 'Local only. IPC sending unavailable.')
+        return true
     end
     -- Relay the issuer's chosen state so clients with different settings agree.
     IpcRelay.shared():send_message(CommandMessage.new('trust fan '..setting..' --quiet'))
-    return true, message..' - requested on all receiving clients'
+    self:show_fan_feedback(enabled, 'Requested on all clients.')
+    return true
 end
 
 function GeneralTrustCommands:handle_combat(_, mode)

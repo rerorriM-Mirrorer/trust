@@ -1,3 +1,9 @@
+# Fan relay and feedback fix - 2026-11-10
+
+The user saw Usage errors on fanall recipients because the new general fan handler rejected the relay's trailing --quiet flag. The handler now accepts that flag only with an explicit on/off state. Recipient success stays quiet. The issuer prints [Trust] Fan Out ON/OFF - Requested on all clients., with green ON and red OFF and standard label colors. IPC-disabled feedback states local-only scope.
+
+The original test only inspected outgoing text and missed recipient parsing. Regression now executes the actual TrustCommands dispatcher with the exact fan on --quiet arguments and checks quiet application and formatted feedback. Host checks pass. Live multiclient acceptance is pending. Install GeneralCommands.lua over the current testing build and reload on every receiving client. Compare fanall off and fanall on and confirm both actual formation settings and one issuer message. Earlier peaceful-travel observation: Myrr rejoined the group after Fan Out was disabled; the underlying oscillation cause remains under investigation.
+
 # Idle following with input overlays - 2026-11-10
 
 Based on 772e6ce5, branch `test/idle-follow-input`. Idle following now continues while chat input or Trust's menu is open. Its cast event wait honors Follow settings' Pause for Spells and Abilities (follow.auto_pause), whose factory default is false. Other movement kinds retain their input and casting guards. Existing saved auto_pause values remain effective. This affects movement; moving can still interrupt a cast. The leader can stop to allow casting.
