@@ -531,3 +531,9 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - Song slots accept None anywhere and dummy songs can be cleared completely. Singing skips blanks in slot order and respects capacity; an empty set uses no singing abilities.
 - Song editing shows the set name in its window header, remembers the edited set and saves confirmed choices to that set. Dummy songs remain shared across sets. Clear dummy selections to remove them; Reset still restores factory settings.
 - Existing song choices and character settings are unchanged by installation. Back up settings before testing, since older builds do not support saved None slots.
+
+### November 11, 2026 - BRD picker polish
+
+- Clear replaces factory Reset in song editing and clears only the selected main-song slot. Removed the editor's Help action. Refresh threshold now allows 1-180 seconds.
+- Dummy selections remain separate from main songs and shared across sets. Picker selections survive paging/filtering; invalid confirmations retain the prior value.
+- Filter uses printable text input, bounded field/caret layout, Enter to apply, Escape to cancel and case-insensitive literal matching.

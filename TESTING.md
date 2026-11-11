@@ -1,3 +1,23 @@
+# BRD picker and Filter polish - 2026-11-11
+
+Branch `test/brd-picker-polish`, based on published `59e194a3`. This follows the user's report that confirming Mage's Ballad and Advancing March in Dummy Songs did not change the main song list and reopening often highlighted Scop's Operetta. Dummy Songs is a separate shared list, not the main five-slot songset. A dummy that overlaps a main song's buff is still rejected. That remains intentional. The exact live sequence behind the reported highlight has not been captured.
+
+Confirmed code issues: multi-picker cells changed their displayed selection before validation; page rebuilding reused selected row indices and emitted deselection callbacks against refreshed values. Rejected choices now restore the prior cell value. Fast-picker paging/filtering separates logical selected values from visual row rebuilds, guards missing deselection indices, and preserves selections outside the filtered page. Dummy picker rows show song names directly and its title identifies the shared scope. An accepted dummy choice still saves through the named editor's existing writer.
+
+The BRD editor removes the Help/Reset children and exposes Clear. Clear sets only the selected main Song 1-5 slot to None, saves it and reopens at that slot. It is unavailable on the Dummy Songs row. It does not clear the entire set or restore factory songs. Preview, Pianissimo, Marcato and existing song choices/order are unchanged. The Config refresh threshold range is now 1-180 seconds; existing values/defaults are retained. This is seconds remaining before refresh, not a singing delay. Historical Reset instructions below apply to older batches.
+
+Filter uses a 260-pixel field in a 300-pixel window, a 24-character query bound and Enter/Escape instructions. Shared text fields accept printable characters rather than keyboard names, preserve typed letter case, reject Ctrl/Alt typing shortcuts as text, constrain rendered text/caret to the artwork and remove the duplicate vertical text offset. Enter applies the query; Escape cancels the pending search edit. Matching is case-insensitive and literal. Paging/filter changes retain selected values even when hidden. Native text rendering and keyboard release behavior still require Windower testing.
+
+Host: 41 menu/movement/pull/Aggro suites pass on Lua 5.4 with Windower literal-method normalization. New production-method tests cover arrows/modifiers not becoming text, character case, Backspace, query limits, submit/cancel callbacks, paging selection preservation, rejected/accepted multi-picker choices and Clear affecting one slot. Existing BRD save/reopen and compact-capacity tests pass. Changed Lua files compile, whitespace checks pass, and the production shared-settings writer passes against real host SQLite. No live FFXI/UI rendering or Lua 5.1 runtime verification was available.
+
+Install this patch over the BRD optional-song batch (`59e194a3`), with Trust unloaded and a backup of addon/settings. Merge trust/ and reload; keep data/. PATCH-BUILD.json identifies the published source. WORKFLOW.md, TESTING.md and README.md are inside trust/. Restore the changed files from the previous batch to roll back; no settings migration is introduced.
+
+Live checks:
+1. Open Dummy Songs, Clear All, choose two songs with buffs different from the main set and Confirm. Reopen and verify those exact selections. Repeat while paging and filtering. Try a conflicting dummy and confirm a visible validation error with the old value retained.
+2. Select a main Song slot, use Clear, and verify just that slot becomes None and remains selected. Reopen/reload and check other slots, dummy choices and other sets remain unchanged.
+3. Filter by ballad and BALLAD, use Backspace, then Up/Down/modifier keys. Confirm no key names appear in the query. Enter applies; Escape cancels a new edit. Type a long query and inspect text, caret, field alignment and native input isolation.
+4. Set the refresh threshold to 1, confirm/reopen, then restore the desired value. Verify Preview, Pianissimo and Marcato retain their prior behavior.
+
 # BRD optional song slots and named editing - 2026-11-11
 
 Repository `rerorriM-Mirrorer/trust`, branch `test/brd-empty-songs`, based on published `ef0d2d21`. The testing delivery identifies its published commit in PATCH-BUILD.json. No character profiles, default song choices or song order are changed by installation. Follow double-back investigation remains separate and unresolved.
