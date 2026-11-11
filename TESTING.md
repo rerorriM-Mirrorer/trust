@@ -1,3 +1,9 @@
+# Idle following with input overlays - 2026-11-10
+
+Based on 772e6ce5, branch `test/idle-follow-input`. Idle following now continues while chat input or Trust's menu is open. Its cast event wait honors Follow settings' Pause for Spells and Abilities (follow.auto_pause), whose factory default is false. Other movement kinds retain their input and casting guards. Existing saved auto_pause values remain effective. This affects movement; moving can still interrupt a cast. The leader can stop to allow casting.
+
+Host recovery regression passed for chat, Trust menu, cast pause on/off and non-idle scopes. Live Windower/FFXI validation is pending. Compare ordinary following and Fan Out while typing and viewing Trust's menu. With auto_pause Off, start a cast while the leader keeps moving; with it On, verify walking pauses and resumes after completion/interruption. Install recovery.lua over the latest Fan command batch and reload. Restore it from 772e6ce5 to roll back.
+
 # Fan Out commands - 2026-11-10
 
 Branch `test/fan-commands` starts at `737ea965`. The user has observed the follower backtracking during peaceful travel and wants a quick way to compare Fan Out on and off. This batch adds `//trust fan [on|off]` and `//trust fanall [on|off]`. Bare fan toggles the local saved preference. Bare fanall chooses the inverse of the issuer's preference and sends that explicit state to every receiving Trust client, including clients outside the current party. Explicit on/off are idempotent. The existing settings event updates live followers. If IPC sending is disabled, fanall applies locally and reports local scope. Remote requests are unconfirmed. Both commands commit eligible menu drafts before changing the saved setting.

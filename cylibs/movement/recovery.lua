@@ -89,7 +89,8 @@ end
 local function suspended(ordinary_follow, following)
     local info=windower.ffxi.get_info();local character=windower.ffxi.get_player()
     if not info or not info.logged_in or not character then return true, 'character unavailable' end
-    if info.chat_open then return true, 'chat input open' end
+    local idle_follow = following and character.status == 0
+    if info.chat_open and not idle_follow then return true, 'chat input open' end
     -- An idle follower can travel with an ordinary inventory window open.
     if info.menu_open and not (following and character.status == 0) then
         -- Windower exposes a flag rather than a menu ID. Recognize the
@@ -101,8 +102,10 @@ local function suspended(ordinary_follow, following)
     end
     if character.status~=0 and character.status~=1 then return true, 'character status '..tostring(character.status) end
     if not ordinary_follow and addon_enabled and not addon_enabled:getValue() then return true, 'Trust paused' end
-    if clock()<(M.casting_until or 0) then return true, 'cast completion pending' end
-    if hud and hud.trustMenu and hud.trustMenu:isVisible() then return true, 'Trust menu open' end
+    local follow_settings = addon_settings and addon_settings:getSettings().follow or {}
+    local pause_for_cast = not idle_follow or follow_settings.auto_pause == true
+    if pause_for_cast and clock()<(M.casting_until or 0) then return true, 'cast completion pending' end
+    if not idle_follow and hud and hud.trustMenu and hud.trustMenu:isVisible() then return true, 'Trust menu open' end
     for _,id in ipairs(character.buffs or {}) do
         local buff=res and res.buffs[id]
         if buff and ({Sleep=true,Stun=true,Petrification=true,Terror=true,Bind=true,Lullaby=true})[buff.en] then

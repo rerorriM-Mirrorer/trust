@@ -125,3 +125,27 @@ require('cylibs/ui/chat/status_message').show('Recovery','path detour')
 assert(colored=='<200>[Trust] <167>Recovery <200>-> <0>path detour')
 string.color=originalColor
 print('PASS verbose detour/retry messages, opt-out and BattleStations fragment colors')
+
+-- Idle follow ignores input overlays and honors the existing cast pause setting.
+local follow_settings={auto_pause=false}
+addon_settings.getSettings=function()return{movement={recovery=config},follow=follow_settings}end
+character.status=0;character.buffs={}
+info.chat_open=true
+assert(not R.suspended(true,true))
+assert(R.suspended(false,false))
+info.chat_open=false
+hud={trustMenu={isVisible=function()return true end}}
+assert(not R.suspended(true,true))
+assert(R.suspended(false,false))
+hud=nil
+R.casting_until=now+10
+assert(not R.suspended(true,true))
+follow_settings.auto_pause=true
+assert(R.suspended(true,true))
+follow_settings.auto_pause=false
+assert(R.suspended(false,false))
+character.status=1
+assert(R.suspended(true,true))
+R.casting_until=0
+character.status=0
+print('PASS idle follow chat/menu bypass and opt-in casting pause with other movement guards retained')
