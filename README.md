@@ -545,3 +545,9 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 ### November 11, 2026 - Autosuggest command
 
 - `//trust autosuggest [on|off]` toggles or explicitly sets saved local command suggestions. New settings default to Off; existing explicit preferences are preserved.
+
+### November 11, 2026 - Mount all
+
+- `//trust mount all` chooses from your state: mounted requests dismount everywhere; on foot requests mounting Raptor. Clients already in the desired state do nothing.
+- `//trust mount all Raptor` always requests mounting; `//trust mount dismount all` always requests dismounting. Names with spaces are supported. All means receiving Trust clients, including clients outside the party.
+- Group requests continue when the issuer cannot comply locally. Known local failures are reported; request feedback does not claim confirmed server completion.
