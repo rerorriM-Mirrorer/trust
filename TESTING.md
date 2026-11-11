@@ -1,3 +1,15 @@
+# Mounted following - 2026-11-11
+
+Branch `test/mounted-follow`, based on published `92fd4fcc`. The movement adapter previously accepted only Idle/Engaged status and the formation gate accepted only Idle. Windower's current Resources `resources_data/statuses.lua` (blob `504e81b4704656a0bb974042d56019915ab81148`) identifies status 5 as Chocobo and 85 as Mount. These statuses now pass movement recovery only for following. Mounted ordinary following shares idle travel's native-menu/chat/Trust-menu exceptions and honors the existing cast pause preference. Fan Out accepts both mounted statuses. Mounting and dismounting restart Always following through the existing status-change handler.
+
+Pulling and recorded-path status guards are unchanged. Explicit follow Off/manual pause, pull movement ownership, death/resting/event/crafting status and incapacitating buffs still block their existing movement paths. Retreat keeps its close-follow behavior and does not fan out. No settings/defaults or BRD code change in this batch. The broader peaceful-travel double-back investigation remains unresolved.
+
+Host verification: all 41 menu/movement/pulling/Aggro suites pass on Lua 5.4 with existing Windower syntax normalization. Added regression covers both mounted status IDs, Fan Out and ordinary follow, overlays, opt-in cast pause, Bind, other blocked statuses, pull/manual ownership and mounting/dismounting follow restarts. Both new mounted test extensions fail against their previous runtime files, then pass with the patch. All four changed Lua files compile and whitespace checks pass. These are host simulations/static checks; live mounted movement and native FFXI status transitions remain unverified. No Lua 5.1 runtime was available.
+
+Install with Trust unloaded, back up the addon, merge trust/ over the current testing build and reload. Only recovery.lua and follower.lua change at runtime. The two regression files and README.md, WORKFLOW.md and this cumulative TESTING.md are included inside trust/. PATCH-BUILD.json identifies the published source. Restore the two runtime files from `92fd4fcc` to roll back. Keep data/.
+
+Live check: establish following, mount both leader and follower, and travel with Fan Out on and off. Mount/dismount the follower while the leader keeps moving. Repeat with chat/native inventory/Trust menu open and while Paused. Check manual stick takeover still releases movement. If available, repeat with a rental Chocobo. Confirm ordinary unmounted following and Retreat retain their behavior.
+
 # BRD picker and Filter polish - 2026-11-11
 
 Branch `test/brd-picker-polish`, based on published `59e194a3`. This follows the user's report that confirming Mage's Ballad and Advancing March in Dummy Songs did not change the main song list and reopening often highlighted Scop's Operetta. Dummy Songs is a separate shared list, not the main five-slot songset. A dummy that overlaps a main song's buff is still rejected. That remains intentional. The exact live sequence behind the reported highlight has not been captured.

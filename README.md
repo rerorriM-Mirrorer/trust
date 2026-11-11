@@ -537,3 +537,7 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - Clear replaces factory Reset in song editing and clears only the selected main-song slot. Removed the editor's Help action. Refresh threshold now allows 1-180 seconds.
 - Dummy selections remain separate from main songs and shared across sets. Picker selections survive paging/filtering; invalid confirmations retain the prior value.
 - Filter uses printable text input, bounded field/caret layout, Enter to apply, Escape to cancel and case-insensitive literal matching.
+
+### November 11, 2026 - Mounted following
+
+- Ordinary following and Fan Out support Mount and Chocobo status, including idle travel's input-overlay behavior. Mounting/dismounting resumes Always following. Pulling/path status restrictions and movement ownership are preserved.
