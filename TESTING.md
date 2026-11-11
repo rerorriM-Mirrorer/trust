@@ -1,3 +1,21 @@
+# BRD optional song slots and named editing - 2026-11-11
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/brd-empty-songs`, based on published `ef0d2d21`. The testing delivery identifies its published commit in PATCH-BUILD.json. No character profiles, default song choices or song order are changed by installation. Follow double-back investigation remains separate and unresolved.
+
+The editor offers None in each of its five real-song slots. Repeated None slots and zero dummy songs are valid. Saved empty slots use the literal string 'None' so a missing table entry cannot accidentally truncate later slots or be mistaken for a missing default. Runtime also tolerates nil holes and compacts only the active singing list in numeric slot order. Normal singing and missing-song Pianissimo use the compact ordinal for capacity checks. With no dummy songs, real songs no longer wait on the dummy activation threshold. Existing dummy behavior remains when configured. An entirely empty set queues no singing abilities. The specialized four-real/two-dummy gear rehearsal reports its requirements instead of indexing absent songs.
+
+The edited songset name appears in the editor window header and menu information title. The songset list initially focuses the active set, remembers the set being edited on return, and binds each open editor's save callbacks to that named set. Confirmed song-field edits and dummy-picker confirmations save the draft without moving focus out of the editor. Dummy choices remain shared across sets, as before. Reset still intentionally restores factory settings; it is not a clear operation. To remove dummy songs, deselect all in Dummy Songs and Confirm.
+
+Host verification: 40 menu/movement/pulling/Aggro suites passed, including a new production-menu-callback and singer-builder regression. The regression covers nil holes, None anywhere, empty and preserved dummy lists, duplicates and conflicting dummy buffs, named window title, save/reopen isolation, initial and remembered songset selection, song priority, compact capacity gates, missing-song Pianissimo and an entirely empty set. It fails against the old mandatory-five-song validator. Changed Lua files compile on host Lua 5.4 with existing Windower literal-method normalization. The production shared settings writer also passed against host SQLite. These are simulated/static checks, not live FFXI or native UI tests. Lua 5.1 and Windower rendering were not available here.
+
+Install: unload Trust, back up the current addon and character settings, merge this ZIP's trust/ folder over the latest testing installation, then reload. Keep data/. All six runtime Lua files, including the new helper, must be installed together. WORKFLOW.md, this cumulative TESTING.md, README.md and the new regression are included inside trust/. To roll back, restore the backed-up files and any profiles edited to contain None, since older singing code cannot consume those placeholders.
+
+Live checks:
+1. Edit a non-Default set. Confirm its name at the top, change one song, return to the set list and reopen Edit. Confirm both the selected set and saved song remain correct. Check Default is unchanged and repeat after reload.
+2. Clear every dummy selection and Confirm. Reopen to verify None. Re-add a dummy on a disposable profile, save a real-song change and confirm the dummy remains selected.
+3. In a disposable set, use Mage's Ballad, Valor Minuet and Army's Paeon II with other slots None, including a None between songs. Verify the first two are sung with two-song capacity and the third only when the existing capacity detector permits three. Do not change live character order as part of installation.
+4. Verify an all-None set is quiet, ordinary full songsets retain dummy behavior, and empty slots can be revisited without errors. Check keyboard/controller focus and optional missing-song Pianissimo.
+
 # Fan relay and feedback fix - 2026-11-10
 
 The user saw Usage errors on fanall recipients because the new general fan handler rejected the relay's trailing --quiet flag. The handler now accepts that flag only with an explicit on/off state. Recipient success stays quiet. The issuer prints [Trust] Fan Out ON/OFF - Requested on all clients., with green ON and red OFF and standard label colors. IPC-disabled feedback states local-only scope.

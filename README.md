@@ -525,3 +525,9 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - Travel following now reports only the final [Trust] Following: X/X acknowledgment count.
 
 - Added //trust fan [on|off] for local Fan Out and //trust fanall [on|off] to request the same setting across receiving clients. Bare commands toggle from the issuer's current setting.
+
+### November 11, 2026 - BRD optional songs
+
+- Song slots accept None anywhere and dummy songs can be cleared completely. Singing skips blanks in slot order and respects capacity; an empty set uses no singing abilities.
+- Song editing shows the set name in its window header, remembers the edited set and saves confirmed choices to that set. Dummy songs remain shared across sets. Clear dummy selections to remove them; Reset still restores factory settings.
+- Existing song choices and character settings are unchanged by installation. Back up settings before testing, since older builds do not support saved None slots.
