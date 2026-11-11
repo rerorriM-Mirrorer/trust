@@ -1,3 +1,15 @@
+# Fan Out without height cutoffs - 2026-11-11
+
+Branch `test/fan-height`, based on published `96ec065f`. User requests no elevation cutoff while Fan Out is on. Always-follow travel with Fan Out enabled now keeps its formation destination across any height difference, removing the former one-yalm formation cutoff. Its direct-follow fallback (for example missing formation membership) also bypasses the former six-yalm height cutoff. The 35-yalm horizontal range is unchanged. Fan Out off, recorded Path mode and Retreat retain their existing height behavior; Retreat still suppresses Fan Out. No settings/defaults or pulling/combat behavior changes.
+
+This changes destination eligibility, not terrain navigation. It continues using existing running/formation/recovery behavior. Historical descriptions of the one/six-yalm limits below apply to the earlier batches; the six-yalm limit still applies outside active Fan Out travel.
+
+Host: all 43 menu/movement/pull/Aggro suites pass on Lua 5.4 with existing Windower literal-method normalization. The production follower regression covers positive/negative heights of 6 and 20 yalms, continued formation movement, direct-follow fallback and retained fan-off/Path/Retreat behavior. Updated height regression fails against the former follower. Both changed Lua files compile and whitespace checks pass. Live ledges/stairs, mounted travel and native FFXI movement remain pending; Lua 5.1 was unavailable.
+
+Install: unload Trust, back up the addon, merge trust/ over the latest follow-recovery testing build, then reload. Only follower.lua changes at runtime. The regression, README.md, WORKFLOW.md and cumulative TESTING.md are inside trust/. PATCH-BUILD.json identifies the published source. Restore follower.lua from `96ec065f` to roll back; keep data/.
+
+Live check: with Fan Out on, walk the leader down a traversable drop and across stairs while followers remain within horizontal range; confirm following continues through the elevation difference. Repeat mounted and unmounted. Compare Fan Out off and verify normal flat travel, Pause, Retreat and recorded paths retain their prior behavior.
+
 # Recoverable ordinary follow - 2026-11-11
 
 Branch `test/follow-recovery`, based on published `e61c7f96`. User-provided `recovery-Myrr.log` contains 260 entries over November 1-11: 129 detour entries, 17 permanent follow-pause entries and 42 detours starting less than one horizontal yalm from their logged destination. Latest logged detour at 03:32:02 starts 0.63 yalms away. This confirms recovery can contribute to apparent doubling back and explicitly stopped following, but the log does not identify Fan Out state or prove every observed reversal has this cause. Original log is retained as supplied; timestamps are its own recorded values.

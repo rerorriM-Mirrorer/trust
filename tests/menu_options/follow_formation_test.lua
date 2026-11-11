@@ -52,9 +52,9 @@ self.manual_pause=true;local paused=created;self:check_distance();assert(created
 queue.current_action=nil;self.fan_out=false;self:check_distance();assert(not dest.formation and dest.distance==1)
 queue.current_action=nil;self.fan_out=true;self.state_var.value='Path';self:check_distance();assert(not dest.formation)
 queue.current_action=nil;self.state_var.value='Always';point.status=1;self:check_distance();assert(not dest.formation)
--- A height change retires the active slot before returning to plain following.
+-- Fan Out continues to update the same live slot across height changes.
 point.status=0;queue.current_action=nil;self:check_distance();assert(dest.formation)
-point.z=-2;self:check_distance();assert(not dest.formation);point.z=0
+point.z=-2;self:check_distance();assert(dest.formation);point.z=0
 -- Near enough to the slot: no new walk, even though outside its arrival radius.
 point.status=0;point.x=10.4;point.y=.7;queue.current_action=nil
 local goal,radius=self.formation:goal(10,1,{11,0,0},ids,20,1)
@@ -74,6 +74,27 @@ for _,status in ipairs({5,85}) do
     local count=created;self.manual_pause=true;self:check_distance();assert(created==count);self.manual_pause=false
     self.action_queue.pull_action={};self:check_distance();assert(created==count);self.action_queue.pull_action=nil
 end
+-- Both upward and downward differences beyond the old six-yalm cutoff work.
+point.status=0;self.fan_out=true;self.state_var.value='Always'
+for _,height in ipairs({-20,-6,6,20}) do
+    point.z=height;queue.current_action=nil
+    local count=created;self:check_distance()
+    assert(created==count+1 and dest.formation,'Fan Out retained a height cutoff')
+end
+-- Missing formation membership still permits direct follow at any elevation.
+local getParty=self.get_party
+self.get_party=function()return{get_party_member_ids=function()return{10}end}end
+queue.current_action=nil;local count=created;self:check_distance()
+assert(created==count+1 and not dest.formation,'Fan Out fallback retained height cutoff')
+self.get_party=getParty
+-- Fan off, recorded paths and Retreat preserve the former six-yalm restriction.
+for _,mode in ipairs({'plain','path','retreat'})do
+    queue.current_action=nil;self.fan_out=mode~='plain'
+    self.state_var.value=mode=='path' and 'Path' or 'Always'
+    self.action_queue.control_state=mode=='retreat' and 'Retreat' or 'Active'
+    count=created;self:check_distance();assert(created==count,'unrelated height behavior changed')
+end
+point.z=0;self.fan_out=true;self.state_var.value='Always';self.action_queue.control_state='Active'
 -- Mounting after combat/resting restarts a previously disabled follow queue.
 env.player={};env.res={statuses={[0]={english='Idle'},[5]={english='Chocobo'},[85]={english='Mount'},[33]={english='Resting'}}}
 env.S=function(values)return{contains=function(_,v)for _,x in ipairs(values)do if x==v then return true end end;return false end}end

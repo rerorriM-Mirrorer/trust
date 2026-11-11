@@ -556,3 +556,7 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 
 - Ordinary following avoids recovery detours for small destination corrections and retries after farther obstruction instead of permanently pausing. Recorded-path and pull failure behavior is preserved.
 - Recovery diagnostics record near-goal steering and follow blocker/retry transitions. Existing steep-drop height limits remain unchanged.
+
+### November 11, 2026 - Fan Out elevation
+
+- Always-follow travel with Fan Out on no longer has a vertical cutoff for formation or direct-follow fallback. The horizontal range remains 35 yalms. Fan Out off, recorded paths and Retreat keep their existing height behavior.

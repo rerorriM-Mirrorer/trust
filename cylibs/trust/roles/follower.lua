@@ -219,9 +219,13 @@ function Follower:check_distance()
     if player then
         local distance = player_util.distance(player_util.get_player_position(), follow_target:get_position())
         local deltaZ = math.abs(z - player.z)
+        -- Fan Out travel keeps pursuing across elevation changes. Path/Retreat
+        -- and ordinary following with Fan Out off retain their height limits.
+        local unrestricted_height = self.fan_out and self.state_var.value == 'Always'
+            and self.action_queue.control_state ~= 'Retreat'
         if self.fan_out and self.action_queue.control_state ~= 'Retreat'
                 and (self.action_queue.is_enabled ~= false or self.action_queue.control_state == 'Paused') and self.state_var.value=='Always' and (player.status==0 or player.status==5 or player.status==85)
-                and distance<self.maxfollowdistance and deltaZ<1 then
+                and distance<self.maxfollowdistance then
             local goal,radius=self.formation:goal(follow_target:get_id(),windower.ffxi.get_info().zone,
                 {x,y,z},self:get_party():get_party_member_ids(),player.id,self:get_distance())
             if goal then
@@ -229,11 +233,11 @@ function Follower:check_distance()
                 return
             end
         end
-        -- On stairs, missing membership or a mode change, retire the old slot
+        -- On missing membership or a mode change, retire the old slot
         -- before reverting to the ordinary leader/path destination.
         local current=self.walk_action_queue.current_action
         if current and current.formation then current:cancel() end
-        if distance < self.maxfollowdistance and deltaZ < 6 and (deltaZ > 1 or distance > self:get_distance()) then
+        if distance < self.maxfollowdistance and (unrestricted_height or deltaZ < 6) and (deltaZ > 1 or distance > self:get_distance()) then
             local action=RunToLocation.new(x, y, z, self:get_distance())
             action.follow_while_stopped=self.state_var.value=='Always'
             local kind=self.state_var.value=='Path' and 'paths' or 'following'
