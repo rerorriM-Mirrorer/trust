@@ -64,3 +64,24 @@ local settings=assert(io.open('settings/TrustAddonSettings.lua'));local st=setti
 local menu=assert(io.open('ui/settings/menus/FollowSettingsMenuItem.lua'));local mt=menu:read('*a');menu:close()
 local _,count=mt:gsub("BooleanConfigItem.new%('fan_out', 'Fan Out'%)",'');assert(count==2)
 print('PASS formation geometry/heading/slots/tolerance, actual follower coalescing and Off/path/combat/pull/Stop bypasses; default and both menu paths')
+
+-- Mounted followers retain Fan Out, ordinary follow and pull/manual ownership.
+point.x=0;point.y=0;point.z=0
+for _,status in ipairs({5,85}) do
+    point.status=status;queue.current_action=nil;self.fan_out=true
+    self:check_distance();assert(dest.formation,'mounted Fan Out was bypassed')
+    self.fan_out=false;self:check_distance();assert(not dest.formation,'mounted plain follow failed')
+    local count=created;self.manual_pause=true;self:check_distance();assert(created==count);self.manual_pause=false
+    self.action_queue.pull_action={};self:check_distance();assert(created==count);self.action_queue.pull_action=nil
+end
+-- Mounting after combat/resting restarts a previously disabled follow queue.
+env.player={};env.res={statuses={[0]={english='Idle'},[5]={english='Chocobo'},[85]={english='Mount'},[33]={english='Resting'}}}
+env.S=function(values)return{contains=function(_,v)for _,x in ipairs(values)do if x==v then return true end end;return false end}end
+local body=assert(src:match('(function Follower:on_player_status_change.-)\nfunction Follower:tic'))
+assert(load(body,'actual status transition','t',env))()
+local resumed,stopped=0,0
+self.start_following=function()resumed=resumed+1 end;self.stop_following=function()stopped=stopped+1 end
+for _,status in ipairs({5,85,0})do self:on_player_status_change(status,33)end
+assert(resumed==3)
+self:on_player_status_change(33,85);assert(stopped==1)
+print('PASS mounted formation/plain following, movement ownership and mount/dismount restart')

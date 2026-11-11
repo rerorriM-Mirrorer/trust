@@ -89,10 +89,13 @@ end
 local function suspended(ordinary_follow, following)
     local info=windower.ffxi.get_info();local character=windower.ffxi.get_player()
     if not info or not info.logged_in or not character then return true, 'character unavailable' end
-    local idle_follow = following and character.status == 0
-    if info.chat_open and not idle_follow then return true, 'chat input open' end
-    -- An idle follower can travel with an ordinary inventory window open.
-    if info.menu_open and not (following and character.status == 0) then
+    -- Windower statuses: 5 = Chocobo, 85 = Mount. Permit these only
+    -- for following; pulling and recorded-path status guards stay unchanged.
+    local mounted_follow = following and (character.status == 5 or character.status == 85)
+    local travel_follow = following and (character.status == 0 or mounted_follow)
+    if info.chat_open and not travel_follow then return true, 'chat input open' end
+    -- An idle or mounted follower can travel with an ordinary inventory window open.
+    if info.menu_open and not travel_follow then
         -- Windower exposes a flag rather than a menu ID. Recognize the
         -- engaged enemy cursor as the battle menu unless subtargeting.
         local target = character.status == 1 and windower.ffxi.get_mob_by_target('t')
@@ -100,12 +103,12 @@ local function suspended(ordinary_follow, following)
             and not windower.ffxi.get_mob_by_target('st')
         if not battle_menu then return true, 'Windower menu_open=true' end
     end
-    if character.status~=0 and character.status~=1 then return true, 'character status '..tostring(character.status) end
+    if character.status~=0 and character.status~=1 and not mounted_follow then return true, 'character status '..tostring(character.status) end
     if not ordinary_follow and addon_enabled and not addon_enabled:getValue() then return true, 'Trust paused' end
     local follow_settings = addon_settings and addon_settings:getSettings().follow or {}
-    local pause_for_cast = not idle_follow or follow_settings.auto_pause == true
+    local pause_for_cast = not travel_follow or follow_settings.auto_pause == true
     if pause_for_cast and clock()<(M.casting_until or 0) then return true, 'cast completion pending' end
-    if not idle_follow and hud and hud.trustMenu and hud.trustMenu:isVisible() then return true, 'Trust menu open' end
+    if not travel_follow and hud and hud.trustMenu and hud.trustMenu:isVisible() then return true, 'Trust menu open' end
     for _,id in ipairs(character.buffs or {}) do
         local buff=res and res.buffs[id]
         if buff and ({Sleep=true,Stun=true,Petrification=true,Terror=true,Bind=true,Lullaby=true})[buff.en] then

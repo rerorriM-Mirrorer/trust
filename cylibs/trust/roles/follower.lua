@@ -220,7 +220,7 @@ function Follower:check_distance()
         local distance = player_util.distance(player_util.get_player_position(), follow_target:get_position())
         local deltaZ = math.abs(z - player.z)
         if self.fan_out and self.action_queue.control_state ~= 'Retreat'
-                and (self.action_queue.is_enabled ~= false or self.action_queue.control_state == 'Paused') and self.state_var.value=='Always' and player.status==0
+                and (self.action_queue.is_enabled ~= false or self.action_queue.control_state == 'Paused') and self.state_var.value=='Always' and (player.status==0 or player.status==5 or player.status==85)
                 and distance<self.maxfollowdistance and deltaZ<1 then
             local goal,radius=self.formation:goal(follow_target:get_id(),windower.ffxi.get_info().zone,
                 {x,y,z},self:get_party():get_party_member_ids(),player.id,self:get_distance())
@@ -271,7 +271,7 @@ function Follower:on_player_status_change(new_status_id, old_status_id)
     end
 
     if self.state_var.value == 'Always' then
-        if player.status == 'Idle' then
+        if new_status_id == 0 or new_status_id == 5 or new_status_id == 85 then
             self:start_following()
         end
     end

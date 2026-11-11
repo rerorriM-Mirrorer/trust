@@ -149,3 +149,24 @@ assert(R.suspended(true,true))
 R.casting_until=0
 character.status=0
 print('PASS idle follow chat/menu bypass and opt-in casting pause with other movement guards retained')
+
+-- Mounted ordinary following shares idle travel overlays, but other scopes do not.
+for _,status in ipairs({5,85}) do
+    character.status=status;info.chat_open=true;info.menu_open=true
+    hud={trustMenu={isVisible=function()return true end}}
+    R.casting_until=now+10;follow_settings.auto_pause=false
+    assert(not R.suspended(true,true),'mounted travel was blocked')
+    assert(R.suspended(false,false),'mounted pull/path guard was relaxed')
+    follow_settings.auto_pause=true
+    assert(R.suspended(true,true),'mounted follow ignored cast pause preference')
+    follow_settings.auto_pause=false;R.casting_until=0
+    res={buffs={[11]={en='Bind'}}};character.buffs={11}
+    assert(R.suspended(true,true),'mounted follow ignored incapacitation')
+    character.buffs={}
+end
+info.chat_open=false;info.menu_open=false;hud=nil;R.casting_until=0
+for _,status in ipairs({2,3,4,33,44,47}) do
+    character.status=status;assert(R.suspended(true,true))
+end
+character.status=0
+print('PASS Mount/Chocobo travel, overlays, cast preference, incapacitation and non-follow status guards')
