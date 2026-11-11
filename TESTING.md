@@ -1,3 +1,17 @@
+# Autosuggest command and follow feedback - 2026-11-11
+
+Branch `test/autosuggest-command`, based on published `7f46ed94`. Adds `//trust autosuggest [on|off]`: bare toggles locally; explicit states are idempotent. Feedback is [Trust] Autosuggest ON/OFF with green ON/red OFF. Changes save per character through the existing settings owner/event, so Off hides an existing popup and skips matching immediately. Menu policy commits eligible drafts first, preventing an older Autosuggest editor draft from overwriting the command. Help discovers the command through its registration.
+
+The prior factory setting was true, inherited from upstream (`cdb00256` introduced the existing default). It is now false for new/missing settings, preserving explicit saved true/false preferences. The user saw Cioara's suggestions enabled again; the cause is not established. No profile reset or forced override of Cioara's saved setting is included. Run `//trust autosuggest off` to set the existing profile explicitly.
+
+User follow feedback: Myrr doubled back again while mounted after the mounted-follow patch. Mounted travel permission and follower oscillation are separate issues; the latter remains unresolved and no follow movement logic changes in this batch. Git history places the former mounted rejection in the movement-recovery addition `493260b7` on November 1, 2026, rather than the original follower. The guard omitted Chocobo/Mount until `2f443865`.
+
+Host verification: all 42 menu/movement/pull/Aggro suites pass on host Lua 5.4 with existing Windower literal-method normalization, including command dispatch, toggle, repeated explicit values, invalid arguments, formatted feedback, menu policy and Off default. Existing autocomplete tests verify Off skips matching/UI updates and saved-setting events hide the popup. Changed Lua files compile and whitespace checks pass. Live command/menu synchronization and persistence after actual Windower reload remain pending. Lua 5.1/runtime FFXI testing was unavailable.
+
+Install: unload Trust, back up addon/settings, merge trust/ over the latest testing build and reload. Runtime files are GeneralCommands.lua, menu_command_policy.lua and TrustAddonSettings.lua. No saved character files are included. README.md, WORKFLOW.md and this cumulative TESTING.md accompany the patch inside trust/. PATCH-BUILD.json identifies its published source. Restore those three runtime files from `7f46ed94` to roll back.
+
+Live check: run autosuggest off while a popup is visible and verify it vanishes. Reload and confirm Off persists. Run on, repeated on, bare toggle and invalid arguments. With the Autosuggest settings menu open, change its draft then run the explicit command and confirm the requested final value survives reopening. Repeat on a disposable new profile to verify the Off factory default.
+
 # Mounted following - 2026-11-11
 
 Branch `test/mounted-follow`, based on published `92fd4fcc`. The movement adapter previously accepted only Idle/Engaged status and the formation gate accepted only Idle. Windower's current Resources `resources_data/statuses.lua` (blob `504e81b4704656a0bb974042d56019915ab81148`) identifies status 5 as Chocobo and 85 as Mount. These statuses now pass movement recovery only for following. Mounted ordinary following shares idle travel's native-menu/chat/Trust-menu exceptions and honors the existing cast pause preference. Fan Out accepts both mounted statuses. Mounting and dismounting restart Always following through the existing status-change handler.

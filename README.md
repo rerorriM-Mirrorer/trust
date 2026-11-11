@@ -541,3 +541,7 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 ### November 11, 2026 - Mounted following
 
 - Ordinary following and Fan Out support Mount and Chocobo status, including idle travel's input-overlay behavior. Mounting/dismounting resumes Always following. Pulling/path status restrictions and movement ownership are preserved.
+
+### November 11, 2026 - Autosuggest command
+
+- `//trust autosuggest [on|off]` toggles or explicitly sets saved local command suggestions. New settings default to Off; existing explicit preferences are preserved.

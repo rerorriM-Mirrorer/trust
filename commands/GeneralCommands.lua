@@ -43,6 +43,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('toggle', self.handle_toggle, 'Toggle local Act and Pause')
     self:add_command('reload', self.handle_reload, 'Reload job settings files')
     self:add_command('status', self.handle_status, 'View Trust status')
+    self:add_command('autosuggest', self.handle_autosuggest, 'Toggle command suggestions: //trust autosuggest [on|off]')
     self:add_command('fan', self.handle_fan, 'Toggle Fan Out, or set it explicitly: //trust fan [on|off]')
     self:add_command('fanall', self.handle_fan_all, 'Set Fan Out on all receiving clients: //trust fanall [on|off]')
     self:add_command('combat', self.handle_combat, 'Show or set combat positioning: //trust combat [auto|mirror|off]')
@@ -56,6 +57,27 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('save', self.handle_save_set, 'Save changes to the current mode set or new set, // trust save mode_set_name (optional)')
 
     return self
+end
+
+function GeneralTrustCommands:handle_autosuggest(_, value, ...)
+    if select('#', ...) > 0 or (value ~= nil and
+            (type(value) ~= 'string' or not ({on=true,off=true})[value:lower()])) then
+        return false, 'Usage: //trust autosuggest [on|off]'
+    end
+    local settings = addon_settings:getSettings().autocomplete
+    local enabled
+    if value == nil then enabled = settings.visible == false
+    else enabled = value:lower() == 'on' end
+    if settings.visible ~= enabled then
+        settings.visible = enabled
+        local success, message = addon_settings:saveSettings(true)
+        if success == false then return false, message or 'Unable to save Autosuggest settings.' end
+    end
+    require('chat')
+    local label = enabled and 'ON' or 'OFF'
+    windower.add_to_chat(0, ('[Trust] '):color(200)..('Autosuggest '):color(167)
+        ..label:color(enabled and 158 or 167))
+    return true
 end
 
 function GeneralTrustCommands:handle_fan(_, value, quiet, ...)
