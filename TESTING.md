@@ -1,3 +1,11 @@
+# Fan Out commands - 2026-11-10
+
+Branch `test/fan-commands` starts at `737ea965`. The user has observed the follower backtracking during peaceful travel and wants a quick way to compare Fan Out on and off. This batch adds `//trust fan [on|off]` and `//trust fanall [on|off]`. Bare fan toggles the local saved preference. Bare fanall chooses the inverse of the issuer's preference and sends that explicit state to every receiving Trust client, including clients outside the current party. Explicit on/off are idempotent. The existing settings event updates live followers. If IPC sending is disabled, fanall applies locally and reports local scope. Remote requests are unconfirmed. Both commands commit eligible menu drafts before changing the saved setting.
+
+Host command regression passes for legacy default, toggle, repeated explicit settings, invalid arguments, relay state and IPC/menu guards. Live FFXI behavior is pending. Run fanall off during peaceful travel, compare the reversal, then fanall on. Record whether it happens near turns, stairs, or shortly after the leader moves. Changes to the backtracking logic are outside this diagnostic comparison.
+
+Install the changed GeneralCommands.lua and menu_command_policy.lua over the current Trust testing install, unload/reload participating clients, and keep data. To roll back, restore both files from 737ea965. The Fan Out preference is saved per character.
+
 # Follow response ASCII punctuation - 2026-11-10
 
 The user reported that the em dash in rejected responses renders as a Japanese character in FFXI. Both rejected and unconfirmed separators now use an ASCII hyphen. Only commands/FollowCommands.lua changes at runtime. The partial-response host regression passes. Live FFXI text rendering remains pending.

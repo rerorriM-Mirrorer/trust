@@ -523,3 +523,5 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - All-job menu test extends the direct role pickers and adds one-confirm Gambit and condition picking with command-column focus on return.
 
 - Travel following now reports only the final [Trust] Following: X/X acknowledgment count.
+
+- Added //trust fan [on|off] for local Fan Out and //trust fanall [on|off] to request the same setting across receiving clients. Bare commands toggle from the issuer's current setting.

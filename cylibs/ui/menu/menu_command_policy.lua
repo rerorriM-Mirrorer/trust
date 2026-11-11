@@ -25,6 +25,7 @@ function Policy.effect(command, args)
         if verb=='' or verb=='status' then return 'immediate' end
         return verb=='apply' and 'commit' or 'blocked'
     end
+    if command=='fan' or command=='fanall' then return 'commit' end
     if command=='combat' then return verb=='' and 'immediate' or 'commit' end
     if command=='set' or command=='cycle' then
         return profiles[verb] and 'blocked' or 'commit'

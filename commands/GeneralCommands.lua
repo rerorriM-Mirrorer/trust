@@ -43,6 +43,8 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('toggle', self.handle_toggle, 'Toggle local Act and Pause')
     self:add_command('reload', self.handle_reload, 'Reload job settings files')
     self:add_command('status', self.handle_status, 'View Trust status')
+    self:add_command('fan', self.handle_fan, 'Toggle Fan Out, or set it explicitly: //trust fan [on|off]')
+    self:add_command('fanall', self.handle_fan_all, 'Set Fan Out on all receiving clients: //trust fanall [on|off]')
     self:add_command('combat', self.handle_combat, 'Show or set combat positioning: //trust combat [auto|mirror|off]')
     self:add_command('widget', self.handle_widget, 'Set widget appearance: // trust widget [full|compact|toggle] [all|trust|party|target]')
     self:add_command('menuperf', self.handle_menuperf, 'Measure CPU time opening Trust menu: // trust menuperf [on|off]')
@@ -54,6 +56,40 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('save', self.handle_save_set, 'Save changes to the current mode set or new set, // trust save mode_set_name (optional)')
 
     return self
+end
+
+function GeneralTrustCommands:handle_fan(_, value, ...)
+    if select('#', ...) > 0 or (value ~= nil and
+            (type(value) ~= 'string' or not ({on=true,off=true})[value:lower()])) then
+        return false, 'Usage: //trust fan [on|off]'
+    end
+    local owner = addon_settings
+    local follow = owner:getSettings().follow
+    local enabled = value == nil and follow.fan_out == false or
+        (type(value) == 'string' and value:lower() == 'on')
+    if follow.fan_out ~= enabled then
+        follow.fan_out = enabled
+        owner:saveSettings(true)
+    end
+    return true, 'Fan Out '..(enabled and 'On' or 'Off')
+end
+
+function GeneralTrustCommands:handle_fan_all(_, value, ...)
+    if select('#', ...) > 0 or (value ~= nil and
+            (type(value) ~= 'string' or not ({on=true,off=true})[value:lower()])) then
+        return false, 'Usage: //trust fanall [on|off]'
+    end
+    local enabled = value == nil and addon_settings:getSettings().follow.fan_out == false or
+        (type(value) == 'string' and value:lower() == 'on')
+    local setting = enabled and 'on' or 'off'
+    local success, message = self:handle_fan(_, setting)
+    if not success then return success, message end
+    if state.IpcMode.value ~= 'All' and state.IpcMode.value ~= 'Send' then
+        return true, message..' locally - IPC sending unavailable'
+    end
+    -- Relay the issuer's chosen state so clients with different settings agree.
+    IpcRelay.shared():send_message(CommandMessage.new('trust fan '..setting..' --quiet'))
+    return true, message..' - requested on all receiving clients'
 end
 
 function GeneralTrustCommands:handle_combat(_, mode)
