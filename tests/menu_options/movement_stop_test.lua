@@ -29,6 +29,9 @@ local f=setmetatable({action_queue={is_enabled=false},state_var={value='Path'},g
 f:start_following(true);f:check_distance();assert(f:can_zone(1)==false)
 f.state_var.value='Always';f.manual_pause=true
 f:start_following(true);f:check_distance();assert(f:can_zone(1)==false)
+f.manual_pause=false;f.stealth_hold=true
+f:start_following(true);f:check_distance();assert(f:can_zone(1)==false,'preparation holds movement and zone walking')
+f.stealth_hold=nil
 follower.manual_pause=true;callback(nil,true);assert(follower.manual_pause==false,'Start must release manual takeover')
 -- Current child cancellation can synchronously call perform again. It must not
 -- progress to the next child, including partial-failure sequences.

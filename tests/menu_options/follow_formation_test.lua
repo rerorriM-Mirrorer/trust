@@ -48,6 +48,7 @@ self.action_queue.pull_action={};self:check_distance();assert(created==1);self.a
 self.action_queue.is_enabled=false;self.action_queue.control_state='Paused';self:check_distance();assert(dest.formation,'Pause must retain Fan Out')
 self.action_queue.control_state='Retreat';self:check_distance();assert(created==2 and not dest.formation,'Retreat must switch to ordinary follow')
 self.action_queue.is_enabled=true;self.action_queue.control_state='Active'
+self.stealth_hold=true;local held=created;self:check_distance();assert(created==held);self.stealth_hold=nil
 self.manual_pause=true;local paused=created;self:check_distance();assert(created==paused);self.manual_pause=false
 queue.current_action=nil;self.fan_out=false;self:check_distance();assert(not dest.formation and dest.distance==1)
 queue.current_action=nil;self.fan_out=true;self.state_var.value='Path';self:check_distance();assert(not dest.formation)

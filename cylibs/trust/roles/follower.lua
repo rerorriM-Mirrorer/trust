@@ -144,8 +144,9 @@ end
 
 -- Ordinary following has its own walking queue and remains available while
 -- job automation is stopped. Manual takeover/explicit follow pause still wins.
+-- A party preparation hold is temporary and independent of manual takeover.
 function Follower:movement_allowed()
-    if self.manual_pause or self.action_queue.pull_action then return false end
+    if self.stealth_hold or self.manual_pause or self.action_queue.pull_action then return false end
     return self.action_queue.is_enabled~=false or
         (self.state_var and self.state_var.value=='Always')
 end
@@ -156,7 +157,7 @@ function Follower:start_following(override)
         else return end
     end
     -- Ordinary following survives Stop; recorded paths and manual takeover do not.
-    if self.manual_pause or self.action_queue.pull_action
+    if self.stealth_hold or self.manual_pause or self.action_queue.pull_action
             or (self.action_queue.is_enabled == false and self.state_var.value ~= 'Always') then return end
     if not override and S{ 'Dead', 'Engaged', 'Resting' }:contains(self:get_party():get_player():get_status()) then
         return
@@ -198,7 +199,7 @@ function Follower:is_valid_target(target_name)
 end
 
 function Follower:check_distance()
-    if self.manual_pause or self.action_queue.pull_action or self.recovery_paused
+    if self.stealth_hold or self.manual_pause or self.action_queue.pull_action or self.recovery_paused
             or (self.action_queue.is_enabled == false and self.state_var.value ~= 'Always')
             or self.state_var.value == 'Off' then
         return
@@ -341,7 +342,7 @@ end
 
 function Follower:can_zone(zone_id)
     local player = self:get_party():get_player()
-    if self.manual_pause or self.action_queue.pull_action or self.recovery_paused
+    if self.stealth_hold or self.manual_pause or self.action_queue.pull_action or self.recovery_paused
             or (self.action_queue.is_enabled == false and self.state_var.value ~= 'Always') or state.AutoZoneMode.value == 'Off' or state.AutoFollowMode.value == 'Off' or not player or (os.time() - player:get_last_zone_time()) < self.zone_cooldown
             or zone_id ~= windower.ffxi.get_info().zone or windower.ffxi.get_info().zone == 0 then
         return false

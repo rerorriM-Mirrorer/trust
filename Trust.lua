@@ -288,6 +288,7 @@ function load_trust_modes(job_name_short)
 end
 
 function load_trust_commands(job_name_short, main_job_trust, sub_job_name_short, sub_job_trust, action_queue, party, main_trust_settings, sub_trust_settings)
+    require('cylibs/trust/stealth/party_stealth').attach(main_job_trust, action_queue, addon_enabled)
 	local common_commands = L{
 		AssistCommands.new(main_job_trust, action_queue),
 		AttackCommands.new(main_job_trust, main_trust_settings, action_queue),
@@ -829,6 +830,8 @@ function unload_chunk_event()
 end
 
 function unloaded()
+    local stealth = package.loaded['cylibs/trust/stealth/party_stealth']
+    if stealth then stealth.detach() end
     if chat_auto_completer then chat_auto_completer:destroy();chat_auto_completer=nil end
     local recovery=package.loaded['cylibs/movement/recovery']
     if recovery then recovery.close() end

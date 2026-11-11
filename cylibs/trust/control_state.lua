@@ -3,6 +3,8 @@ local Control = {}
 
 function Control.set(queue, enabled, trust, mode, manual)
     assert(mode == 'Active' or mode == 'Paused' or mode == 'Retreat', 'Invalid control state')
+    -- Temporary operations restore state only if no later user control superseded it.
+    queue.control_revision = (queue.control_revision or 0) + 1
     local follower = trust and trust:role_with_type('follower')
     local changed = queue.control_state ~= mode
     local was_enabled = enabled:getValue()

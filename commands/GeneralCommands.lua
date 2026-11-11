@@ -27,6 +27,10 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('timeout', self.handle_timeout, 'Unload Trust after a specified number of minutes, // trust timeout num_minutes or // trust timeout clear')
     self:add_command('item', self.handle_use_item, 'Use an item by name, // trust item item_name')
 
+    self:add_command('sneak', self.handle_stealth, 'Prepare party Sneak: //trust sneak')
+    self:add_command('invisible', self.handle_stealth, 'Prepare party Invisible: //trust invisible')
+    self:add_command('stealth', self.handle_stealth, 'Prepare both: //trust stealth [status|cancel]')
+
     -- State
     self:add_command('start', self.handle_start, 'Start Trust')
     self:add_command('act', self.handle_start, 'Activate Trust job automation (alias for start)')
@@ -57,6 +61,17 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('save', self.handle_save_set, 'Save changes to the current mode set or new set, // trust save mode_set_name (optional)')
 
     return self
+end
+
+function GeneralTrustCommands:handle_stealth(command, option, ...)
+    if select('#', ...) > 0 or (option and (command ~= 'stealth' or (option ~= 'status' and option ~= 'cancel'))) then
+        return false, 'Usage: //trust sneak | //trust invisible | //trust stealth [status|cancel]'
+    end
+    self.party_stealth = require('cylibs/trust/stealth/party_stealth').current()
+    if not self.party_stealth then return false, 'Stealth is not initialized' end
+    if option == 'status' then return true, 'Stealth: '..self.party_stealth:status() end
+    if option == 'cancel' then self.party_stealth:cancel(); return true end
+    return self.party_stealth:start(command)
 end
 
 function GeneralTrustCommands:handle_autosuggest(_, value, ...)
