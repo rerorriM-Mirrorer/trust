@@ -80,6 +80,12 @@ function SongValidator:validate()
     local dummy_songs = self.singer:get_dummy_songs()
     local songs = self.singer:get_merged_songs(song_target)
 
+    if songs:length() < 4 or dummy_songs:length() < 2 then
+        self.singer.song_tracker.diagnostics_enabled = false
+        addon_system_error("This gear rehearsal requires four real songs and two dummy songs. Normal singing does not.")
+        return
+    end
+
     local song1 = SpellAction.new(0, 0, 0, songs[1]:get_spell().id, song_target.index, player)
 
     local song2 = SpellAction.new(0, 0, 0, songs[2]:get_spell().id, song_target.index, player)

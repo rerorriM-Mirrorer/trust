@@ -30,11 +30,11 @@ function SongSetsMenuItem.new(trustSettings, trustSettingsMode, trustModeSetting
     self.trustSettings = trustSettings
     self.trustSettingsMode = trustSettingsMode
     self.trustModeSettings = trustModeSettings
-    self.selectedSetName = ValueRelay.new('Default')
+    self.selectedSetName = ValueRelay.new(state.SongSet.value)
     self.disposeBag = DisposeBag.new()
 
     local SongSettingsMenuItem = require('ui/settings/menus/songs/SongSettingsMenuItem')
-    self.editSetMenuItem = SongSettingsMenuItem.new(trustSettings, trustSettingsMode, trustModeSettings, 'Default', trust)
+    self.editSetMenuItem = SongSettingsMenuItem.new(trustSettings, trustSettingsMode, trustModeSettings, state.SongSet.value, trust)
 
     self.selectedSetName:onValueChanged():addAction(function(_, newValue)
         self.editSetMenuItem:setSongSetName(newValue)
@@ -73,8 +73,12 @@ function SongSetsMenuItem.new(trustSettings, trustSettingsMode, trustModeSetting
             end
         end), songListEditor:getDelegate():didSelectItemAtIndexPath())
 
-        if songSets:length() > 0 then
-            songListEditor:getDelegate():setCursorIndexPath(IndexPath.new(1, 1))
+        for index, name in ipairs(songSetNames) do
+            if name == self.selectedSetName:getValue() then
+                self.selectedSetName:setValue(name)
+                songListEditor:getDelegate():setCursorIndexPath(IndexPath.new(1, index))
+                break
+            end
         end
 
         self.songListEditor = songListEditor

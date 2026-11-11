@@ -1,3 +1,4 @@
+local SongSlots = require('cylibs/entity/jobs/bard/song_slots')
 local ConditionalCondition = require('cylibs/conditions/conditional')
 local CooldownCondition = require('cylibs/conditions/cooldown')
 local DisposeBag = require('cylibs/events/dispose_bag')
@@ -61,9 +62,9 @@ function Singer:on_add()
 end
 
 function Singer:set_song_settings(song_settings)
-    self.dummy_songs = song_settings.DummySongs
-    self.songs = song_settings.SongSets[state.SongSet.value].Songs
-    self.pianissimo_songs = song_settings.SongSets[state.SongSet.value].PianissimoSongs
+    self.dummy_songs = SongSlots.active(song_settings.DummySongs)
+    self.songs = SongSlots.active(song_settings.SongSets[state.SongSet.value].Songs)
+    self.pianissimo_songs = SongSlots.active(song_settings.SongSets[state.SongSet.value].PianissimoSongs)
     self.expiring_duration = song_settings.ResingDuration or 75
     self.resing_missing_songs = song_settings.ResingMissingSongs
     self.last_expire_time = os.time() - self.expiring_duration
@@ -87,9 +88,9 @@ function Singer:set_song_settings(song_settings)
         dummy_song_threshold = dummy_song_threshold + 1
     end
 
-    gambit_settings.DummySongs = song_settings.DummySongs:map(function(song)
+    gambit_settings.DummySongs = self.dummy_songs:map(function(song)
         return Gambit.new(GambitTarget.TargetType.Self, L{
-            GambitCondition.new(NotCondition.new(L{ HasSongsCondition.new(song_settings.DummySongs:map(function(s) return s:get_name() end), 1) }), GambitTarget.TargetType.Self),
+            GambitCondition.new(NotCondition.new(L{ HasSongsCondition.new(self.dummy_songs:map(function(s) return s:get_name() end), 1) }), GambitTarget.TargetType.Self),
             GambitCondition.new(NumSongsCondition.new(dummy_song_threshold, Condition.Operator.GreaterThanOrEqualTo), GambitTarget.TargetType.Self),
             GambitCondition.new(HasMaxNumSongsCondition.new(Condition.Operator.LessThan), GambitTarget.TargetType.Self),
         }, song, Condition.TargetType.Self)
@@ -104,8 +105,8 @@ function Singer:set_song_settings(song_settings)
                 GambitCondition.new(MaxNumSongsCondition.new(songNum, Condition.Operator.GreaterThanOrEqualTo), GambitTarget.TargetType.Self),
                 GambitCondition.new(NotCondition.new(L{ HasSongsCondition.new(L{ song:get_name() }) }), GambitTarget.TargetType.Self),
                 GambitCondition.new(ConditionalCondition.new(L{
-                    HasSongsCondition.new(song_settings.DummySongs:map(function(s) return s:get_name() end), 1),
-                    NumSongsCondition.new(dummy_song_threshold, Condition.Operator.LessThan),
+                    HasSongsCondition.new(self.dummy_songs:map(function(s) return s:get_name() end), 1),
+                    NumSongsCondition.new(self.dummy_songs:length() == 0 and 5 or dummy_song_threshold, Condition.Operator.LessThan),
                     NumExpiringSongsCondition.new(1, Condition.Operator.GreaterThanOrEqualTo),
                 }, Condition.LogicalOperator.Or), GambitTarget.TargetType.Self),
             }, song, Condition.TargetType.Self),
@@ -118,6 +119,7 @@ function Singer:set_song_settings(song_settings)
     end
 
     if self.resing_missing_songs then
+        local songNum = 0
         gambit_settings.PianissimoSongs = gambit_settings.DummySongs:map(function(gambit)
             local song = gambit:getAbility():copy()
             song:set_job_abilities(L{ "Pianissimo" })
@@ -127,16 +129,18 @@ function Singer:set_song_settings(song_settings)
                 return GambitCondition.new(condition:getCondition(), GambitTarget.TargetType.Ally)
             end), song, GambitTarget.TargetType.Ally)
         end) + self.songs:map(function(song)
+            songNum = songNum + 1
             local song = song:copy()
             song:set_job_abilities(L{ "Pianissimo" })
             song:set_requires_all_job_abilities(true)
 
             return Gambit.new(GambitTarget.TargetType.Ally, L{
                 GambitCondition.new(NotCondition.new(L{ IsAlterEgoCondition.new() }), GambitTarget.TargetType.Ally),
+                GambitCondition.new(MaxNumSongsCondition.new(songNum, Condition.Operator.GreaterThanOrEqualTo), GambitTarget.TargetType.Ally),
                 GambitCondition.new(NotCondition.new(L{ HasSongsCondition.new(L{ song:get_name() }) }), GambitTarget.TargetType.Ally),
                 GambitCondition.new(ConditionalCondition.new(L{
-                    HasSongsCondition.new(song_settings.DummySongs:map(function(s) return s:get_name() end), 1),
-                    NumSongsCondition.new(dummy_song_threshold, Condition.Operator.LessThan),
+                    HasSongsCondition.new(self.dummy_songs:map(function(s) return s:get_name() end), 1),
+                    NumSongsCondition.new(self.dummy_songs:length() == 0 and 5 or dummy_song_threshold, Condition.Operator.LessThan),
                 }, Condition.LogicalOperator.Or), GambitTarget.TargetType.Ally),
             }, song, Condition.TargetType.Ally)
         end)
@@ -199,6 +203,13 @@ function Singer:set_song_settings(song_settings)
             end),
         }), GambitTarget.TargetType.Self),
     }
+
+    -- An empty set must not spend singing abilities with nothing to sing.
+    if self.songs:length() == 0 and self.pianissimo_songs:length() == 0 then
+        gambit_settings.Nitro = L{}
+        gambit_settings.DummySongs = L{}
+        gambit_settings.PianissimoSongs = L{}
+    end
 
     gambit_settings.Gambits = gambit_settings.Nitro + gambit_settings.DummySongs + gambit_settings.Songs + gambit_settings.PianissimoSongs
 

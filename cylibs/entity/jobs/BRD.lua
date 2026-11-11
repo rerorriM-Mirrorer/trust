@@ -315,8 +315,10 @@ function Bard:get_extra_song_instrument_ids()
 end
 
 function Bard:validate_songs(song_names, dummy_song_names)
-    if S(song_names):length() ~= 5 then
-        return false, "You must pick 5 songs."
+    song_names = song_names:filter(function(name) return name ~= 'None' end)
+    dummy_song_names = dummy_song_names:filter(function(name) return name ~= 'None' end)
+    if S(song_names):length() ~= song_names:length() then
+        return false, "Choose different songs for non-empty slots."
     end
     local buffsForSongs = S(song_names:map(function(song_name)
         return buff_util.buff_for_spell(spell_util.spell_id(song_name)).id
