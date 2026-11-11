@@ -415,7 +415,7 @@ end
 -- Returns the number of active songs.
 -- @treturn number Number of active songs.
 function PartyMember:get_num_songs(check_buff_ids_instead)
-    local singer = player.trust.main_job:role_with_type("singer")
+    local singer = require('cylibs/util/singer_util').get_singer()
     if singer then
         if check_buff_ids_instead then
             return singer.job:get_song_buff_ids(self:get_buff_ids()):length()
@@ -430,7 +430,7 @@ end
 -- Returns a list of active songs.
 -- @treturn list List of song records
 function PartyMember:get_songs()
-    local singer = player.trust.main_job:role_with_type("singer")
+    local singer = require('cylibs/util/singer_util').get_singer()
     if singer then
         return singer.song_tracker:get_songs(self:get_id())
     end
@@ -441,7 +441,7 @@ end
 -- Returns a list of active songs.
 -- @treturn list List of song records
 function PartyMember:get_max_num_songs()
-    local singer = player.trust.main_job:role_with_type("singer")
+    local singer = require('cylibs/util/singer_util').get_singer()
     if singer then
         return singer.song_tracker:get_max_num_songs(self:get_id())
     end
@@ -453,7 +453,7 @@ end
 -- @tparam number song_id Song id (see spells.lua)
 -- @treturn boolean True if the song is active, false otherwise
 function PartyMember:has_song(song_id)
-    local singer = player.trust.main_job:role_with_type("singer")
+    local singer = require('cylibs/util/singer_util').get_singer()
     if singer then
         return singer.song_tracker:has_song(self:get_id(), song_id, self:get_buff_ids())
     end

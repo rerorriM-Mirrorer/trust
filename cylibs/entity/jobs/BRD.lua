@@ -210,6 +210,8 @@ end
 -- @tparam number current_num_bard_songs (optional) The number of song buffs currently active
 -- @treturn number Number of songs
 function Bard:get_max_num_songs(include_clarion_call, current_num_bard_songs)
+    -- A support-job Bard cannot equip instruments and maintains one song.
+    if not self:isMainJob() then return 1 end
     local max_num_songs = self.max_num_songs
     if not self.gear_swap_enabled or self:getLevel() < 99 then
         max_num_songs = 2

@@ -565,3 +565,7 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 
 - Command responses use [Trust] labels instead of internal command class names, with heading/value separation and readable state colors. Errors retain their punctuation and quiet coordinated successes remain suppressed.
 - Shortened common control, assist/follow, combat, magic burst, path, logging/sound, remote-request and job-command wording. Existing custom summaries and command behavior are preserved.
+
+### November 11, 2026 - BRD support-job singing
+
+- Song tracking/capacity/expiry conditions find the main- or support-job Singer. BRD subjob uses one-song capacity; main-BRD capacity behavior and saved song order are unchanged.

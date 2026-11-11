@@ -24,7 +24,7 @@ function NumExpiringSongsCondition:is_satisfied(target_index)
     if target then
         local party_member = player.party:get_party_member(target.id)
         if party_member then
-            local singer = player.trust.main_job:role_with_type("singer")
+            local singer = require('cylibs/util/singer_util').get_singer()
             if singer then
                 local expiring_duration = singer.song_tracker.expiring_duration
                 local num_expiring = party_member:get_songs():filter(function(song_record)
