@@ -262,7 +262,7 @@ function SongSetsMenuItem:getConfigMenuItem()
                 }
 
                 local configItems = L{
-                    ConfigItem.new('ResingDuration', 60, 180, 1, function(value) return value.."s" end, "Resing Threshold"),
+                    ConfigItem.new('ResingDuration', 1, 180, 1, function(value) return value.."s" end, "Resing Threshold"),
                     BooleanConfigItem.new('ResingMissingSongs', "Resing Missing Songs"),
                     ConfigItem.new('DummySongThreshold', 2, 4, 1, function(value) return value end, "Dummy Song Threshold"),
                 }

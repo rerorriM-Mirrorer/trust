@@ -88,6 +88,14 @@ assert(reopened.configSettings.DummySongs:length()==0)
 reopened.configSettings.DummySongs=L{song('Other Minuet')}
 reopened.configSettings.Song4='None';reopened:onConfigItemChanged():trigger()
 assert(root.Default.SongSettings.DummySongs:length()==1)
+-- Clear touches just the selected slot and never restores factory songs.
+package.loaded['cylibs/ui/menu/menu_item'].action=function(callback,_,_,_,enabled)return{callback=callback,enabled=enabled}end
+menu.selectedSongIndex=2
+local clear=menu:getClearSongMenuItem();assert(clear.enabled())
+clear.callback({showMenu=function(_,target)assert(target==menu)end})
+assert(sets.Travel.Songs[1]=='None' and Slots.name(sets.Travel.Songs[5])=="Army's Paeon II")
+assert(Slots.name(sets.Default.Songs[1])=='Other Minuet')
+menu.selectedSongIndex=1;assert(not clear.enabled())
 -- Song-set list opens at the active set and points Edit at the same set.
 local setsPath='ui/settings/menus/songs/SongSetsMenuItem.lua';stubs(setsPath)
 T=function(t)return setmetatable({}, {__index=function(_,key)

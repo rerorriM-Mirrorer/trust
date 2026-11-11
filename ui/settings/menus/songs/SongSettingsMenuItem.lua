@@ -18,7 +18,8 @@ SongSettingsMenuItem.__index = SongSettingsMenuItem
 function SongSettingsMenuItem.new(trustSettings, trustSettingsMode, trustModeSettings, songSetName, trust)
     local self = setmetatable(MenuItem.new(L{
         ButtonItem.localized('Confirm', i18n.translate('Button_Confirm')),
-        ButtonItem.default('Pianissimo')
+        ButtonItem.default('Pianissimo'),
+        ButtonItem.default('Clear')
     }, {},
     nil, "Songs - "..songSetName, "Edit songs in this set."), SongSettingsMenuItem)
 
@@ -58,7 +59,8 @@ function SongSettingsMenuItem.new(trustSettings, trustSettingsMode, trustModeSet
             if dummySongs:length() == 0 then return 'None' end
             return localization_util.commas(dummySongs:map(function(dummySong) return dummySong:get_name() end))
         end, "Dummy Songs")
-        dummySongsConfigItem:setPickerTitle("Dummy Songs")
+        dummySongsConfigItem:setPickerTextFormat(function(song) return song:get_name() end)
+        dummySongsConfigItem:setPickerTitle("Dummy Songs (shared across sets)")
         dummySongsConfigItem:setPickerDescription("Choose zero or more dummy songs. Clear all selections to skip dummy songs.")
         dummySongsConfigItem:setPickerValidator(function(newValue)
             local is_valid, error_message = trust:get_job():validate_songs(SongSlots.names(songs), newValue:map(function(s) return s:get_name() end))
@@ -145,7 +147,12 @@ function SongSettingsMenuItem.new(trustSettings, trustSettingsMode, trustModeSet
         dummySongsConfigItem:setOnConfirm(saveChoice)
         self.disposeBag:add(songConfigEditor:onConfigItemChanged():addAction(saveChoice), songConfigEditor:onConfigItemChanged())
 
-        self.selectedSongIndex = 1
+        self.songEditor = songConfigEditor
+        self.selectedSongIndex = self.reopenSongIndex or 1
+        if self.reopenSongIndex then
+            songConfigEditor:getDelegate():setCursorIndexPath(IndexPath.new(self.reopenSongIndex, 1))
+            self.reopenSongIndex = nil
+        end
 
         return songConfigEditor
     end
@@ -171,10 +178,7 @@ end
 function SongSettingsMenuItem:reloadSettings()
     self:setChildMenuItem("Marcato", self:getMarcatoMenuItem())
     self:setChildMenuItem("Pianissimo", self:getPianissmoSongsMenuItem())
-    self:setChildMenuItem("Reset", self:getResetSongsMenuItem())
-    self:setChildMenuItem("Help", MenuItem.action(function()
-        windower.open_url(windower.trust.settings.get_addon_settings():getSettings().help.wiki_base_url..'/Singer')
-    end))
+    self:setChildMenuItem("Clear", self:getClearSongMenuItem())
 end
 
 function SongSettingsMenuItem:getJobsMenuItem()
@@ -367,21 +371,20 @@ function SongSettingsMenuItem:getMarcatoMenuItem()
     end)
 end
 
-function SongSettingsMenuItem:getResetSongsMenuItem()
+function SongSettingsMenuItem:getClearSongMenuItem()
     return MenuItem.action(function(menu)
-        local defaultSettings = T(self.trustSettings:getDefaultSettings().Default):clone().SongSettings
-        local defaultSongSet = defaultSettings.SongSets.Default
-        if defaultSongSet then
-            self.trustSettings:getSettings()[self.trustSettingsMode.value].SongSettings.SongSets[self.songSetName] = defaultSongSet
-            self.trustSettings:getSettings()[self.trustSettingsMode.value].SongSettings.DummySongs = defaultSettings.DummySongs
-
-            self.trustSettings:saveSettings(true)
-
-            addon_message(260, '('..windower.ffxi.get_player().name..') '.."Alright, I've reset "..self.songSetName.." to its factory settings!")
-
-            menu:showMenu(self)
-        end
-    end, "Songs", "Reset to default songs.")
+        local index = self.selectedSongIndex - 1
+        if index < 1 or index > 5 or not self.songEditor then return end
+        local draft = self.songEditor:readDraft()
+        draft['Song'..index] = 'None'
+        local valid, message = self.songEditor.validator(draft)
+        if not valid then addon_system_error(message);return end
+        self.songEditor:onConfigChanged():trigger(draft)
+        self.reopenSongIndex = index + 1
+        menu:showMenu(self)
+    end, "Songs", "Clear only the selected song slot.", false, function()
+        return self.selectedSongIndex > 1 and self.selectedSongIndex <= 6
+    end)
 end
 
 function SongSettingsMenuItem:getDiagnosticsMenuItem()
