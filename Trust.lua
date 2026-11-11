@@ -675,16 +675,17 @@ end
 
 -- Helpers
 
+-- Retain the helper signature while sharing labeled fragment formatting.
 function addon_message(color,str)
-    windower.add_to_chat(color, _addon.name..': '..str)
+    require('cylibs/ui/chat/command_message').show(str)
 end
 
 function addon_system_message(str)
-	windower.add_to_chat(122, str)
+	require('cylibs/ui/chat/command_message').show(str)
 end
 
 function addon_system_error(str)
-	windower.add_to_chat(123, str)
+	require('cylibs/ui/chat/command_message').show(str, true)
 end
 
 -- Handlers

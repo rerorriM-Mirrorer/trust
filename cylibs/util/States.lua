@@ -144,5 +144,5 @@ function handle_set(field, value, hide_help_text)
 end
 
 function addon_message(color,str)
-    windower.add_to_chat(color, _addon.name..': '..str)
+    require('cylibs/ui/chat/command_message').show(str)
 end

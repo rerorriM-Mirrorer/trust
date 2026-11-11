@@ -72,10 +72,10 @@ function TrustCommands:handle_command(...)
         end)
         if success then
             if message and not quiet then
-                addon_message(207, self.__class..' '..message)
+                addon_message(0, message)
             end
         else
-            addon_system_error(message..".")
+            addon_system_error(message or 'Command failed')
         end
         return true, success
     end
