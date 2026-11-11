@@ -560,3 +560,8 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 ### November 11, 2026 - Fan Out elevation
 
 - Always-follow travel with Fan Out on no longer has a vertical cutoff for formation or direct-follow fallback. The horizontal range remains 35 yalms. Fan Out off, recorded paths and Retreat keep their existing height behavior.
+
+### November 11, 2026 - Command feedback
+
+- Command responses use [Trust] labels instead of internal command class names, with heading/value separation and readable state colors. Errors retain their punctuation and quiet coordinated successes remain suppressed.
+- Shortened common control, assist/follow, combat, magic burst, path, logging/sound, remote-request and job-command wording. Existing custom summaries and command behavior are preserved.
