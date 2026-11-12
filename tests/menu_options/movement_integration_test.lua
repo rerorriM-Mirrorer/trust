@@ -35,4 +35,5 @@ menu=true;count=#takeovers;gesture();assert(#takeovers==count,'menu navigation b
 menu=false;env.action_queue.parked=true;gesture();assert(#takeovers==count,'parked source cannot auto-unpark')
 env.action_queue.parked=false;env.state.IpcMode.value='Receive';gesture(0x79)
 assert(#takeovers==count+1,'local takeover independent of IPC send')
+gesture();assert(#takeovers==count+2,'ordinary stick takeover also independent of IPC send')
 print('PASS production movement wiring: independent Follow/Assist/Act/quiet flags, local takeover and guards')

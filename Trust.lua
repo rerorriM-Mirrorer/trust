@@ -499,6 +499,7 @@ function load_ui()
         path=function(name)return windower.addon_path..'data/movement/'..name..'.lease' end,
         blocked=function(local_only)
             if not windower.has_focus() then return 'unfocused' end
+            if action_queue.parked then return 'Parked - use Pause or Act first' end
             local info=windower.ffxi.get_info()
             if not info or not info.logged_in then return 'logged out' end
             if info.chat_open then return 'chat input' end
@@ -507,7 +508,6 @@ function load_ui()
             if not character then return 'no character' end
             if character.status==4 then return 'event/cutscene' end
             if hud.trustMenu:isVisible() then return 'Trust menu' end
-            if not local_only and state.IpcMode.value~='All' and state.IpcMode.value~='Send' then return 'IpcMode must be All or Send' end
         end,
         perform=function(local_only, leader)
             local movement=addon_settings:getSettings().movement
@@ -515,6 +515,7 @@ function load_ui()
             shortcuts.follow.pending_follow=nil
             require('cylibs/movement/takeover').apply(player.trust.main_job,action_queue,addon_enabled,movement.stop_on_movement,false)
             if local_only or movement.enabled==false then return true end
+            if state.IpcMode.value~='All' and state.IpcMode.value~='Send' then return false,'Local takeover complete; IPC sending unavailable' end
             local quiet=movement.quiet~=false
             return require('cylibs/util/command_feedback').run(quiet,function()
                 local flags=(movement.start_others and '1' or '0')..' '..(movement.assist_others==true and '1' or '0')..' '..(quiet and '1' or '0')
