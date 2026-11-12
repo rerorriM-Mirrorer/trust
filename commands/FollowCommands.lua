@@ -97,6 +97,7 @@ function FollowTrustCommands:finish_follow_receipts()
     local pending = self.pending_follow
     if not pending then return end
     self.pending_follow = nil
+    if pending.quiet then return end
     local accepted, rejected, missing = {}, {}, {}
     for name, result in pairs(pending.targets) do
         if result == 'accepted' then
@@ -146,7 +147,7 @@ function FollowTrustCommands:handle_follow_me(response_only)
     -- and reports that the remote state cannot be verified.
     if state.IpcMode.value ~= 'All' then
         self.pending_follow = nil
-        if response_only == true then
+        if response_only == true and not command_feedback.is_quiet() then
             require('chat')
             windower.add_to_chat(0, '[Trust] ':color(200)..'Following: ':color(167)
                 ..'unconfirmed (IpcMode Send)':color(0))
@@ -157,7 +158,7 @@ function FollowTrustCommands:handle_follow_me(response_only)
     local recipients = self:get_receipt_recipients()
     if #recipients == 0 then
         self.pending_follow = nil
-        if response_only == true then
+        if response_only == true and not command_feedback.is_quiet() then
             require('chat')
             windower.add_to_chat(0, '[Trust] ':color(200)..'Following: ':color(167)..'0/0':color(0))
             return true
@@ -167,6 +168,7 @@ function FollowTrustCommands:handle_follow_me(response_only)
     self.follow_request_sequence = self.follow_request_sequence + 1
     local pending = {
         leader = leader,
+        quiet = command_feedback.is_quiet(),
         request_id = tostring(os.time())..tostring(self.follow_request_sequence),
         started_at = os.time(),
         retried = false,
@@ -218,6 +220,7 @@ end
 
 -- // trust follow party_member_name
 function FollowTrustCommands:handle_follow_party_member(party_member_name)
+    if self.action_queue and self.action_queue.parked then return false,'Parked - use Pause or Act first' end
     if party_member_name == nil then return self:handle_travel() end
     if self.action_queue and self.action_queue.control_state == 'Retreat'
             and (not self.action_queue.retreat_leader or party_member_name:lower() ~= self.action_queue.retreat_leader:lower()) then
@@ -236,6 +239,7 @@ function FollowTrustCommands:handle_follow_party_member(party_member_name)
                 and not follower.manual_pause and not follower.recovery_paused then
             return true, 'Following: '..party_member_name
         end
+        if self.action_queue then self.action_queue.movement_suspended=false end
         self:handle_set_mode('AutoFollowMode', 'Always', command_feedback.is_quiet())
 
         require('cylibs/movement/recovery').reset()
@@ -281,6 +285,8 @@ end
 
 -- // trust follow start
 function FollowTrustCommands:handle_start()
+    if self.action_queue and self.action_queue.parked then return false,'Parked - use Pause or Act first' end
+    if self.action_queue then self.action_queue.movement_suspended=false end
     require('cylibs/movement/recovery').reset()
     self:get_follower().manual_pause=false
     self:get_follower().recovery_paused=false

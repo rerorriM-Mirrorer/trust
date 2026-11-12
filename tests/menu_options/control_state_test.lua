@@ -59,16 +59,19 @@ check(#native==0 and following=='Old' and follower.fan_out,'Pause preserves enga
 local before=changes;local beforestops=stops
 c:handle_pause();check(changes==before and stops==beforestops,'repeated Pause idempotent')
 c:handle_start();check(enabled_value and q.control_state=='Active','Act resumes')
+-- Public Stop now parks; legacy apply_retreat remains separately exercised below.
+c.apply_park=function(self)
+ Control.set(q,enabled,trust,'Parked',true);q.parked=true
+ env.windower.send_command('input /attack off');env.windower.send_command('input /pet "Retreat" <me>')
+ return true
+end
+env.addon_system_message=function(s)chat[#chat+1]=s end
 check(c:handle_stop(),'Stop dispatch succeeds')
-check(not enabled_value and q.control_state=='Retreat' and following=='Myrr','Stop disables actions and follows assist leader')
-check(#sent==1 and sent[1].target=='Myrr' and sent[1].command=='trust partyrequest retreat Myrr','one bounded request; no NPC/duplicate/unrelated recipients')
-local found_attack,found_pet=false,false
-for _,command in ipairs(native)do found_attack=found_attack or command=='input /attack off';found_pet=found_pet or command=='input /pet "Retreat" <me>' end
-check(found_attack and found_pet,'player and avatar disengage requested')
+check(not enabled_value and q.control_state=='Parked' and following=='Old','Stop parks without changing remembered target')
+check(#sent==1 and sent[1].target=='Myrr' and sent[1].command=='trust partyrequest park Cioara','park scoped to real party')
+check(chat[#chat]:find('Parked locally',1,true),'park scope reported')
+c:handle_pause();q.movement_suspended=nil;follower.manual_pause=false
 local f=setmetatable({action_queue=q,distance=4},{__index=F})
-check(f:get_distance()==0.3 and follower.distance==4,'retreat uses temporary 0.3y without editing saved distance')
-local oldclears=clears;c:handle_stop();check(clears==oldclears,'repeat retreat keeps established follow destination')
-check(chat[#chat]:find('[Trust] Retreat!',1,true) and chat[#chat]:find('unconfirmed',1,true),'truthful labeled retreat acknowledgment')
 -- Receiving anchor applies locally and does not broadcast or follow itself.
 character.name='Myrr';character.id=2;local oldsent=#sent
 check(c:handle_party_request(nil,'retreat','Myrr'),'anchor accepts retreat')
@@ -87,7 +90,7 @@ check(not ok and message:find('Retreat active',1,true) and q.control_state=='Ret
 -- Local-only Stop works with IPC disabled and reports that scope.
 character.name='Cioara';character.id=1;character.status=0;env.state.IpcMode.value='Off';oldsent=#sent
 check(c:handle_stop() and #sent==oldsent,'IPC Off still retreats locally')
-check(chat[#chat]:find('local retreat only',1,true),'IPC Off does not imply remote success')
+check(chat[#chat]:find('requested on 0',1,true),'IPC Off does not imply remote success')
 env.state.IpcMode.value='All';oldsent=#sent
 c:handle_all(nil,'pause','party')
 check(#sent==oldsent+1 and sent[#sent].command=='trust pause' and sent[#sent].target=='Myrr','Pauseall party scopes/deduplicates without retreat')

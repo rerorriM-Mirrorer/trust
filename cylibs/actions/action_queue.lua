@@ -205,6 +205,7 @@ end
 
 -- Pushes the given action onto the queue
 function ActionQueue:push_action(action, check_duplicates)
+    if self.movement_suspended and require('cylibs/movement/takeover').is_movement(action) then require('cylibs/movement/takeover').discard(action); return end
 	self:cleanup()
 
 	if not self.is_enabled or (check_duplicates and check_duplicates == true and self:contains(action)) or self:length() >= self.max_size then
@@ -234,6 +235,14 @@ end
 
 -- Pushes the given actions onto the queue
 function ActionQueue:push_actions(actions, check_duplicates)
+    if self.movement_suspended then
+        actions=actions:filter(function(action)
+            if require('cylibs/movement/takeover').is_movement(action) then
+                require('cylibs/movement/takeover').discard(action);return false
+            end
+            return true
+        end)
+    end
 	if not self.is_enabled or (self:length() + actions:length()) >= self.max_size then
 		for action in actions:it() do
 			action:destroy()
@@ -344,6 +353,7 @@ end
 -------
 -- Enables the action queue.
 function ActionQueue:enable()
+    if self.parked then return end
 	self.is_enabled = true
 	self.timer:start()
 end

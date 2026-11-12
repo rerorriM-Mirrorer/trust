@@ -43,8 +43,8 @@ function load_user_files(main_job_id, sub_job_id)
 
 	addon_enabled = ValueRelay.new(false)
 	addon_enabled:onValueChanged():addAction(function(_, isEnabled)
-        if isEnabled then action_queue.control_state = 'Active'
-        elseif action_queue.control_state ~= 'Retreat' then action_queue.control_state = 'Paused' end
+        if isEnabled and not action_queue.parked then action_queue.control_state = 'Active'
+        elseif action_queue.control_state ~= 'Retreat' and not action_queue.parked then action_queue.control_state = 'Paused' end
 		if isEnabled then
 			player.player:monitor()
 			action_queue:enable()
@@ -68,7 +68,7 @@ function load_user_files(main_job_id, sub_job_id)
             local trust = player and player.trust and player.trust.main_job
             local follower = trust and trust:role_with_type('follower')
             if follower then
-                if isEnabled then follower.manual_pause=false;follower.recovery_paused=false end
+                if isEnabled and not action_queue.movement_suspended then follower.manual_pause=false;follower.recovery_paused=false end
                 follower:start_following()
             end
         end
@@ -510,47 +510,20 @@ function load_ui()
             if not local_only and state.IpcMode.value~='All' and state.IpcMode.value~='Send' then return 'IpcMode must be All or Send' end
         end,
         perform=function(local_only, leader)
-            -- Preserve RC3's actions/order. Direct internal calls avoid a
-            -- queued command executing later in a changed client context.
-            return require('cylibs/util/command_feedback').run(addon_settings:getSettings().movement.quiet~=false,function()
-                local movement=addon_settings:getSettings().movement
-                if local_only and not movement.stop_on_movement then return false,'local Pause disabled' end
-                if not local_only and not leader then
-                    return shortcuts.follow:handle_travel()
+            local movement=addon_settings:getSettings().movement
+            if action_queue.parked then return false,'Parked - use Pause or Act first' end
+            shortcuts.follow.pending_follow=nil
+            require('cylibs/movement/takeover').apply(player.trust.main_job,action_queue,addon_enabled,movement.stop_on_movement,false)
+            if local_only or movement.enabled==false then return true end
+            local quiet=movement.quiet~=false
+            return require('cylibs/util/command_feedback').run(quiet,function()
+                local flags=(movement.start_others and '1' or '0')..' '..(movement.assist_others==true and '1' or '0')..' '..(quiet and '1' or '0')
+                local issuer=windower.ffxi.get_player().name
+                for _,name in ipairs(shortcuts.follow:get_receipt_recipients()) do
+                    IpcRelay.shared():send_message(require('cylibs/messages/command_message').new('trust movementhandoff '..issuer..' '..flags,name))
                 end
-                if movement.stop_on_movement then handle_pause(true) end
-                if local_only then
-                    -- Pause is idempotent: clear native motion even if Trust
-                    -- was already paused and its relay does not fire again.
-                    windower.ffxi.follow()
-                    windower.ffxi.run(false)
-                    shortcuts.follow:get_follower():set_follow_target(nil)
-                    return true
-                end
-                local function acknowledge()
-                    require('chat')
-                    windower.add_to_chat(0, '[Trust]':color(200)..' -> ':color(200)
-                        ..'Asked party to follow, assist, and stand ready!':color(0))
-                end
-                if movement.start_others then
-                    shortcuts.follow:get_follower():set_follow_target(nil)
-                    local quiet_flag=require('cylibs/util/command_feedback').is_quiet() and ' --quiet' or ''
-                    -- One message executes follow -> assist -> start at each
-                    -- receiver, avoiding Start racing ahead of target updates.
-                    IpcRelay.shared():send_message(require('cylibs/messages/command_message').new(
-                        'trust handoff '..windower.ffxi.get_player().name..quiet_flag))
-                    acknowledge()
-                    return true
-                end
-                local ok,message=shortcuts.follow:handle_follow_me()
-                if ok==false then return false,message end
-                local assisted,assist_message=shortcuts.assist:handle_assist_me()
-                if assisted~=false then
-                    require('chat')
-                    windower.add_to_chat(0, '[Trust]':color(200)..' -> ':color(200)
-                        ..'Asked party to follow and assist!':color(0))
-                end
-                return assisted,assist_message
+                if not quiet then addon_system_message('Movement follow requested.') end
+                return true
             end)
         end,
     })

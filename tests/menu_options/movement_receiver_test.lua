@@ -28,6 +28,6 @@ focused=true;succeed=false;receiver:key(0x7B,true);receiver:key(0x7B,false)
 assert(receiver.ignored==2 and receiver.last=='IPC unavailable')
 settings.enabled=false
 receiver:key(0x7B,true);receiver:key(0x7B,false)
-assert(receiver.last=='disabled' and receiver.ignored==3)
+assert(receiver.last=='IPC unavailable' and receiver.ignored==3,'follow toggle must not disable local takeover')
 receiver:close();receiver:close();assert(removed['Myrr.lease'])
 print('PASS movement receiver: policies, debounce, immediate ignore, no retry, action failure and cleanup')

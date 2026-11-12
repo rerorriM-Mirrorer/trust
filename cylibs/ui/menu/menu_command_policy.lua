@@ -2,7 +2,7 @@
 -- a runtime group is not permission for every structural editor subcommand.
 local Policy = {}
 local immediate={help=true,version=true,status=true,debug=true,menuperf=true,
-    menu=true,widget=true,commands=true,act=true,actall=true,pause=true,pauseall=true,aggro=true,start=true,startall=true,stop=true,stopall=true,toggle=true,ready=true,standdown=true,partyrequest=true}
+    menu=true,widget=true,commands=true,act=true,actall=true,pause=true,pauseall=true,aggro=true,start=true,startall=true,stop=true,stopall=true,toggle=true,ready=true,standdown=true,partyrequest=true,movementhandoff=true}
 local profiles={trustmode=true,maintrustsettingsmode=true,subtrustsettingsmode=true,weaponskillsettingsmode=true}
 local runtime={
     attack={['']=true,off=true,mirror=true,engage=true,distance=true},

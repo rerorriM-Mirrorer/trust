@@ -20,6 +20,7 @@ function AssistTrustCommands.new(trust, action_queue)
         PickerConfigItem.new('party_member_name', party_member_names[1], party_member_names, nil, "Party Member Name"),
         PickerConfigItem.new('mirror', "true", L{ "true", "false" }, nil, "Mirror Combat Position")
     })
+    self:add_command('wake', self.handle_wake_assist, 'Internal explicit assist request')
     self:add_command('me', self.handle_assist_me, 'Make all players assist me')
     self:add_command('clear', self.handle_clear_assist, 'Clear assist target')
     self:add_command('lock', self.handle_lock_target, 'Locks your target on the party\'s current battle target until it dies (use for Aminon only)')
@@ -77,6 +78,12 @@ function AssistTrustCommands:handle_assist_player(party_member_name, mirror)
     return success, message
 end
 
+function AssistTrustCommands:handle_wake_assist(_,name)
+    local ok,message=self:handle_assist_player(name)
+    if ok~=false and windower.ffxi.get_player().status==33 then windower.send_command('input /heal') end
+    return ok,message
+end
+
 -- // trust assist me
 function AssistTrustCommands:handle_assist_me()
     local success
@@ -84,7 +91,7 @@ function AssistTrustCommands:handle_assist_me()
 
     if L{'All', 'Send'}:contains(state.IpcMode.value) then
         local quiet_flag = command_feedback.is_quiet() and ' --quiet' or ''
-        IpcRelay.shared():send_message(CommandMessage.new('trust assist '..windower.ffxi.get_player().name..quiet_flag))
+        IpcRelay.shared():send_message(CommandMessage.new('trust assist wake '..windower.ffxi.get_player().name..quiet_flag))
         success = true
         message = 'Assist - Requested on other clients.'
     else

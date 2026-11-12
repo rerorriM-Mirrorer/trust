@@ -31,6 +31,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('invisible', self.handle_stealth, 'Prepare party Invisible: //trust invisible')
     self:add_command('stealth', self.handle_stealth, 'Prepare both: //trust stealth [status|cancel]')
 
+    self:add_command('movementhandoff', self.handle_movement_handoff, 'Internal movement request')
     -- State
     self:add_command('start', self.handle_start, 'Start Trust')
     self:add_command('act', self.handle_start, 'Activate Trust job automation (alias for start)')
@@ -40,9 +41,9 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('handoff', self.handle_handoff, 'Follow and assist a party member, then start: //trust handoff <name>')
     self:add_command('startall', self.handle_start_all, 'Start Trust on all characters, or only party members with // trust startall party')
     self:add_command('actall', self.handle_start_all, 'Activate all Trust clients, or only party members with //trust actall party')
-    self:add_command('stop', self.handle_stop, 'Party retreat: disengage and close-follow the assist/party leader')
+    self:add_command('stop', self.handle_stop, 'Park party movement and actions; disengage')
     self:add_command('pause', self.handle_pause, 'Pause job actions; keep following and configured Fan Out')
-    self:add_command('stopall', self.handle_stop_all, 'Party retreat (alias for stop): //trust stopall [party]')
+    self:add_command('stopall', self.handle_stop_all, 'Park party (alias for stop): //trust stopall [party]')
     self:add_command('pauseall', self.handle_pause_all, 'Pause all Trust clients, or only party members with //trust pauseall party')
     self:add_command('toggle', self.handle_toggle, 'Toggle local Act and Pause')
     self:add_command('reload', self.handle_reload, 'Reload job settings files')
@@ -72,6 +73,37 @@ function GeneralTrustCommands:handle_stealth(command, option, ...)
     if option == 'status' then return true, 'Stealth: '..self.party_stealth:status() end
     if option == 'cancel' then self.party_stealth:cancel(); return true end
     return self.party_stealth:start(command)
+end
+
+function GeneralTrustCommands:handle_movement_handoff(_,name,act,assist,quiet,...)
+    if select('#',...)>0 or type(name)~='string' or not name:match('^%a+$')
+        or not ({['0']=true,['1']=true})[act] or not ({['0']=true,['1']=true})[assist]
+        or not ({['0']=true,['1']=true})[quiet] then return false,'Invalid movement request' end
+    if self.action_queue.parked then return true end -- discard; never replay or Act
+    return require('cylibs/util/command_feedback').run(quiet=='1',function()
+        local ok,message=shortcuts.follow:handle_follow_party_member(name)
+        if ok==false then return false,message end
+        if assist=='1' then
+            ok,message=shortcuts.assist:handle_assist_player(name)
+            if ok==false then return false,message end
+        end
+        if act=='1' and not self.addon_enabled:getValue() then self:handle_start() end
+        return true
+    end)
+end
+
+function GeneralTrustCommands:apply_park()
+    shortcuts.follow.pending_follow=nil
+    require('cylibs/movement/takeover').apply(self.trust,self.action_queue,self.addon_enabled,true,true)
+    local character=windower.ffxi.get_player()
+    if character.status==1 then windower.send_command('input /attack off') end
+    local pet=windower.ffxi.get_mob_by_target('pet')
+    if pet and (character.main_job_id==15 or character.sub_job_id==15) then
+        windower.send_command('input /pet "Retreat" <me>')
+    elseif pet and (character.main_job_id==9 or character.sub_job_id==9) then
+        windower.send_command('input /pet "Heel" <me>')
+    end
+    return true
 end
 
 function GeneralTrustCommands:handle_autosuggest(_, value, ...)
@@ -291,10 +323,11 @@ end
 -- A: receivers apply one ordered operation locally, with no rebroadcast and
 -- no success chatter. Errors still return through normal command feedback.
 function GeneralTrustCommands:handle_party_request(_, operation, leader, ...)
-    if select('#', ...) > 0 or (operation ~= 'ready' and operation ~= 'standdown' and operation ~= 'retreat')
+    if select('#', ...) > 0 or (operation ~= 'ready' and operation ~= 'standdown' and operation ~= 'retreat' and operation ~= 'park')
             or type(leader) ~= 'string' or not leader:match('^%a+$') then
         return false, 'Invalid coordinated party request'
     end
+    if operation=='park' then return self:apply_park() end
     local member = self.trust:get_party():get_party_member_named(leader, true)
     if not member then return false, 'Party leader '..leader..' is unavailable' end
     return require('cylibs/util/command_feedback').run(true, function()
@@ -463,9 +496,8 @@ end
 -- Bare Stop is intentionally party-wide. Only partyrequest retreat is local.
 function GeneralTrustCommands:handle_stop(_, ...)
     if select('#', ...) > 0 then return false, 'Usage: //trust stop' end
-    local leader = self:get_retreat_leader()
-    local feedback = require('cylibs/util/command_feedback')
-    local ok,message = feedback.run(true, function() return self:apply_retreat(leader) end)
+    local leader=windower.ffxi.get_player().name
+    local ok,message=self:apply_park()
     local sent,seen = 0,{}
     if state.IpcMode.value == 'All' or state.IpcMode.value == 'Send' then
         local own_name = windower.ffxi.get_player().name:lower()
@@ -473,14 +505,13 @@ function GeneralTrustCommands:handle_stop(_, ...)
             if type(name) == 'string' and name:match('^%a+$') and name:lower() ~= own_name
                     and not seen[name:lower()] and not party_util.is_alter_ego(name) then
                 seen[name:lower()] = true
-                IpcRelay.shared():send_message(CommandMessage.new('trust partyrequest retreat '..leader, name))
+                IpcRelay.shared():send_message(CommandMessage.new('trust partyrequest park '..leader, name))
                 sent = sent + 1
             end
         end
     end
     require('chat')
-    local detail = 'close-follow '..leader..'; '..(sent > 0 and 'retreat requested; remote state unconfirmed' or 'local retreat only; no remote requests sent')
-    windower.add_to_chat(0, ('[Trust] '):color(200)..('Retreat!'):color(167)..(' -> '):color(200)..detail:color(0))
+    addon_system_message('Stopped - Parked locally; requested on '..sent..' party clients.')
     return ok,message
 end
 

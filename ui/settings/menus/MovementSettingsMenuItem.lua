@@ -15,13 +15,14 @@ function M.new(owner)
     },function(_,infoView)
         local values=owner:getSettings().movement
         return ConfigEditor.new(owner,owner:getSettings().movement,L{
-            PickerConfigItem.new('policy',values.policy or 'Send',L{'Send','Ready'},nil,'First movement signal'),
-            BooleanConfigItem.new('enabled','Movement follow/assist enabled'),
-            BooleanConfigItem.new('quiet','Quiet follow/assist feedback'),
+            PickerConfigItem.new('policy',values.policy or 'Send',L{'Send','Ready'},nil,'Delivery policy (advanced)'),
+            BooleanConfigItem.new('enabled','Request follow on movement'),
+            BooleanConfigItem.new('quiet','Quiet movement follow feedback'),
             BooleanConfigItem.new('stop_on_movement','Pause my Trust on movement'),
-            BooleanConfigItem.new('start_others','Start others on mute handoff'),
+            BooleanConfigItem.new('start_others','Act others on movement'),
+            BooleanConfigItem.new('assist_others','Request assist on movement'),
             BooleanConfigItem.new('auto_lockon','Automatic lock-on when engaging'),
         },infoView)
-    end,'Movement','Send acts once without waiting; Ready waits for readiness. Follow/assist stays enabled independently of local Pause and others Act. Lock-on controls engaging. Switch clients to rearm.')
+    end,'Movement','Send attempts each fresh signal; Ready checks receiver readiness first. Client/Neutral arming is selected in XIVCrossbar. Follow, Assist and Act are independent.')
 end
 return M

@@ -6,7 +6,6 @@ function M.new(options)
         return options.settings().policy=='Ready' and 'Ready' or 'Send'
     end
     function self:reason(local_only)
-        if options.settings().enabled==false then return 'disabled' end
         return options.blocked(local_only)
     end
     function self:receive(local_only, leader)
@@ -49,7 +48,8 @@ function M.new(options)
     function self:status()
         local settings=options.settings()
         return self:policy()..' | local Pause '..tostring(settings.stop_on_movement==true)..
-            ' | others Start '..tostring(settings.start_others==true)..
+            ' | follow '..tostring(settings.enabled~=false)..' | others Act '..tostring(settings.start_others==true)..
+            ' | others Assist '..tostring(settings.assist_others==true)..
             ' | engage lock-on '..tostring(settings.auto_lockon~=false)..' | received '..self.received..' | accepted '..self.accepted..
             ' | ignored '..self.ignored..' | current: '..(self:reason() or 'ready')..' | last: '..self.last
     end

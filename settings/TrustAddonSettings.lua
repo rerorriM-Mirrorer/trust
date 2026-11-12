@@ -27,7 +27,7 @@ default.follow.auto_pause = false
 default.follow.fan_out = true
 -- Filled once from the active job, then retained across job/profile switches.
 default.character_modes = {}
-default.movement = {policy='Send',enabled=true,quiet=true,stop_on_movement=true,start_others=true,auto_lockon=false,defaults_version=0,
+default.movement = {policy='Send',enabled=true,quiet=true,assist_others=false,stop_on_movement=true,start_others=true,auto_lockon=false,defaults_version=0,
     recovery={mode='Detour',pulling=true,following=true,paths=true,interval=2,min_movement=.5,
         detour_distance=2,attempts=2,pull_cooldown=30,diagnostics=true,verbose=true}}
 default.widgets = {hide_pet=true}
