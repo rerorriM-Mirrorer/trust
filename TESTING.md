@@ -1,3 +1,9 @@
+# Restore original message colors - 2026-11-11
+
+Branch `test/restore-message-colors`, based on `b4293a2b`. User reports that the command-feedback batch changed deliberately yellow loading/mode/save notices to white. Restore system-message color 122 and honor explicit nonzero addon_message colors in both root and alternate States helpers. Keep [Trust] labels, existing fragment colors, errors and ordinary command state formatting. No movement, settings or action behavior changes.
+
+Host: production helper/dispatcher regression passes on Lua 5.4 with Windower literal-method normalization. Covers yellow loading/mode/save notices, caller color 207, neutral command state colors, errors and quiet calls. Whitespace checks pass; live FFXI color verification pending. Install with Trust unloaded by merging trust/ over the latest testing build. Restore the four runtime files from b4293a2b to roll back. README/WORKFLOW/TESTING included inside trust/.
+
 # Party stealth preparation - 2026-11-11
 
 Branch `test/party-stealth`, based on published `df779de44dce4ef2fe81030e8e22d4d32f04be97` (`test/subjob-singing`). User approved a one-shot party Sneak/Invisible routine using available magic/abilities before items, with Sneak before Invisible and actual coverage reporting. This batch adds `//trust sneak`, `//trust invisible`, `//trust stealth`, `//trust stealth status` and `//trust stealth cancel`. Work is separated into planner/regressions, runtime integration/regressions, and documentation commits, followed by a small expired-request guard; the delivered PATCH-BUILD.json identifies the published commits and exact source tree. No saved character settings or song choices are changed. The unresolved backwards-running/stick-takeover incident remains separate and is not claimed fixed here.

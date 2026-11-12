@@ -678,11 +678,11 @@ end
 
 -- Retain the helper signature while sharing labeled fragment formatting.
 function addon_message(color,str)
-    require('cylibs/ui/chat/command_message').show(str)
+    require('cylibs/ui/chat/command_message').show(str, false, color)
 end
 
 function addon_system_message(str)
-	require('cylibs/ui/chat/command_message').show(str)
+	require('cylibs/ui/chat/command_message').show(str, false, 122)
 end
 
 function addon_system_error(str)

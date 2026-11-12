@@ -144,5 +144,5 @@ function handle_set(field, value, hide_help_text)
 end
 
 function addon_message(color,str)
-    require('cylibs/ui/chat/command_message').show(str)
+    require('cylibs/ui/chat/command_message').show(str, false, color)
 end

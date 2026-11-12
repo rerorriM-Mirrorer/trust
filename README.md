@@ -615,3 +615,7 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 
 - Added one-shot party Sneak, Invisible and combined Stealth commands, plus status/cancel. Coordinated magic/ability methods precede oil/powder fallback; real buff observations determine coverage.
 - Preparation temporarily holds follow movement separately from manual takeover and restores prior control only if no newer control command supersedes it. No settings or ongoing travel upkeep are added.
+
+### November 11, 2026 - Restore original notice colors
+
+- Restored yellow system notices and explicitly requested message colors while retaining [Trust] labels and ordinary command formatting.

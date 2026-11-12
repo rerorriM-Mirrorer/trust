@@ -33,8 +33,12 @@ c:handle_command('none');assert(#lines==count+1)
 for _,line in ipairs(lines)do assert(not line:find('TrustCommands',1,true) and not line:find('..',1,true))end
 -- Root systems/status helpers also use the label, and alternate States loading
 -- cannot restore the legacy Trust: prefix.
-addon_system_message('Log filter: None');assert(lines[#lines]=='<200>[Trust] <167>Log filter: <0>None')
+addon_system_message('Log filter: None');assert(lines[#lines]=='<200>[Trust] <122>Log filter: None')
 local s=assert(io.open('cylibs/util/States.lua')):read('*a')
 assert(load(assert(s:match('(function addon_message.-)\nend'))..'\nend'))()
-addon_message(207,'Active');assert(lines[#lines]=='<200>[Trust] <158>Active')
+addon_message(207,'Active');assert(lines[#lines]=='<200>[Trust] <207>Active')
+addon_message(122,'Saved Command Changes');assert(lines[#lines]=='<200>[Trust] <122>Saved Command Changes')
+addon_message(0,'Active');assert(lines[#lines]=='<200>[Trust] <158>Active')
+addon_system_message('Loading Trust...');assert(lines[#lines]=='<200>[Trust] <122>Loading Trust...')
+addon_system_message('AutoBuffMode is now Auto.');assert(lines[#lines]=='<200>[Trust] <122>AutoBuffMode is now Auto.')
 print('PASS labeled feedback, state/name colors, no class names, unchanged punctuation, quiet successes/errors and alternate helper')

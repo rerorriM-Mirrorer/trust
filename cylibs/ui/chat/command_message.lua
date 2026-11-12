@@ -12,11 +12,13 @@ local function value_text(text)
     if text=='OFF' or text=='Off' or text=='Paused' then return color(text,167) end
     return color(text,0)
 end
-function M.format(text, failed)
+function M.format(text, failed, base_color)
     text = tostring(text or (failed and 'Command failed' or ''))
     if failed then return color(text,167) end
     -- Existing fragment-formatted messages retain their original colors.
     if text:find('[\30\31]') then return text end
+    -- Explicit legacy colors belong to the caller, including yellow notices.
+    if base_color and base_color ~= 0 then return color(text, base_color) end
     local label, value = text:match('^([^:\n]+):%s*(.*)$')
     if label then return color(label..': ',167)..value_text(value) end
     local state, detail = text:match('^(Active) %- (.*)$')
@@ -24,8 +26,8 @@ function M.format(text, failed)
     if state then return value_text(state)..color(' - '..detail,0) end
     return value_text(text)
 end
-function M.show(text, failed)
+function M.show(text, failed, base_color)
     pcall(require,'chat')
-    windower.add_to_chat(0,color('[Trust] ',200)..M.format(text,failed))
+    windower.add_to_chat(0,color('[Trust] ',200)..M.format(text,failed,base_color))
 end
 return M
