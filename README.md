@@ -619,3 +619,10 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 ### November 11, 2026 - Restore original notice colors
 
 - Restored yellow system notices and explicitly requested message colors while retaining [Trust] labels and ordinary command formatting.
+
+### November 12, 2026 - Movement handoff and parked Stop
+
+- Movement settings independently request Follow, Act and Assist; Assist defaults off, existing Act preference remains. Quiet movement feedback includes asynchronous follow counts. Client/Neutral arming stays in XIVCrossbar; advanced Send/Ready remains delivery policy.
+- Fresh stick signals take over local movement while retaining targets. Pause my Trust controls job automation; Follow off disables only party requests. Active movement is cancelled with ownership-aware input release.
+- Stop/Stopall parks party movement/actions and requests disengage, replacing close-follow retreat. Automatic handoffs cannot unpark. Explicit Pause/Act releases park; fresh Follow is required to resume travel.
+- Explicit Assist Me stands up resting recipients with /heal; standing clients are not toggled into rest. Install the same test patch on participating clients. Live verification remains pending.
