@@ -28,7 +28,7 @@ Branch `test/widget-autohide`, based on `test/movement-handoff` (`a001b83`). **N
 **Verification.**
 - Static: all 7 changed or new Lua files compile on Lua 5.1 (via `tests/menu_options/check_syntax.lua`).
 - Simulated: `tests/menu_options/widget_autohide_test.lua` passes on Lua 5.1 (defaults, command parsing and idempotence, timer, each wake source, focus gating, suspension, automated-movement filter, zone-jump and jitter filters, save failure, close). Four deliberate mutations (drop the automation check, the focus gate, the suspension, the timeout) each make it fail.
-- Regression: 51 existing Lua test files run through the same harness give identical results before and after this change (20 pass, 31 fail both times). The 31 baseline failures need the project's own test runner or stubs, so they are **not** evidence either way.
+- Regression: the 50 existing Lua test files run through the same harness give identical results before and after this change (19 pass, 31 fail both times; the new autohide test is the 20th pass). The 31 baseline failures need the project's own test runner or stubs, so they are **not** evidence either way.
 - **Not verified:** that hiding the container hides every drawable (including TrustStatusWidget's compact icon, crystal pulse and name strips) and that everything returns correctly; real keyboard/mouse/controller activity; manual stick movement versus Trust movement; the countdown pause with menus open.
 
 **Pending live tests (PENDING).**
