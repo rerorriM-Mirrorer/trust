@@ -1,6 +1,8 @@
 # Widget autohide Test 1 - 2026-11-14
 
-Branch `test/widget-autohide`, based on `test/movement-handoff` (`a001b83`). **Not `main`:** `main` lacks CompactWidget, the reworked widgets and the stick/controller signal path this feature depends on. Source change only; no testing ZIP; **no live FFXI test has been run.**
+Branch `test/widget-autohide`, based on `test/movement-handoff` (`a001b83`). **Not `main`:** `main` lacks CompactWidget, the reworked widgets and the stick/controller signal path this feature depends on. Source change only; **no live FFXI test has been run.**
+
+**Installation.** Unload Trust on every client you test. Merge the `trust/` folder from the patch ZIP over a `test/movement-handoff` build (`a001b83`); five code files are replaced whole (`Trust.lua`, `commands/GeneralCommands.lua`, `settings/TrustAddonSettings.lua`, `ui/TrustWidgets.lua`, `ui/widgets/Widget.lua`) or added (`ui/WidgetAutohide.lua`), so do not overlay a build that has other edits to those files without comparing first. `widget-autohide.patch` is the same change for `git apply`. Rollback: restore the previous copies of those files and delete `ui/WidgetAutohide.lua`; the new `widgets.autohide*` settings can stay harmlessly.
 
 **What it adds.** One global setting hides every Trust widget together after a period without player input, and shows them again on the next input. Off by default, so current behavior is unchanged.
 
@@ -21,7 +23,7 @@ Branch `test/widget-autohide`, based on `test/movement-handoff` (`a001b83`). **N
 
 **Differences from the ChatGPT proposal (corrected here, not silently).**
 - ~~Built on `main`.~~ `main` is about 284 files behind `test/movement-handoff`; this batch is based on the latter.
-- ~~"Any analog movement-stick input resets the timer."~~ Trust never sees the analog stick. The controller companion only sends discrete F8/F10/F12 signals (once per client switch), which the keyboard hook already observes. Continuous stick movement is therefore detected as player movement (position sampling), which is **inferred, not yet observed live**.
+- ~~"Any analog movement-stick input resets the timer."~~ Trust never sees the analog stick itself. XIVCrossbar's AHK companion samples it and sends discrete key signals that Trust's keyboard hook already observes (`movement_receiver.lua`): SC07B (first movement after switching clients, follow handoff), SC079 (local-only pulse; with XIVCrossbar's Neutral arming, one per movement after the stick has been below .16 for 100 ms and then reaches .24 or more) and SC077 (mute handoff). So a fresh stick movement wakes the widgets through the existing keyboard hook (user confirmed the Neutral behavior 2026-11-14; SOURCE-CONFIRMED that the receiver reads the same keyboard event; not live-tested here). Holding the stick sends no repeats, so sustained walking beyond the delay is covered by the position sampling below, which is **inferred, not yet observed live**. ~~"once per client switch"~~ applies only to Client arming.
 - ~~"Autohide shouldn't fight a deliberate `hide` or `show` command."~~ No widget `hide`/`show` command exists in this fork (`//trust widget` only sets full/compact), so there is nothing to conflict with yet.
 - **Fade is not in this batch.** The view system has no alpha propagation (only background views, a few cells and the compact icons set alpha), so a real fade means touching shared UI code used by every menu. Hide/show comes first; fade (400 ms out, 200 ms in as proposed) is a separate batch once hide/show is confirmed live.
 
