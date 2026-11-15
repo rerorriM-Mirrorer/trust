@@ -10,6 +10,8 @@ _addon.timeout = nil
 windower.trust = {}
 local controller_menu
 local movement_receiver
+local widget_autohide
+local widget_autohide_events
 local movement_keyboard
 windower.trust.get_temp_dir = function(file_name)
 	if file_name then
@@ -532,6 +534,47 @@ function load_ui()
     movement_keyboard=windower.register_event('keyboard',function(...)return movement_receiver:key(...)end)
     movement_receiver:tick(true)
 
+    -- A: one idle-autohide controller for every Trust widget (off by default).
+    -- Only player activity restarts its timer; Trust's own follow/path movement
+    -- is excluded so background automation cannot keep widgets on screen.
+    if widget_autohide then widget_autohide:close() end
+    if widget_autohide_events then
+        for _,event in pairs(widget_autohide_events) do windower.unregister_event(event) end
+    end
+    widget_autohide=require('ui/WidgetAutohide').new({
+        settings=function() return addon_settings:getSettings().widgets end,
+        save=function() return addon_settings:saveSettings(true) end,
+        clock=require('socket').gettime,
+        focused=windower.has_focus,
+        apply=function(visible) if widgets then widgets:setAutohidden(not visible) end end,
+        position=function()
+            local me=windower.ffxi.get_mob_by_target('me')
+            return me and {x=me.x,y=me.y} or nil
+        end,
+        automated=function()
+            local ok,result=pcall(function()
+                local takeover=require('cylibs/movement/takeover')
+                if takeover.is_movement(action_queue.current_action) then return true end
+                local follower=player.trust and player.trust.main_job and player.trust.main_job:role_with_type('follower')
+                return follower~=nil and follower.walk_action_queue~=nil
+                    and takeover.is_movement(follower.walk_action_queue.current_action)
+            end)
+            -- When in doubt, do not treat movement as player input.
+            return (not ok) or result
+        end,
+        suspended=function()
+            if hud and hud.trustMenu and hud.trustMenu:isVisible() then return 'Trust menu' end
+            if hud and hud.viewStack and hud.viewStack.currentView then return 'Trust view' end
+            return widgets and widgets:getInteractionReason() or nil
+        end,
+    })
+    windower.trust.autohide=widget_autohide
+    -- These handlers only observe: they return nothing, so no input is blocked.
+    widget_autohide_events={
+        keyboard=windower.register_event('keyboard',function() widget_autohide:touch('keyboard',true) end),
+        mouse=windower.register_event('mouse',function() widget_autohide:touch('mouse',true) end),
+    }
+
 	hud:addSubview(widgets)
 
 	hud:setNeedsLayout()
@@ -742,6 +785,7 @@ end
 local function addon_command(cmd, ...)
     -- Internal direct input never traverses tactical command/autosave dispatch.
     if cmd=='__controller' then
+        if widget_autohide then widget_autohide:touch('controller') end
         if controller_menu then controller_menu:accept(...) end
         return
     end
@@ -812,6 +856,12 @@ function unloaded()
     if movement_keyboard then windower.unregister_event(movement_keyboard);movement_keyboard=nil end
     if movement_receiver then movement_receiver:close();movement_receiver=nil end
     windower.trust.movement=nil
+    if widget_autohide_events then
+        for _,event in pairs(widget_autohide_events) do windower.unregister_event(event) end
+        widget_autohide_events=nil
+    end
+    if widget_autohide then widget_autohide:close();widget_autohide=nil end
+    windower.trust.autohide=nil
     if controller_menu then controller_menu:close();controller_menu=nil end
     windower.trust.controller_menu=nil
     if user_events then
@@ -923,10 +973,13 @@ windower.register_event('addon command', addon_command)
 windower.register_event('prerender', function()
     if controller_menu then controller_menu:tick() end
     if movement_receiver then movement_receiver:tick() end
+    if widget_autohide then widget_autohide:tick() end
     local shared=require('settings/shared_preferences').poll()
     if shared and hud and hud.mediaPlayer then hud.mediaPlayer:setEnabled(not shared.Sounds.disabled)end
 end)
 windower.register_event('gain focus',function()
+    -- Switching to this client wakes its widgets.
+    if widget_autohide then widget_autohide:touch('focus') end
     if movement_receiver then movement_receiver.down=false;movement_receiver:tick(true) end
 end)
 windower.register_event('lose focus',function()

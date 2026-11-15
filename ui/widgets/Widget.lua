@@ -210,6 +210,10 @@ function Widget:onMouseEvent(type, x, y, delta)
 end
 
 function Widget:hitTest(x, y)
+    -- A: invisible (for example autohidden) widgets must not intercept input.
+    if not self:isVisible() then
+        return false
+    end
     if not self.dragging then
         local result = CollectionView.hitTest(self, x, y)
         if not result then

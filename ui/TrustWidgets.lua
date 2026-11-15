@@ -71,7 +71,31 @@ function TrustWidgets:removeWidget(widgetName)
     self.widgetManager:removeWidget(widgetName)
 end
 
+-- A: Autohide hides this container rather than each widget. View visibility is
+-- inherited by every descendant, so Full/Compact state and any widget added
+-- later are untouched, and hidden widgets disappear together.
+function TrustWidgets:setAutohidden(hidden)
+    self:setVisible(not hidden)
+    self:setNeedsLayout()
+    self:layoutIfNeeded()
+end
+
+-- Returns why autohide should wait, or nil. A widget being dragged, edited or
+-- driven from the keyboard should never vanish under the player's hands.
+function TrustWidgets:getInteractionReason()
+    for widget in self.widgetManager:getAllWidgets():it() do
+        if widget:isEditing() or widget.dragging or widget.compactDrag or widget:hasFocus() then
+            return 'widget in use'
+        end
+    end
+    return nil
+end
+
 function TrustWidgets:hitTest(x, y)
+    -- Hidden widgets must not intercept the mouse.
+    if not self:isVisible() then
+        return false
+    end
     for widget in self.widgetManager:getAllWidgets():it() do
         if widget:hitTest(x, y) then
             return true

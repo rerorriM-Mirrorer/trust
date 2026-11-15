@@ -30,7 +30,8 @@ default.character_modes = {}
 default.movement = {policy='Send',enabled=true,quiet=true,assist_others=false,stop_on_movement=true,start_others=true,auto_lockon=false,defaults_version=0,
     recovery={mode='Detour',pulling=true,following=true,paths=true,interval=2,min_movement=.5,
         detour_distance=2,attempts=2,pull_cooldown=30,diagnostics=true,verbose=true}}
-default.widgets = {hide_pet=true}
+-- autohide: hide every Trust widget after `autohide_seconds` without player input.
+default.widgets = {hide_pet=true,autohide=false,autohide_seconds=5}
 default.flags = {}
 default.flags.show_death_warning = true
 default.flags.check_files = true
@@ -102,6 +103,12 @@ end
 
 function TrustAddonSettings:loadSettings()
     local _, settings = coroutine.resume(self:loadFile())
+    -- A: settings files saved before autohide existed gain its defaults without
+    -- disturbing any other widget preference.
+    settings.widgets = settings.widgets or {}
+    for _, key in ipairs({'autohide','autohide_seconds'}) do
+        if settings.widgets[key] == nil then settings.widgets[key] = default.widgets[key] end
+    end
     settings.menu = settings.menu or {}
     for key, value in pairs(default.menu) do
         if settings.menu[key] == nil then settings.menu[key] = value end
