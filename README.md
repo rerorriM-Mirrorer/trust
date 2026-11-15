@@ -626,3 +626,8 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - Fresh stick signals take over local movement while retaining targets. Pause my Trust controls job automation; Follow off disables only party requests. Active movement is cancelled with ownership-aware input release.
 - Stop/Stopall parks party movement/actions and requests disengage, replacing close-follow retreat. Automatic handoffs cannot unpark. Explicit Pause/Act releases park; fresh Follow is required to resume travel.
 - Explicit Assist Me stands up resting recipients with /heal; standing clients are not toggled into rest. Install the same test patch on participating clients. Live verification remains pending.
+
+### November 14, 2026 - Widget autohide
+
+- `//trust autohide [on|off|<seconds>]` hides all Trust widgets together after a period without keyboard, mouse, controller or manual-movement input, and shows them again on the next input. Off by default; the default delay is 5 seconds (1-600). Trust's own follow and path movement does not count as activity. The delay pauses while a Trust menu is open or a widget is being dragged or used. `//trust status` reports the state.
+- Hide/show only for now; a fade is planned separately. Source change only; live testing is pending (see TESTING.md).

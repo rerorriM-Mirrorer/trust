@@ -1,3 +1,45 @@
+# Widget autohide Test 1 - 2026-11-14
+
+Branch `test/widget-autohide`, based on `test/movement-handoff` (`a001b83`). **Not `main`:** `main` lacks CompactWidget, the reworked widgets and the stick/controller signal path this feature depends on. Source change only; no testing ZIP; **no live FFXI test has been run.**
+
+**What it adds.** One global setting hides every Trust widget together after a period without player input, and shows them again on the next input. Off by default, so current behavior is unchanged.
+
+| Command | Effect |
+| --- | --- |
+| `//trust autohide` | Toggle on/off |
+| `//trust autohide on` / `off` | Idempotent set |
+| `//trust autohide <seconds>` | Hide after N seconds (1-600); also turns it on |
+
+`//trust status` reports `Widget autohide:` with state, pause reason, last activity source and counters. Settings: `widgets.autohide` (false) and `widgets.autohide_seconds` (5), merged into existing settings files without touching `hide_pet`.
+
+**Design decisions (SOURCE-CONFIRMED unless stated).**
+- `ui/WidgetAutohide.lua` is a dependency-injected state machine (`off` / `awake` / `hidden`). It hides the `TrustWidgets` container, not each widget, so Full/Compact state and per-widget logic are untouched and any widget added later participates automatically. `View` visibility is inherited by descendants, and `ScrollView:updateContentView` restores descendant visibility on the next layout while visible.
+- Activity that restarts the timer: keyboard and mouse (only while this client has window focus, so an idle second client still hides), `__controller` commands, regaining window focus, and the player's own movement.
+- Movement is detected by sampling the player's position every 0.25 s (0.05-10 yalms counts). It is ignored while Trust owns movement (`takeover.is_movement` on the action queue and the follower's walk queue), so follow/path automation cannot keep widgets awake. If that check errors, movement is treated as automated.
+- The countdown pauses, and widgets are shown, while the Trust menu or a Trust view is open, or a widget is being dragged, edited or has keyboard focus.
+- Hidden widgets no longer answer `hitTest` (`TrustWidgets` and `Widget`), so invisible UI cannot take clicks.
+
+**Differences from the ChatGPT proposal (corrected here, not silently).**
+- ~~Built on `main`.~~ `main` is about 284 files behind `test/movement-handoff`; this batch is based on the latter.
+- ~~"Any analog movement-stick input resets the timer."~~ Trust never sees the analog stick. The controller companion only sends discrete F8/F10/F12 signals (once per client switch), which the keyboard hook already observes. Continuous stick movement is therefore detected as player movement (position sampling), which is **inferred, not yet observed live**.
+- ~~"Autohide shouldn't fight a deliberate `hide` or `show` command."~~ No widget `hide`/`show` command exists in this fork (`//trust widget` only sets full/compact), so there is nothing to conflict with yet.
+- **Fade is not in this batch.** The view system has no alpha propagation (only background views, a few cells and the compact icons set alpha), so a real fade means touching shared UI code used by every menu. Hide/show comes first; fade (400 ms out, 200 ms in as proposed) is a separate batch once hide/show is confirmed live.
+
+**Verification.**
+- Static: all 7 changed or new Lua files compile on Lua 5.1 (via `tests/menu_options/check_syntax.lua`).
+- Simulated: `tests/menu_options/widget_autohide_test.lua` passes on Lua 5.1 (defaults, command parsing and idempotence, timer, each wake source, focus gating, suspension, automated-movement filter, zone-jump and jitter filters, save failure, close). Four deliberate mutations (drop the automation check, the focus gate, the suspension, the timeout) each make it fail.
+- Regression: 51 existing Lua test files run through the same harness give identical results before and after this change (20 pass, 31 fail both times). The 31 baseline failures need the project's own test runner or stubs, so they are **not** evidence either way.
+- **Not verified:** that hiding the container hides every drawable (including TrustStatusWidget's compact icon, crystal pulse and name strips) and that everything returns correctly; real keyboard/mouse/controller activity; manual stick movement versus Trust movement; the countdown pause with menus open.
+
+**Pending live tests (PENDING).**
+1. `//trust autohide 5`, wait: Trust, Party and Target widgets (Full and Compact) all disappear together, nothing left behind or drawn at the old position.
+2. Press a key / move the mouse / press a controller button: all return, in their previous layout and Full/Compact state, then hide again after 5 s.
+3. Walk with the stick, idle with Trust following, and have a second client walk: confirm the first stays visible only for the client being driven by hand and hides while following.
+4. Open the Trust menu and drag a widget: neither hides while in use; the timer restarts afterwards. Click a Full-mode widget (it takes keyboard focus) and note whether autohide stays paused until Esc.
+5. Two or more clients: the unfocused client hides, the focused one wakes on input; switching clients wakes the newly focused one.
+6. `//trust autohide off`, `//trust status`, restart Trust and relog: setting persists; an existing settings file loads without errors.
+7. Zone change and Trust restart with widgets hidden: they come back.
+
 # Neutral stick takeover and parked Stop - 2026-11-12
 
 Branch `test/movement-handoff`, based on published `f5a2b08e` (yellow-message fix). User reports XIVCrossbar Neutral gestures work well, requests independent Follow/Act/Assist options (Assist off by default), quiet counts, and approves parked Stop and explicit Assist Me waking resting clients. Sender remains unchanged: DIK 0x7B, with Client/Neutral arming in XIVCrossbar. Send/Ready remains an advanced delivery policy; rejected requests are not replayed. The all-slots wrapper issue is deferred by user; normal directinput wrapper reportedly works. Recovery configuration/algorithms are not redesigned here.
