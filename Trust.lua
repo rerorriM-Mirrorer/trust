@@ -10,6 +10,7 @@ _addon.timeout = nil
 windower.trust = {}
 local controller_menu
 local movement_receiver
+local autorun_monitor
 local movement_keyboard
 windower.trust.get_temp_dir = function(file_name)
 	if file_name then
@@ -489,6 +490,7 @@ function load_ui()
     windower.create_dir(windower.addon_path..'data/movement')
     movement_receiver=require('cylibs/ui/input/movement_receiver').new({
         settings=function() return addon_settings:getSettings().movement end,
+        autorun_state=function() return require('cylibs/movement/autorun').read() end,
         focused=windower.has_focus,clock=require('socket').gettime,timestamp=os.time,
         open=io.open,remove=os.remove,
         name=function()
@@ -513,7 +515,7 @@ function load_ui()
             local movement=addon_settings:getSettings().movement
             if action_queue.parked then return false,'Parked - use Pause or Act first' end
             shortcuts.follow.pending_follow=nil
-            require('cylibs/movement/takeover').apply(player.trust.main_job,action_queue,addon_enabled,movement.stop_on_movement,false)
+            require('cylibs/movement/takeover').apply(player.trust.main_job,action_queue,addon_enabled,movement.stop_on_movement,false,movement.keep_autorun==true)
             if local_only or movement.enabled==false then return true end
             if state.IpcMode.value~='All' and state.IpcMode.value~='Send' then return false,'Local takeover complete; IPC sending unavailable' end
             local quiet=movement.quiet~=false
@@ -531,6 +533,19 @@ function load_ui()
     windower.trust.movement=movement_receiver
     movement_keyboard=windower.register_event('keyboard',function(...)return movement_receiver:key(...)end)
     movement_receiver:tick(true)
+    -- A: optional Autorun on/off notices; see cylibs/movement/autorun.lua.
+    local autorun=require('cylibs/movement/autorun')
+    autorun_monitor=autorun.monitor({
+        clock=require('socket').gettime,
+        enabled=function() return addon_settings:getSettings().movement.autorun_messages==true end,
+        read=autorun.read,
+        owned=function()
+            local trust=player and player.trust and player.trust.main_job
+            return trust~=nil and require('cylibs/movement/takeover').owned(trust,action_queue)
+        end,
+        notify=function(on) addon_system_message(on and 'Autorun on.' or 'Autorun off.') end,
+        unavailable=function() addon_system_message('Autorun state is not available from Windower.') end,
+    })
 
 	hud:addSubview(widgets)
 
@@ -811,6 +826,7 @@ function unloaded()
     if recovery then recovery.close() end
     if movement_keyboard then windower.unregister_event(movement_keyboard);movement_keyboard=nil end
     if movement_receiver then movement_receiver:close();movement_receiver=nil end
+    autorun_monitor=nil
     windower.trust.movement=nil
     if controller_menu then controller_menu:close();controller_menu=nil end
     windower.trust.controller_menu=nil
@@ -923,6 +939,7 @@ windower.register_event('addon command', addon_command)
 windower.register_event('prerender', function()
     if controller_menu then controller_menu:tick() end
     if movement_receiver then movement_receiver:tick() end
+    if autorun_monitor then autorun_monitor:update() end
     local shared=require('settings/shared_preferences').poll()
     if shared and hud and hud.mediaPlayer then hud.mediaPlayer:setEnabled(not shared.Sounds.disabled)end
 end)

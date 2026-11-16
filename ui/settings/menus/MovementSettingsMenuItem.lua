@@ -22,6 +22,8 @@ function M.new(owner)
             BooleanConfigItem.new('start_others','Act others on movement'),
             BooleanConfigItem.new('assist_others','Request assist on movement'),
             BooleanConfigItem.new('auto_lockon','Automatic lock-on when engaging'),
+            BooleanConfigItem.new('keep_autorun','Keep autorun on stick movement'),
+            BooleanConfigItem.new('autorun_messages','Autorun on/off messages'),
         },infoView)
     end,'Movement','Send attempts each fresh signal; Ready checks receiver readiness first. Client/Neutral arming is selected in XIVCrossbar. Follow, Assist and Act are independent.')
 end

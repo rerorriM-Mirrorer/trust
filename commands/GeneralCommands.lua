@@ -49,6 +49,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('reload', self.handle_reload, 'Reload job settings files')
     self:add_command('status', self.handle_status, 'View Trust status')
     self:add_command('autosuggest', self.handle_autosuggest, 'Toggle command suggestions: //trust autosuggest [on|off]')
+    self:add_command('keepautorun', self.handle_keep_autorun, 'Keep native autorun when stick movement takes over: //trust keepautorun [on|off]')
     self:add_command('fan', self.handle_fan, 'Toggle Fan Out, or set it explicitly: //trust fan [on|off]')
     self:add_command('fanall', self.handle_fan_all, 'Set Fan Out on all receiving clients: //trust fanall [on|off]')
     self:add_command('combat', self.handle_combat, 'Show or set combat positioning: //trust combat [auto|mirror|off]')
@@ -123,6 +124,29 @@ function GeneralTrustCommands:handle_autosuggest(_, value, ...)
     require('chat')
     local label = enabled and 'ON' or 'OFF'
     windower.add_to_chat(0, ('[Trust] '):color(200)..('Autosuggest '):color(167)
+        ..label:color(enabled and 158 or 167))
+    return true
+end
+
+-- A: Movement > Keep autorun on stick movement. Off (default) keeps the original
+-- takeover, which also cancels native follow/autorun.
+function GeneralTrustCommands:handle_keep_autorun(_, value, ...)
+    if select('#', ...) > 0 or (value ~= nil and
+            (type(value) ~= 'string' or not ({on=true,off=true})[value:lower()])) then
+        return false, 'Usage: //trust keepautorun [on|off]'
+    end
+    local movement = addon_settings:getSettings().movement
+    local enabled
+    if value == nil then enabled = movement.keep_autorun ~= true
+    else enabled = value:lower() == 'on' end
+    if movement.keep_autorun ~= enabled then
+        movement.keep_autorun = enabled
+        local success, message = addon_settings:saveSettings(true)
+        if success == false then return false, message or 'Unable to save Movement settings.' end
+    end
+    require('chat')
+    local label = enabled and 'ON' or 'OFF'
+    windower.add_to_chat(0, ('[Trust] '):color(200)..('Keep autorun on stick movement '):color(167)
         ..label:color(enabled and 158 or 167))
     return true
 end

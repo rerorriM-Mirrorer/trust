@@ -23,9 +23,18 @@ local function owns_movement(action)
     if action.current_action then return owns_movement(action.current_action) end
     return action.gettype and action:gettype():match('^run')~=nil
 end
-function M.apply(trust,queue,enabled,pause,park)
+-- True while Trust itself (main queue or follower walk queue) is running the character.
+function M.owned(trust,queue)
+    local follower=trust and trust:role_with_type('follower')
+    return (owns_movement(queue.current_action) or (follower and owns_movement(follower.walk_action_queue.current_action))) and true or false
+end
+-- keep_autorun (optional, default off): leave the player's own native autorun
+-- running so they can steer it; Trust still releases everything it owns.
+function M.apply(trust,queue,enabled,pause,park,keep_autorun)
     local follower=trust:role_with_type('follower')
-    local owned=owns_movement(queue.current_action) or (follower and owns_movement(follower.walk_action_queue.current_action))
+    local owned=M.owned(trust,queue)
+    -- Decided before any cancellation so Trust's own cleanup cannot change the reading.
+    local keep=keep_autorun==true and require('cylibs/movement/autorun').should_preserve(true,owned)
     if not pause and not park then queue.control_revision=(queue.control_revision or 0)+1 end
     queue.movement_suspended=true
     queue.parked=park or queue.parked
@@ -44,7 +53,8 @@ function M.apply(trust,queue,enabled,pause,park)
         end
         if follower then follower:stop_following() end
         require('cylibs/movement/recovery').reset()
-        windower.ffxi.follow()
+        -- Cancels native follow/autorun; skipped only for kept player autorun.
+        if not keep then windower.ffxi.follow() end
     end)
     windower.ffxi.run=run
     if owned then run(false) end
