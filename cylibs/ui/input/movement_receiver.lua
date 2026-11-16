@@ -45,12 +45,20 @@ function M.new(options)
             f:close()
         end
     end
+    -- Native autorun as Windower reports it: on, off, or unavailable when the field is missing.
+    function self:autorun_text()
+        local state=options.autorun_state and options.autorun_state()
+        if state==nil then return 'unavailable' end
+        return state and 'on' or 'off'
+    end
     function self:status()
         local settings=options.settings()
         return self:policy()..' | local Pause '..tostring(settings.stop_on_movement==true)..
             ' | follow '..tostring(settings.enabled~=false)..' | others Act '..tostring(settings.start_others==true)..
             ' | others Assist '..tostring(settings.assist_others==true)..
-            ' | engage lock-on '..tostring(settings.auto_lockon~=false)..' | received '..self.received..' | accepted '..self.accepted..
+            ' | engage lock-on '..tostring(settings.auto_lockon~=false)..
+            ' | keep autorun '..tostring(settings.keep_autorun==true)..' | autorun msgs '..tostring(settings.autorun_messages==true)..
+            ' | autorun now '..self:autorun_text()..' | received '..self.received..' | accepted '..self.accepted..
             ' | ignored '..self.ignored..' | current: '..(self:reason() or 'ready')..' | last: '..self.last
     end
     function self:close()
