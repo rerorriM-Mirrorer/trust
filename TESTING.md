@@ -1,3 +1,19 @@
+# Tank2: Banish fallbacks; pets count as party - 2026-11-16
+
+Branch `test/flank-mode`, on top of Tank1 (`f302a35`). Source change plus host simulation only; **no live FFXI test of this batch.**
+
+**Tank1 live result (user, 2026-11-16).** "Already working pretty damn good" on Clairvaux (PLD).
+
+**Requests.** Banish and Banish II as fallbacks for Flash on PLD; count party members' pets and trusts as party for hate grabbing.
+
+**Changes.** Single-target order is now Flash, Provoke (WAR sub), Banish II, Banish (`tank_util.SingleOrder`; Banish ranges 19). Provoke stays ahead of the Banishes because it builds much more hate; say if the Banishes should come first. Alter egos (trusts) were already included: Windower lists them as party members. Each party member's pet (`mob.pet_index`, alive) is now added to the protected set, so an enemy attacking a pet is loose; its id also counts for the claim check. Alliance members are still not included.
+
+**Host verification.** `tank_util_test.lua` 15 pass (adds Provoke-before-Banish, Banish II, Banish), `tanker_role_test.lua` 10 pass (adds enemy on a party member's pet, Banish II when Flash is unavailable), `flank_mode_test.lua` 18 pass. Lua 5.1 (lupa).
+
+**Live checks.** (1) Flash on cooldown, no WAR sub, add on a party member: Banish II (then Banish when II is also down). (2) An enemy on a pet (avatar, wyvern, puppet, luopan...) gets Flashed. (3) An enemy on a trust gets Flashed.
+
+Install: cumulative `Trust-Tank2-20261116.zip` (replaces Tank1).
+
 # Tank1: PLD pulls loose enemies off the party - 2026-11-16
 
 Branch `test/flank-mode`, on top of Flank1 (`ca9f9aa`). Source change plus host simulation only; **no live FFXI test of this batch.**

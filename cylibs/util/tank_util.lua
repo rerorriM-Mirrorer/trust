@@ -17,6 +17,12 @@ tank_util.RetryDelay = 6
 -- game's limits so a cast is not refused as out of range.
 tank_util.FlashRange = 19
 tank_util.ProvokeRange = 16
+tank_util.BanishRange = 19
+-- Single-target order after the AoE check. Provoke (a WAR subjob ability) comes before the
+-- Banishes because it builds far more hate; Banish II/Banish are the PLD-native fallbacks
+-- when Flash is on cooldown.
+tank_util.SingleOrder = { 'Flash', 'Provoke', 'Banish II', 'Banish' }
+tank_util.Ranges = { Flash = 19, Provoke = 16, ['Banish II'] = 19, Banish = 19 }
 tank_util.BanishgaRange = 19
 -- Banishga: loose mobs within ClusterRadius of the centre mob count as caught; any
 -- uninvolved monster within SafetyRadius of the centre blocks the cast (it would be
@@ -39,7 +45,8 @@ end
 -- @tparam table ctx Fields:
 --   me          the tank's mob table (needs index, x, y)
 --   mobs        list of mob tables (windower.ffxi.get_mob_array values)
---   party       map index -> { id, hpp } of party members (including the tank)
+--   party       map index -> { id, hpp } of everyone the tank protects: party members
+--               (alter egos/trusts are party members) and their pets, the tank included
 --   max_range   ignore mobs further than this from the tank
 -- @treturn list Loose mobs, the one attacking the lowest-HP party member first, then nearest.
 function tank_util.loose_enemies(ctx)
@@ -101,7 +108,7 @@ function tank_util.aoe_center(ctx, loose)
 end
 
 -------
--- Chooses what to do. `ready` maps 'Banishga'/'Flash'/'Provoke' to true when that action
+-- Chooses what to do. `ready` maps 'Banishga'/'Flash'/'Provoke'/'Banish II'/'Banish' to true when that action
 -- is known and ready; `recent` maps mob id -> time last acted on; `now` is the clock.
 -- @treturn table|nil { name = action name, target = mob, marks = list of mobs to mark }
 function tank_util.choose(ctx, ready, recent, now)
@@ -117,11 +124,10 @@ function tank_util.choose(ctx, ready, recent, now)
     end
     for _, mob in ipairs(fresh) do
         local d = dist2d(mob, ctx.me)
-        if ready.Flash and d <= tank_util.FlashRange then
-            return { name = 'Flash', target = mob, marks = { mob } }
-        end
-        if ready.Provoke and d <= tank_util.ProvokeRange then
-            return { name = 'Provoke', target = mob, marks = { mob } }
+        for _, name in ipairs(tank_util.SingleOrder) do
+            if ready[name] and d <= tank_util.Ranges[name] then
+                return { name = name, target = mob, marks = { mob } }
+            end
         end
     end
     return nil

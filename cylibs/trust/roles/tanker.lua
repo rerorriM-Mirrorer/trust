@@ -3,6 +3,8 @@
 -- it pulls loose enemies (ones attacking another party member) back onto itself:
 --   two or more loose enemies close together, nothing else nearby -> Banishga
 --   otherwise, the enemy hitting the lowest-HP party member -> Flash, else Provoke
+--   (WAR subjob), else Banish II, else Banish
+-- "Party" includes alter egos (trusts) and every party member's pet.
 -- It never moves and never changes the engaged target: spells and abilities are aimed at
 -- the loose enemy by index, so the tank stays on the party leader's target. Each enemy is
 -- left alone for a few seconds after an attempt. Decisions live in cylibs/util/tank_util.lua.
@@ -25,6 +27,8 @@ function Tanker.new(action_queue)
         Banishga = Spell.new('Banishga', L{}, L{}),
         Flash = Spell.new('Flash', L{}, L{}),
         Provoke = JobAbility.new('Provoke', L{}, L{}),
+        ['Banish II'] = Spell.new('Banish II', L{}, L{}),
+        Banish = Spell.new('Banish', L{}, L{}),
     }
     return self
 end
@@ -77,6 +81,11 @@ function Tanker:get_context(player)
     for key, member in pairs(windower.ffxi.get_party()) do
         if type(member) == 'table' and type(key) == 'string' and key:match('^p%d$') and member.mob then
             party[member.mob.index] = { id = member.mob.id, hpp = member.hpp }
+            -- Pets count too: an enemy hitting Myrr's avatar or a puppet is loose.
+            local pet = member.mob.pet_index and windower.ffxi.get_mob_by_index(member.mob.pet_index)
+            if pet and pet.hpp and pet.hpp > 0 then
+                party[pet.index] = { id = pet.id, hpp = pet.hpp }
+            end
         end
     end
     local mobs = {}
