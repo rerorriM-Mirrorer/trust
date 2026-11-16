@@ -2,25 +2,46 @@
 --
 -- Background: when the stick sender fires, takeover.lua hands the character
 -- back to manual control. The only native call it makes when Trust owns no
--- movement is windower.ffxi.follow() with no argument, which also drops the
--- player's own autorun. FFXI lets a player steer slightly left/right while
+-- movement is windower.ffxi.follow() with no argument, which may also drop the
+-- player's own autorun (not yet confirmed in game). FFXI lets a player steer slightly left/right while
 -- autorunning, so the optional "keep autorun" setting skips that call when
 -- the player is autorunning on their own.
 --
--- Windower exposes autorun as a boolean on windower.ffxi.get_player(). That
--- field has NOT been observed in game from this code; every function here
--- answers nil ("unknown") instead of guessing when it is missing, and callers
--- then behave exactly as they did before this module existed.
+-- Windower documents get_player().autorun as a table {x, y, z}: the direction
+-- the character is auto-running in. (The first version of this module expected
+-- a boolean, so in game it always read as "unavailable" and did nothing.) The
+-- documentation does not say whether the field is absent or zeroed when no
+-- autorun is active, so both count as "not autorunning". Whether a stopped
+-- autorun can leave its last direction behind is not documented; Movement >
+-- Status prints the raw numbers so that can be checked in game.
 local M = {}
 
--- Returns true/false for native autorun, or nil when Windower does not say.
--- Native /follow of another character also moves the player, but it is not
--- autorun the player asked to keep, so an active follow target reads false.
+local function component(value)
+    value = tonumber(value) or 0
+    return math.abs(value) > 1e-6 and value or 0
+end
+
+-- Returns the autorun direction as x, y, z (all 0 when idle), or nil when there
+-- is no player to ask.
+function M.vector()
+    local player = windower.ffxi.get_player()
+    if not player then return nil end
+    local autorun = player.autorun
+    if type(autorun) ~= 'table' then return 0, 0, 0 end
+    return component(autorun.x), component(autorun.y), component(autorun.z)
+end
+
+-- Returns true/false for native autorun, or nil when Windower has no player to
+-- report on. Native /follow of another character also moves the player, but it
+-- is not autorun the player asked to keep, so an active follow target reads false.
+-- A plain boolean is still accepted in case a Windower build reports one.
 function M.read()
     local player = windower.ffxi.get_player()
-    if not player or type(player.autorun) ~= 'boolean' then return nil end
+    if not player then return nil end
     if type(player.follow_index) == 'number' and player.follow_index > 0 then return false end
-    return player.autorun
+    if type(player.autorun) == 'boolean' then return player.autorun end
+    local x, y, z = M.vector()
+    return x ~= 0 or y ~= 0 or z ~= 0
 end
 
 -- True only when the setting is on, Trust is not itself running (a Trust run

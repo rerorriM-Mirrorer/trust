@@ -2,14 +2,17 @@
 local M={}
 function M.new(options)
     local self={received=0,accepted=0,ignored=0,down=false,last='waiting for movement'}
+    -- Delivery policy is no longer a setting. The sender still requires a
+    -- policy= line in the lease file, so Send (the old default) is always published.
     function self:policy()
-        return options.settings().policy=='Ready' and 'Ready' or 'Send'
+        return 'Send'
     end
     function self:reason(local_only)
         return options.blocked(local_only)
     end
     function self:receive(local_only, leader)
         self.received=self.received+1
+        self.takeover_note=nil                 -- set by perform when something noteworthy happened
         local reason=self:reason(local_only)
         if not reason then
             local ok,result,message=pcall(options.perform,local_only,leader)
@@ -17,7 +20,7 @@ function M.new(options)
             elseif result==false then reason=message or 'action unavailable' end
         end
         if reason then self.ignored=self.ignored+1;self.last=reason;return false end
-        self.accepted=self.accepted+1;self.last=local_only and 'local movement takeover' or (leader and 'leader handoff requested' or 'follow requested');return true
+        self.accepted=self.accepted+1;self.last=(local_only and 'local movement takeover' or (leader and 'leader handoff requested' or 'follow requested'))..(self.takeover_note and (' ('..self.takeover_note..')') or '');return true
     end
     function self:key(dik,pressed)
         if dik~=0x7B and dik~=0x79 and dik~=0x77 then return end
@@ -45,11 +48,16 @@ function M.new(options)
             f:close()
         end
     end
-    -- Native autorun as Windower reports it: on, off, or unavailable when the field is missing.
+    -- Native autorun as Windower reports it: on, off, or unavailable when there is no player.
     function self:autorun_text()
         local state=options.autorun_state and options.autorun_state()
         if state==nil then return 'unavailable' end
-        return state and 'on' or 'off'
+        local text=state and 'on' or 'off'
+        -- The raw direction shows whether a stopped autorun leaves a stale vector behind.
+        local x,y,z
+        if options.autorun_vector then x,y,z=options.autorun_vector() end
+        if x then text=text..string.format(' (x %.2f y %.2f z %.2f)',x,y,z) end
+        return text
     end
     function self:status()
         local settings=options.settings()

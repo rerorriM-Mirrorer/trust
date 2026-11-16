@@ -11,11 +11,18 @@ local W={ffxi={get_player=function()return player end,
 local env=setmetatable({windower=W},{__index=_G})
 local Autorun=load_with('cylibs/movement/autorun.lua',env)
 
--- read(): nil unless Windower provides a boolean; /follow is not kept autorun.
-player=nil;assert(Autorun.read()==nil,'no player is unknown')
-player={};assert(Autorun.read()==nil,'missing field is unknown, never guessed')
-player={autorun='yes'};assert(Autorun.read()==nil)
-player={autorun=true};assert(Autorun.read()==true)
+-- read(): Windower documents autorun as a table {x,y,z}; nil only when there is no player.
+player=nil;assert(Autorun.read()==nil and Autorun.vector()==nil,'no player is unknown')
+player={};assert(Autorun.read()==false,'absent field means not autorunning')
+local ax,ay,az=Autorun.vector();assert(ax==0 and ay==0 and az==0)
+player={autorun={x=0,y=0,z=0}};assert(Autorun.read()==false,'zero vector is idle')
+player={autorun={x=1e-9,y=-1e-9,z=0}};assert(Autorun.read()==false,'tiny noise is idle')
+player={autorun={x=0,y=1,z=0}};assert(Autorun.read()==true,'a direction means autorunning')
+ax,ay,az=Autorun.vector();assert(ax==0 and ay==1 and az==0,'vector is reported')
+player={autorun={x=-0.5,y=0}};assert(Autorun.read()==true,'missing components count as 0')
+player={autorun={x=0,y=1,z=0},follow_index=9};assert(Autorun.read()==false,'native /follow is not kept autorun')
+player={autorun='yes'};assert(Autorun.read()==false,'unrecognised value is not autorun')
+player={autorun=true};assert(Autorun.read()==true,'a plain boolean is still accepted')
 player={autorun=false};assert(Autorun.read()==false)
 player={autorun=true,follow_index=0};assert(Autorun.read()==true)
 player={autorun=true,follow_index=17};assert(Autorun.read()==false,'native /follow is not autorun to keep')
@@ -24,7 +31,9 @@ player={autorun=true}
 assert(Autorun.should_preserve(true,false)==true)
 assert(Autorun.should_preserve(false,false)==false and Autorun.should_preserve(nil,false)==false,'default off')
 assert(Autorun.should_preserve(true,true)==false,'Trust-owned run is still released')
-player={};assert(Autorun.should_preserve(true,false)==false,'unknown state keeps the old behavior')
+player=nil;assert(Autorun.should_preserve(true,false)==false,'no player keeps the old behavior')
+player={};assert(Autorun.should_preserve(true,false)==false,'no autorun field keeps the old behavior')
+player={autorun={x=0,y=1,z=0}};assert(Autorun.should_preserve(true,false)==true,'the documented vector form is preserved')
 player={autorun=false};assert(Autorun.should_preserve(true,false)==false)
 
 -- takeover.apply(): real production engine, real autorun module.
@@ -48,13 +57,15 @@ Takeover.apply(trust,queue,enabled,true,false)
 assert(follows==1,'default (argument omitted) still cancels native follow/autorun')
 reset();Takeover.apply(trust,queue,enabled,true,false,false)
 assert(follows==1,'setting off cancels as before')
-reset();Takeover.apply(trust,queue,enabled,true,false,true)
-assert(follows==0 and runs==0,'kept autorun: no native follow() and no native run(false)')
+reset();local kept=Takeover.apply(trust,queue,enabled,true,false,true)
+assert(follows==0 and runs==0 and kept==true,'kept autorun: no native follow() and no native run(false), and the caller is told')
 assert(queue.movement_suspended and follower.manual_pause and not enabled.value,'Trust still takes the gates and pauses itself')
-reset();player={autorun=false};Takeover.apply(trust,queue,enabled,true,false,true)
+reset();player={autorun=false};assert(Takeover.apply(trust,queue,enabled,true,false,true)==false)
 assert(follows==1,'setting on but not autorunning: ordinary takeover')
-reset();player={};Takeover.apply(trust,queue,enabled,true,false,true)
-assert(follows==1,'setting on but state unavailable: ordinary takeover')
+reset();player=nil;Takeover.apply(trust,queue,enabled,true,false,true)
+assert(follows==1,'setting on but no player to ask: ordinary takeover')
+reset();player={autorun={x=0,y=1,z=0}};Takeover.apply(trust,queue,enabled,true,false,true)
+assert(follows==0 and runs==0,'documented vector form: autorun kept')
 reset();player={autorun=true,follow_index=5};Takeover.apply(trust,queue,enabled,true,false,true)
 assert(follows==1,'native /follow of another character is still cancelled')
 reset();player={autorun=true};queue.current_action={gettype=function()return'runtolocationaction'end}
@@ -125,11 +136,19 @@ assert(m.keep_autorun==false and m.autorun_messages==false,'existing characters 
 -- Movement status reports the options and what Windower says about autorun.
 local live={keep_autorun=true,autorun_messages=false,policy='Send'}
 local autorunNow
+local vector
 local R=require('cylibs/ui/input/movement_receiver').new({settings=function()return live end,blocked=function()end,
-    autorun_state=function()return autorunNow end})
+    autorun_state=function()return autorunNow end,autorun_vector=function()if vector then return vector.x,vector.y,vector.z end end})
 autorunNow=nil;assert(R:status():find('keep autorun true | autorun msgs false | autorun now unavailable',1,true))
 autorunNow=true;assert(R:status():find('autorun now on',1,true))
+vector={x=0,y=1,z=0};assert(R:status():find('autorun now on (x 0.00 y 1.00 z 0.00)',1,true),'raw direction is shown');vector=nil
 autorunNow=false;assert(R:status():find('autorun now off',1,true))
 local bare=require('cylibs/ui/input/movement_receiver').new({settings=function()return live end,blocked=function()end})
 assert(bare:status():find('autorun now unavailable',1,true),'receivers without the hook still report')
+-- The receiver reports what the takeover decided in Movement > Status "last".
+local Rcv=require('cylibs/ui/input/movement_receiver')
+local noteRcv;noteRcv=Rcv.new({settings=function()return live end,blocked=function()end,
+    perform=function()noteRcv.takeover_note='autorun kept';return true end})
+noteRcv:receive(true);assert(noteRcv.last=='local movement takeover (autorun kept)')
+noteRcv.perform=nil
 print('PASS keep-autorun takeover (off by default, Trust-owned run still released, unknown state unchanged), debounced notices, command, defaults and status')

@@ -27,7 +27,10 @@ default.follow.auto_pause = false
 default.follow.fan_out = true
 -- Filled once from the active job, then retained across job/profile switches.
 default.character_modes = {}
-default.movement = {policy='Send',enabled=true,quiet=true,assist_others=false,stop_on_movement=true,start_others=true,auto_lockon=false,keep_autorun=false,autorun_messages=false,defaults_version=0,
+-- `policy` (Delivery policy) and `quiet` are legacy keys kept only so old files load:
+-- the menu no longer offers a policy (the sender always gets Send), and `feedback`
+-- (Request feedback, off by default) replaces the inverted `quiet`.
+default.movement = {policy='Send',quiet=true,feedback=false,enabled=true,assist_others=false,stop_on_movement=true,start_others=false,auto_lockon=false,keep_autorun=false,autorun_messages=false,defaults_version=0,
     recovery={mode='Detour',pulling=true,following=true,paths=true,interval=2,min_movement=.5,
         detour_distance=2,attempts=2,pull_cooldown=30,diagnostics=true,verbose=true}}
 -- autohide: hide every Trust widget after `autohide_seconds` without player input.
@@ -184,7 +187,7 @@ function TrustAddonSettings:loadSettings()
     local movement=settings.movement
     local movementDefaultsChanged=false
     if (tonumber(movement.defaults_version) or 0)<1 then
-        movement.stop_on_movement=true;movement.start_others=true;movement.auto_lockon=false
+        movement.stop_on_movement=true;movement.start_others=false;movement.auto_lockon=false
         movement.enabled=true;movement.policy='Send';movement.quiet=true
         movement.recovery.mode='Detour';movement.recovery.pulling=true
         movement.recovery.following=true;movement.recovery.paths=true
@@ -193,6 +196,13 @@ function TrustAddonSettings:loadSettings()
     end
     if (tonumber(movement.defaults_version) or 0)<2 then
         movement.recovery.verbose=true;movement.defaults_version=2
+        movementDefaultsChanged=true
+    end
+    if (tonumber(movement.defaults_version) or 0)<3 then
+        -- Request feedback replaces the inverted `quiet` key; carry each character's
+        -- existing choice across so nobody's behavior changes.
+        movement.feedback=(movement.quiet==false)
+        movement.defaults_version=3
         movementDefaultsChanged=true
     end
     if movementDefaultsChanged then save_with_fresh_file(self, settings) end

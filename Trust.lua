@@ -493,6 +493,7 @@ function load_ui()
     movement_receiver=require('cylibs/ui/input/movement_receiver').new({
         settings=function() return addon_settings:getSettings().movement end,
         autorun_state=function() return require('cylibs/movement/autorun').read() end,
+        autorun_vector=function() return require('cylibs/movement/autorun').vector() end,
         focused=windower.has_focus,clock=require('socket').gettime,timestamp=os.time,
         open=io.open,remove=os.remove,
         name=function()
@@ -517,10 +518,11 @@ function load_ui()
             local movement=addon_settings:getSettings().movement
             if action_queue.parked then return false,'Parked - use Pause or Act first' end
             shortcuts.follow.pending_follow=nil
-            require('cylibs/movement/takeover').apply(player.trust.main_job,action_queue,addon_enabled,movement.stop_on_movement,false,movement.keep_autorun==true)
+            local kept=require('cylibs/movement/takeover').apply(player.trust.main_job,action_queue,addon_enabled,movement.stop_on_movement,false,movement.keep_autorun==true)
+            movement_receiver.takeover_note=kept and 'autorun kept' or nil
             if local_only or movement.enabled==false then return true end
             if state.IpcMode.value~='All' and state.IpcMode.value~='Send' then return false,'Local takeover complete; IPC sending unavailable' end
-            local quiet=movement.quiet~=false
+            local quiet=movement.feedback~=true
             return require('cylibs/util/command_feedback').run(quiet,function()
                 local flags=(movement.start_others and '1' or '0')..' '..(movement.assist_others==true and '1' or '0')..' '..(quiet and '1' or '0')
                 local issuer=windower.ffxi.get_player().name

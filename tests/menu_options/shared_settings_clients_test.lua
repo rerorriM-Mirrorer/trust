@@ -85,9 +85,9 @@ local function seed()
     -- Shaped like the real file: a <global> that says Off, and per-character sections.
     return {writes=0,data={
         global={movement={start_others=false,stop_on_movement=false,defaults_version=0}},
-        clairvaux={movement={start_others=true,stop_on_movement=true,defaults_version=2}},
-        myrr={movement={stop_on_movement=true,defaults_version=2}},
-        lionstag={movement={start_others=true,stop_on_movement=true,defaults_version=2}},
+        clairvaux={movement={start_others=true,stop_on_movement=true,defaults_version=3}},
+        myrr={movement={defaults_version=3}},
+        lionstag={movement={start_others=true,stop_on_movement=true,defaults_version=3}},
     }}
 end
 local function client(name,disk,tweak)
@@ -123,15 +123,17 @@ do
         'control must reproduce the reported bug: another client\'s unrelated save restored On')
 end
 
--- Control 2: even ONE client is enough. Myrr only inherits <global>'s Off, yet an unrelated
--- save by Clairvaux (old behavior) writes an explicit On for Myrr, because the library
--- compared each character against the code's default instead of <global>.
+-- Control 2: even ONE client is enough. Myrr only inherits <global>'s Off for Pause on
+-- movement (the code default is On), yet an unrelated save by Clairvaux (old behavior)
+-- writes an explicit On for Myrr, because the library compared each character against the
+-- code's default instead of <global>. (Request others act used to show this too; its code
+-- default is now Off, matching <global>, so Pause on movement carries the control.)
 do
     local disk=seed()
     local c=client('clairvaux',disk,function(cfg)cfg.reload=nil end)
-    assert(effective(disk,'myrr','start_others')==false,'control: Myrr inherits Off from <global>')
+    assert(effective(disk,'myrr','stop_on_movement')==false,'control: Myrr inherits Off from <global>')
     toggle_fan(c)
-    assert(effective(disk,'myrr','start_others')==true,'control must reproduce: Myrr flipped to On by someone else\'s save')
+    assert(effective(disk,'myrr','stop_on_movement')==true,'control must reproduce: Myrr flipped to On by someone else\'s save')
 end
 
 -- With the fix: all three clients loaded at once, then each saves in turn.

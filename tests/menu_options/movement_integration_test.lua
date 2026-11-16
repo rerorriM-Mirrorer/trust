@@ -4,7 +4,7 @@ local block=assert(root:match('(    if movement_receiver then movement_receiver:
 local Feedback=require('cylibs/util/command_feedback')
 local Receiver=require('cylibs/ui/input/movement_receiver')
 local events,sent,takeovers,chat={}, {}, {}, {}
-local settings={policy='Send',enabled=true,quiet=true,stop_on_movement=true,start_others=true,assist_others=false}
+local settings={enabled=true,feedback=false,stop_on_movement=true,start_others=true,assist_others=false}
 local menu=false
 local env=setmetatable({action_queue={},addon_enabled={},player={trust={main_job={}}},
  addon_settings={getSettings=function()return{movement=settings}end},hud={trustMenu={isVisible=function()return menu end}},state={IpcMode={value='All'}},
@@ -27,7 +27,7 @@ local function gesture(key)events.keyboard(key or 0x7B,true);events.keyboard(key
 gesture();assert(#takeovers==1 and #sent==2 and #chat==0)
 assert(sent[1].command=='trust movementhandoff Myrr 1 0 1' and sent[1].target=='Cioara')
 gesture();assert(#takeovers==2 and #sent==4,'fresh neutral gesture sends again')
-settings.assist_others=true;settings.start_others=false;settings.quiet=false
+settings.assist_others=true;settings.start_others=false;settings.feedback=true
 gesture();assert(sent[#sent].command=='trust movementhandoff Myrr 0 1 0' and #chat==1)
 settings.enabled=false;settings.stop_on_movement=false
 local count=#sent;gesture();assert(#sent==count and takeovers[#takeovers]==false,'follow off retains local takeover')

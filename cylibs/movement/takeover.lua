@@ -59,5 +59,6 @@ function M.apply(trust,queue,enabled,pause,park,keep_autorun)
     windower.ffxi.run=run
     if owned then run(false) end
     if not ok then error(err) end
+    return keep and true or false   -- true when the player's own autorun was deliberately left running
 end
 return M

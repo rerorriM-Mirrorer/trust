@@ -50,7 +50,10 @@ local sub=real_require('ui/settings/menus/RecoverySettingsMenuItem').new(owner);
 local editor=sub.view();assert(editor.data==options.movement.recovery and #editor.items==11)
 local expected={'mode','pulling','following','paths','interval','min_movement','detour_distance','attempts','pull_cooldown','diagnostics','verbose'}
 for i,key in ipairs(expected)do assert(editor.items[i].args[1]==key)end
-assert(menu.view().data==options.movement and menu.view().items[1].args[2]=='Ready')
+local mv=menu.view();assert(mv.data==options.movement)
+local movementKeys={'stop_on_movement','enabled','assist_others','start_others','feedback','auto_lockon','keep_autorun','autorun_messages'}
+assert(#mv.items==#movementKeys,'Delivery policy is no longer in the Movement menu')
+for i,key in ipairs(movementKeys)do assert(mv.items[i].args[1]==key,'Movement menu order: '..key)end
 assert(editor.items[1].args[2]=='Detour','saved Recovery selection was reset to Off')
 options.movement.recovery.mode='Pause';assert(sub.view().items[1].args[2]=='Pause')
 options.movement.recovery.mode='Off';assert(sub.view().items[1].args[2]=='Off')
