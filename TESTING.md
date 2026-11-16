@@ -1,3 +1,17 @@
+# Cutscene during Trust startup - 2026-11-15
+
+Branch `test/autorun-and-settings-fix` (same delivery as the keep-autorun and shared-settings entries below), base `test/widget-autohide` `5549371`. User report: loading Trust on Cioara failed with `Trust.lua 774, attempt to index field 'main_job' a nil value`; the user suspected she was in a cutscene.
+
+**Finding (read from source; reproduced in a host test, not in game).** Not caused by the keep-autorun or shared-settings patches: the same line exists in the user's 2026-11-15 backup (line 759) and was not touched by them. `loaded()` calls `handle_status_change` once near its start (`Trust.lua` line 109) with the character's current status, but `player.trust.main_job` is only assigned much later (line 139). When the status is Event (cutscene), the handler indexes `player.trust.main_job:role_with_type("follower")` and fails.
+
+**Change.** In `handle_status_change`, the Event branch now clears `action_queue` and, only if the main job trust and its follower role exist, the follower's walk queue. During normal play the behavior is identical (both queues cleared); at startup only the main queue is cleared, and the follower's queue starts empty when it is created. No other status is affected.
+
+Host verification: new `tests/menu_options/cutscene_startup_test.lua` slices the production handler out of `Trust.lua`. It fails against the previous code with the reported error, then passes: Event at startup with no job trust, with no `player.trust` at all, during play with a follower (main then walk queue cleared in order), with a job lacking a follower role, and an Idle status unchanged. All previously passing suites still pass; `Trust.lua` parses under Lua 5.1 after Windower literal-method normalization. Real Windower startup in a cutscene is NOT tested.
+
+Live check: log Cioara into a cutscene (or reload Trust while one is playing) and load Trust: it should load without the error. During a cutscene, confirm queued walking/actions stop as before, and that following resumes afterwards. Note the load-time status check only runs once, so a character who is already in a cutscene when Trust loads will not have its queues cleared again until the status changes.
+
+Install: part of the cumulative `Trust-Autorun-and-Settings-Fix2-20261115.zip` (replaces Fix1; adds the single `Trust.lua` change). Roll back by restoring `Trust.lua` from the previous package.
+
 # Shared settings.xml overwrites - 2026-11-15
 
 Branch `test/autorun-and-settings-fix`, based on `test/widget-autohide` `5549371`, together with the keep-autorun entry below. ~~Branch `fix/shared-settings-clobber`, based on `feature/autorun-steering` `bf17fc8`, which is based on `test/movement-handoff` `a001b83`.~~ **Correction:** wrong base branch; see the correction in the keep-autorun entry. User report: "Others act on movement" saves but after `//am all reload trust` stays the same or resets to On on other characters, with no pattern; suspected a save-on-unload problem. User ran the experiment below on their three-client setup and **confirmed** it: after turning Others act Off on Clairvaux and saving something unrelated from a second client loaded earlier, Clairvaux's `<start_others>true</start_others>` came back.

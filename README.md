@@ -642,3 +642,7 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - Fixes "Others act on movement" (and any other saved Trust setting) flipping back after saves or `//am all reload trust` when several characters share one `data/settings.xml`. Two causes in Windower's config library: a save rewrote the whole file from the copy this client loaded at startup, undoing newer saves by other clients; and a character that only inherited an older `<global>` value (this file's `<global>` still says Off for Others act and Pause on movement) was rewritten as an explicit On.
 - Saves now refresh from the file first and compare against `<global>`, then write. Nothing to configure; no new settings. Your existing `settings.xml` is not rewritten until a client next saves, and `<global>` is not edited by hand or wiped. Characters keep the values currently stored for them; the five characters stored as On in the backup stay On until you change them once more.
 - Live behavior with the real Windower library is still pending; see TESTING.md.
+
+### November 15, 2026 - Loading Trust during a cutscene
+
+- Fixes `Trust.lua: attempt to index field 'main_job' a nil value` when Trust is loaded while a character is in a cutscene (Event status): the startup status check ran before the job trusts existed. No settings or behavior change otherwise.
