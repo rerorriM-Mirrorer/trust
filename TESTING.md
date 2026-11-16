@@ -10,6 +10,8 @@ Branch `test/autorun-and-settings-fix`, on top of Fix5. Source change plus host 
 
 Host verification: new `tests/menu_options/pull_hysteresis_battle_menu_test.lua` (production `pull_attempt.lua`: melee approach limit, settled hold, re-approach; production `battle_menu`; receiver ordering). `pull_attempt_test.lua` passes before and after when run with a `math.atan2` shim (Lua 5.5 lacks it; that is why it is in the baseline failures). Whole suite 50 pass, the same 9 fail. Changed files parse under Lua 5.1.
 
+**Live result (user, 2026-11-16):** Fix5 confirmed (after Pause then Act, the character ran back into combat range). Fix6 working: pulls start promptly after a kill, and stick movement pauses Trust in combat. Myrr's raw-ID `...A command error occurred.` casts were GearSwap being unloaded during the chat-message investigation (Trust relies on GearSwap to resolve target IDs unless Config > GearSwap is Off). Missing addon chat on Myrr persists with Battlemod and FastTarget unloaded; still open.
+
 Install: cumulative `Trust-Autorun-Menu-Fix6-20261116.zip` (replaces Fix5; adds `cylibs/movement/recovery.lua` and `cylibs/actions/pull_attempt.lua`).
 
 # Fix5: Act resumes movement after a stick takeover - 2026-11-16
