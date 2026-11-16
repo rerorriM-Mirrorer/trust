@@ -60,7 +60,8 @@ end
 
 -- How far (degrees) a flanker may drift around the mob before it repositions. A wide
 -- margin keeps characters from shuffling every time the mob turns a little.
-flanking_util.ReturnAngle = 50
+-- Flank2: 50 -> 66 (user request after live play).
+flanking_util.ReturnAngle = 66
 
 -------
 -- Returns the mob's facing direction as a unit vector {x, y}. FFXI's facing angle runs

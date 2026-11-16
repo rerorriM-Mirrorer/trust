@@ -6,7 +6,7 @@ end
 local list = {}; function list:it() local i = 0; return function() i = i + 1; return self[i] end end
 L = function(t) return setmetatable(t or {}, { __index = list }) end
 state = { AutoTankMode = { value = 'Auto' } }
-ActionPriority = { medium = 2 }
+ActionPriority = { medium = 2, high = 3 }
 logger = { isEnabled = false }
 Condition = { check_conditions = function() return true end }
 local now = 100
@@ -53,7 +53,7 @@ player.status = 1
 t:check_gambits()
 local a = pushed[1]
 check('engaged, loose crab on Myrr -> Flash queued', a and a.name == 'Flash' and a.target_index == 11)
-check('queued with tanker identifier and medium priority', a and a.identifier == 'tanker_action' and a.priority == 2)
+check('queued with tanker identifier and high priority', a and a.identifier == 'tanker_action' and a.priority == 3)
 check('validate true while crab still on Myrr', a and a.validate() == true)
 mobs[11].target_index = 1
 check('validate false once crab is on the tank', a and a.validate() == false)

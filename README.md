@@ -670,3 +670,9 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - With **Auto Tank Mode** on and engaged, a PLD now watches for enemies attacking other party members and pulls them back: **Banishga** when two or more are bunched together and no uninvolved monster is near enough to get caught, otherwise **Flash** on the enemy hitting the lowest-HP member, or **Provoke** if Flash isn't ready (needs a WAR subjob). It never runs toward an enemy (out-of-range enemies are skipped), never changes its engaged target, and leaves each enemy alone for 6 seconds after an attempt.
 - PLD only for now. Live FFXI behavior is pending; see TESTING.md.
 - Tank2: **Banish II** and **Banish** are now fallbacks after Flash and Provoke. Enemies attacking a party member's pet or a trust count as loose too.
+
+### November 16, 2026 - Flank2: calmer Flank; tank helper priority
+
+- Flank now moves at most every 3 seconds, allows 66 degrees of drift, and settles for 5 seconds after arriving. If it can't reach the back within 3 seconds (wall, obstruction), or moves 3 times within 9 seconds, it acts like Auto for 9 seconds before trying again.
+- `//trust flank status` shows what Flank last did and why.
+- The PLD tank helper's actions now run at high priority (ahead of buffs, gambits and ordinary cures; emergency cures, weaponskills and skillchains still first).

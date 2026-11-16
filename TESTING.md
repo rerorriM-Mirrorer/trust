@@ -1,3 +1,28 @@
+# Flank2: calmer Flank; tank helper priority high - 2026-11-16
+
+Branch `test/flank-mode`, on top of Tank2 (`f02dd05`). Source change plus host simulation only; **no live FFXI test of this batch.**
+
+**Tank2 live result (user, 2026-11-16).** "Seems to be working well." Asked whether tank actions should take priority over other actions, with healing still first.
+
+**Flank1 live issue (user).** In some fights the Flank leader moved back and forth while the tank was gathering hate; near obstructions it should give up for a while, like Fan Out.
+
+**User decisions.** Tank helper priority `high`. Flank: check every 3 s; tolerance >66 degrees; settle after arriving; if the back is not reached within 3 s, stop for about 9 s; if Flank moved 3 times in 9 s, stop for about 9 s. Aiming "behind" from the attacked character's position instead of the mob's facing (option 1) deferred until this is tried.
+
+**Changes.**
+- `cylibs/trust/roles/tanker.lua`: priority `medium` -> `high` (3). Ahead of buffs, gambits (default) and medium/high cures queued at the same moment; emergency cures, weaponskills and skillchain steps (`highest`) still go first. The action queue only orders waiting actions; a cast in progress always finishes.
+- New `cylibs/movement/flank_state.lua` (per client): CheckInterval 3 s between move starts; SettleTime 5 s after arriving (cut short only when more than 135 degrees off, i.e. nearly in front, or further than Distance + 1); ReachTimeout 3 s; PauseTime 9 s; BurstCount 3 within BurstWindow 9 s (pause starts when the 3rd move ends). While paused Flank acts like Auto. A run destroyed by a queue clear releases the moving flag; a run that never reports back is released after 5 s.
+- `cylibs/util/flanking_util.lua`: ReturnAngle 50 -> 66.
+- `cylibs/conditions/flank_position.lua`: `move` also needs `flank_state.can_start`; `hold` also true while paused and not running.
+- `cylibs/battle/flank.lua`: the flank move is now a `FlankRunAction` (RunToLocation subclass) that records its start when it really begins, faces the target on arrival, and cancels itself after 3 s.
+- New `//trust flank status` (`commands/FlankCommands.lua`, registered in `Trust.lua` and `commands/Trust-Commands-Include.lua`): last event and age, remaining pause/settle, moves and pauses since load.
+- Observation, not changed: Settings "Priorities" (`RoleSettings.Priority`, `RolePrioritySettingsMenuItem.lua`) is read only by its own menu; nothing found that orders roles by it.
+
+**Host verification.** `flank_mode_test.lua` 30 pass (66-degree tolerance, check interval, settle and its front/too-far exceptions, reach-timeout pause and Auto hold, 3-in-9 pause, 2 moves 10 s apart not paused, stale-run release, status text); new `flank_run_action_test.lua` 6 pass (start, arrive/settle/face, 3 s timeout pause, destroy mid-run, never performed); `tank_util_test.lua` 15 pass; `tanker_role_test.lua` 10 pass (priority high). Lua 5.1 (lupa); changed files compile. The full older suite (Lua 5.4+) was not run here.
+
+**Live checks.** (1) The fight where the leader went back and forth: it should now move at most every 3 s, sit still after arriving, and after 3 moves in about 9 s stand still (Auto distance) for about 9 s. `//trust flank status` should show "paused 9s: 3 moves in 9s". (2) Flank next to a wall that blocks the back: within about 3 s `//trust flank status` should read "could not reach the back in 3s", and it should hold Auto distance for 9 s before trying again. (3) Ordinary single-tank fight: still gets behind and stays. (4) Clairvaux: loose-enemy Flash should not wait behind buffs.
+
+Install: cumulative `Trust-Flank2-20261116.zip` (replaces Tank2).
+
 # Tank2: Banish fallbacks; pets count as party - 2026-11-16
 
 Branch `test/flank-mode`, on top of Tank1 (`f302a35`). Source change plus host simulation only; **no live FFXI test of this batch.**

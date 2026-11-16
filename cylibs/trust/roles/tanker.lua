@@ -49,8 +49,10 @@ function Tanker:get_cooldown()
     return 1
 end
 
+-- Tank2+: high (user request). Ahead of buffs, gambits and ordinary cures queued at the
+-- same time; emergency cures, weaponskills and skillchain steps (highest) still go first.
 function Tanker:get_priority()
-    return ActionPriority.medium
+    return ActionPriority.high
 end
 
 -- Known, off cooldown, and (for spells) enough MP.

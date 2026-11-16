@@ -3,13 +3,15 @@
 --   FlankPositionCondition.new('move') is satisfied when this character should run to
 --     its flank spot behind the enemy (out of position, mob not targeting us, not tanking).
 --   FlankPositionCondition.new('hold') is satisfied when Flank should behave like Auto
---     instead: the mob is targeting us (it would turn and "behind" would keep moving) or
---     AutoTankMode is Auto (a tank stays in front).
+--     instead: the mob is targeting us (it would turn and "behind" would keep moving),
+--     AutoTankMode is Auto (a tank stays in front), or flank has given up for a while
+--     (see cylibs/movement/flank_state.lua).
 -- Not offered in the gambit editor; CombatMode builds it in code.
 -- @class module
 -- @name FlankPositionCondition
 
 local flanking_util = require('cylibs/util/flanking_util')
+local flank_state = require('cylibs/movement/flank_state')
 
 local Condition = require('cylibs/conditions/condition')
 local FlankPositionCondition = setmetatable({}, { __index = Condition })
@@ -39,14 +41,23 @@ function FlankPositionCondition:is_satisfied(target_index)
         return false
     end
     local targeting_me = mob.target_index ~= nil and mob.target_index == me.index
+    local now = flank_state.clock()
     if self.mode == 'hold' then
+        -- Flank2: also act like Auto while flank is paused (gave up), but never while a
+        -- flank run is still under way.
         return is_tanking() or targeting_me
+            or (flank_state.is_paused(now) and not flank_state.running)
     end
     if is_tanking() then
         return false
     end
-    local needed, _ = flanking_util.flank_needed(mob, me, flanking_util.Back, self.get_radius())
-    return needed
+    local needed, reason = flanking_util.flank_needed(mob, me, flanking_util.Back, self.get_radius())
+    if not needed then
+        return false
+    end
+    local angle = flanking_util.angle_off(mob, me, flanking_util.Back)
+    local allowed, _ = flank_state.can_start(now, angle, reason == 'too far')
+    return allowed
 end
 
 function FlankPositionCondition:tostring()
