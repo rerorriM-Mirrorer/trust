@@ -655,3 +655,4 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - **Option lists:** the cursor stays visible; Left/Right and X change an on/off option, Left/Right adjust sliders and choices immediately, Up/Down save and move, Circle/Esc returns to the menu column. Left/Right no longer jump between the menu and the options. The cursor is redrawn on top of neighbouring menus.
 
 - Left in the menu column goes back into the option list after Circle/Esc. New `//trust menu cursorfront [on|off]` diagnostic (and a re-creation count in `//trust menu status`) for investigating the controller menu flash.
+- 2026-11-16 (Fix5): Act now lifts the stick-takeover movement gate and resumes following, so combat positioning (closing to combat distance) and return to camp work again after you steer a character.

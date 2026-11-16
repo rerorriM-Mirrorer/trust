@@ -26,5 +26,5 @@ for _,job in ipairs({{'SMN','SummonerTrust'},{'PUP','PuppetmasterTrust'}})do
  assert(class.get_widget({})==nil)
  petenv.addon_settings.getSettings=function()return{widgets={hide_pet=true}}end;assert(class.get_widget({})==nil)
 end
-assert(source('settings/TrustAddonSettings.lua'):find('default.widgets = {hide_pet=true}',1,true))
+assert(source('settings/TrustAddonSettings.lua'):find('default.widgets = {hide_pet=true,',1,true))
 print('PASS actual compact opacity/Off/Idle/animated Active transitions and SMN/PUP hidden visual factories; pet automation untouched')

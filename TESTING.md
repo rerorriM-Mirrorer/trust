@@ -1,3 +1,21 @@
+# Fix5: Act resumes movement after a stick takeover - 2026-11-16
+
+Branch `test/autorun-and-settings-fix`, on top of Fix4 (`8f65874`). Source change plus host simulation only; **no live FFXI test of this batch.** The menu flash work is on hold at the user's request.
+
+**Cause found (from source).** A stick takeover sets the main queue's `movement_suspended` gate (`cylibs/movement/takeover.lua`). While it is set, `ActionQueue:push_action` silently discards every `run*` action: the combat role's RunTo (closing to the combat Distance, e.g. 2 yalms), flanking moves and return to camp. Only an explicit follow command (`//trust follow <name>`, follow start) cleared it; Act did not. Pull attempts move with direct `windower.ffxi.run` calls outside the queue, so a gated character still ran to mobs and pulled but never closed to combat range afterwards. This matches both user reports: Cioara not closing when Clairvaux (Aggro engage mode) hit her pull target first, and not returning to 2 yalms after being moved out of range with Trust on Act.
+
+**Change (user's choice: Act resumes following too).** `GeneralTrustCommands:handle_start` (Act/start, also reached by the IPC `trust start` and by movement handoffs with Request others act) now, when the result is Active, clears `movement_suspended`, resets recovery, clears the follower's `manual_pause`/`recovery_paused` and starts following. A park released by Act is lifted the same way. Pause and the stick takeover itself are unchanged.
+
+**Stick takeover ignored in combat (user live result, cause pending).** On the moved character in combat, Movement > Status showed received and ignored both increasing; Trust stayed Active (widget) and kept acting and pulling. So the signal arrives but the receiver refuses it: either a `blocked` reason (unfocused, Parked, chat input, game menu, event, Trust menu) or an error inside the takeover. **Needed:** the `current:` and `last:` fields of that Status line read right after a refused combat stick move. That text names the reason.
+
+**Missing chat lines on Myrr (third client now).** The user reports lines from other addons missing too, with `/echo` working, which points at a Windower-level filter (an addon's incoming-text handler) on that client, not at Trust. `//lua list` output is itself among the hidden lines; use the Windower console (`~` key) to read it.
+
+**Pulling delay (pending logs).** Two candidates in `cylibs/actions/pull_attempt.lua`: a readiness blocker holds a pull up to 3 s before releasing it, and melee pulls treat 2 yalms centre distance as in range, then wait for the claim. `data/movement/pulling-<name>.log` (diagnostics on by default) records each step and reason.
+
+Host verification: new `tests/menu_options/act_resumes_movement_test.lua` (production `handle_start` slice: gate lifted and following resumed after takeover, after a park, and left alone when the result is not Active). `party_widgets_test.lua` had a stale assertion (it expected the widgets defaults line to end after `hide_pet=true`; the autohide keys added on `test/widget-autohide` broke it at the installed base); updated to match. Whole suite 49 pass, 9 fail (the same 9 as before; they need a fuller Windower environment). `GeneralCommands.lua` parses under Lua 5.1 after the usual literal-method normalization.
+
+Install: cumulative `Trust-Autorun-Menu-Fix5-20261116.zip` (replaces Fix4).
+
 # Fix4: Left re-enters options; menu flash diagnostic - 2026-11-15 (late)
 
 Branch `test/autorun-and-settings-fix`, on top of Fix3 (`64ac18a`). Source change plus host simulation only; **no live FFXI test of this batch.** User feedback on Fix3: autorun works well and is cancelled responsively by another character's Trust movement; autorun messages are good on the main character; the dialogue conflict was handed to the XIVCrossbar conversation and seems fixed; the cursor now draws over the menu items correctly. Open: (a) no Trust chat messages at all on two subordinate characters, (b) white box flashes when the controller moves the cursor or backs out.

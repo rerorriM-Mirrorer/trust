@@ -451,6 +451,18 @@ function GeneralTrustCommands:handle_start(_, include_party)
     local message
 
     Control.set(self.action_queue, self.addon_enabled, self.trust, 'Active')
+    -- Act also lifts the stick-takeover gate: combat positioning, return to
+    -- camp and following all resume (previously only a follow command did).
+    if self.action_queue and self.action_queue.control_state == 'Active' then
+        self.action_queue.movement_suspended = false
+        local follower = self.trust and self.trust:role_with_type('follower')
+        if follower then
+            require('cylibs/movement/recovery').reset()
+            follower.manual_pause = false
+            follower.recovery_paused = false
+            follower:start_following()
+        end
+    end
 
     if include_party then
         if state.IpcMode.value ~= 'All' and state.IpcMode.value ~= 'Send' then
