@@ -17,6 +17,7 @@ function MenuTrustCommands.new(trust, action_queue, hud)
     self:add_command('close', self.handle_close, 'Save eligible options and close all Trust menus')
     self:add_command('discard', self.handle_discard, 'Close menus without applying the pending editor draft')
     self:add_command('status', self.handle_status, 'Show menu test build and saved preferences')
+    self:add_command('cursorfront', self.handle_cursor_front, 'Redraw the menu cursor on top each time it appears: //trust menu cursorfront [on|off]')
     self:add_command('trace', self.handle_trace, 'Trace menu saves: //trust menu trace [on|off|status|dump|clear]')
 
     return self
@@ -46,9 +47,25 @@ function MenuTrustCommands:handle_status()
     local editorStatus = view and view.exitSaveStatus and view:exitSaveStatus() or 'no eligible editor'
     local controller=windower and windower.trust and windower.trust.controller_menu
     local controllerStatus=controller and string.format('%s, accepted %d, rejected %d',controller.mode or 'closed',controller.accepted,controller.rejected) or 'unavailable'
-    return true, string.format('Menu controller Test 1 | explicit open: true | save on exit: %s | adjacent: %s | IJKL: %s | editor: %s | controller: %s',
+    local loaded, CollectionView = pcall(require, 'cylibs/ui/collection_view/collection_view')
+    if not loaded then CollectionView = {} end
+    return true, string.format('Menu controller Test 1 | explicit open: true | save on exit: %s | adjacent: %s | IJKL: %s | editor: %s | controller: %s | cursor on top: %s, re-created %d times',
         tostring(MenuPreferences.get('save_on_exit')), tostring(MenuPreferences.get('adjacent')),
-        tostring(MenuPreferences.get('ijkl')), editorStatus,controllerStatus)
+        tostring(MenuPreferences.get('ijkl')), editorStatus,controllerStatus,
+        CollectionView.cursorFront == false and 'off' or 'on', CollectionView.cursorRecreated or 0)
+end
+
+-- Diagnostic switch for the cursor-on-top fix (see ImageView:bringToFront). Not saved:
+-- it resets to on when Trust reloads.
+function MenuTrustCommands:handle_cursor_front(_, action)
+    local CollectionView = require('cylibs/ui/collection_view/collection_view')
+    if action == 'on' or action == 'off' then
+        CollectionView.cursorFront = (action == 'on')
+    elseif action ~= nil and action ~= 'status' then
+        return false, 'Usage: //trust menu cursorfront [on|off]'
+    end
+    return true, string.format('Menu cursor redraw on top: %s | re-created %d times since load',
+        CollectionView.cursorFront == false and 'OFF' or 'ON', CollectionView.cursorRecreated or 0)
 end
 
 function MenuTrustCommands:handle_trace(_, action)

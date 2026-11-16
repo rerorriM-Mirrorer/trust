@@ -29,7 +29,7 @@ local v2=ImageView.new(1,1,255);local keep=v.image;v2:bringToFront();assert(bag.
 local cf=assert(io.open('cylibs/ui/collection_view/collection_view.lua'));local csrc=cf:read('*a');cf:close()
 local body=assert(csrc:match('(function CollectionView:moveCursorToIndexPath.-\nend)\n'))
 local fronts=0
-local CV={};local cenv=setmetatable({CollectionView=CV},{__index=_G})
+local CV={cursorFront=true};local cenv=setmetatable({CollectionView=CV},{__index=_G})
 assert(load(body,'moveCursor','t',cenv))()
 local focused=true
 local cv=setmetatable({cursorImageItem={getSize=function()return{width=37,height=24}end,offsetX=0,offsetY=0},
@@ -40,4 +40,9 @@ local cv=setmetatable({cursorImageItem={getSize=function()return{width=37,height
 cv:moveCursorToIndexPath();assert(fronts==1,'appearing brings the cursor to the front')
 cv:moveCursorToIndexPath();cv:moveCursorToIndexPath();assert(fronts==1,'staying visible does not recreate it every frame')
 focused=false;cv:moveCursorToIndexPath();focused=true;cv:moveCursorToIndexPath();assert(fronts==2,'each reappearance brings it to the front again')
+-- Diagnostic switch: off means the cursor is never re-created; the counter counts re-creations.
+CV.cursorRecreated=0;CV.cursorFront=false;fronts=0;focused=false;cv.cursorShown=false;cv:moveCursorToIndexPath();focused=true;cv:moveCursorToIndexPath()
+assert(fronts==0 and CV.cursorRecreated==0,'switch off: cursor is not re-created')
+CV.cursorFront=true;focused=false;cv:moveCursorToIndexPath();focused=true;cv:moveCursorToIndexPath()
+assert(fronts==1 and CV.cursorRecreated==1,'switch on: re-created and counted once')
 print('PASS cursor image is re-created on top each time it appears, once per appearance')

@@ -1,7 +1,7 @@
 -- Option-list input model (real ConfigEditor / Menu key code, stubbed UI):
 --   Left/Right and Confirm act on the item under the cursor, no "select first";
 --   Up/Down save the finished option then move; Circle/Escape returns to the menu
---   column; Confirm on a slider or choice only saves; Left/Right never hop columns.
+--   column; Confirm on a slider or choice only saves; Left/Right inside a list never hop columns.
 L=function(t)t=t or {};t.contains=function(self,k)for _,v in ipairs(self)do if v==k then return true end end;return false end;return t end;S=function(t)local s={};for _,v in ipairs(t or {})do s[v]=true end;s.contains=function(self,k)return self[k]==true end;return s end
 local f=assert(io.open('ui/settings/editors/config/ConfigEditor.lua'));local src=f:read('*a');f:close()
 local names={[200]='Up',[208]='Down',[203]='Left',[205]='Right',[28]='Enter',[1]='Escape'}
@@ -62,7 +62,7 @@ local big={};for i=1,120 do big[i]='v'..i end;pk=picker('v1',big);ed,log=editor(
 
 -- Multi-select picker: Confirm keeps its old behavior (opens the chooser via selection); Left/Right do not leave.
 pk=picker('a',{'a','b'},true);ed,log=editor(pk)
-assert(press(ed,205)==true and pk.value=='a' and log.finished==0,'Left/Right never hop columns')
+assert(press(ed,205)==true and pk.value=='a' and log.finished==0,'Left/Right inside a list never hop columns')
 assert(press(ed,28)==false and #fell==1 and fell[1]==28,'Confirm falls through to select the multi-picker')
 
 -- Up/Down: save the finished option first, then move; a failed save keeps the cursor.
@@ -79,7 +79,7 @@ ed,log=editor(toggle(true));ed.ownsDirectionalInput=nil;press(ed,203);assert(#fe
 -- Plain editors give up Right as a way back to the menu column; subclasses keep the default.
 assert(ConfigEditor.new~=nil)
 
--- Menu: Left does not enter an option list; an option list is focusable on open whatever autosave says.
+-- Menu: Left in the menu column re-enters an option list; an option list is focusable on open whatever autosave says.
 local mf=assert(io.open('cylibs/ui/menu/menu.lua'));local msrc=mf:read('*a');mf:close()
 local prefs={save_on_exit=false}
 local Menu={}
@@ -99,6 +99,6 @@ local menu=setmetatable({isChatOpen=false,contentViewStack={getCurrentView=funct
 assert(menu:focusOptionsEditor()==true and focused==1,'option lists are entered on open even with autosave off')
 view.ownsDirectionalInput=nil;assert(menu:focusOptionsEditor()==false,'other views still follow the autosave preference')
 focused=0;view.ownsDirectionalInput=true
-menu:onKeyboardEvent(203,true,0,false);assert(focused==0 and paged==1,'Left no longer enters the option list')
-view.ownsDirectionalInput=nil;menu:onKeyboardEvent(203,true,0,false);assert(focused==1,'views without the new model keep Left to enter')
-print('PASS option-list input model: in-place toggle/slider/choice, save on Up/Down and Confirm, Escape returns, Left/Right never hop columns')
+menu:onKeyboardEvent(203,true,0,false);assert(focused==1 and paged==0,'Left in the menu column re-enters the option list')
+view.shouldRequestFocus=function()return false end;menu:onKeyboardEvent(203,true,0,false);assert(focused==1 and paged==1,'no focusable list: Left pages the menu')
+print('PASS option-list input model: in-place toggle/slider/choice, save on Up/Down and Confirm, Escape returns, Left/Right inside a list never hop columns')

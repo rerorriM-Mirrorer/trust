@@ -233,9 +233,9 @@ function Menu:onKeyboardEvent(key, pressed, flags, blocked)
 
         if keyName == 'Left' then
             local currentView = self.contentViewStack:getCurrentView()
-            -- Option lists own Left/Right (they change values); they are entered by
-            -- opening the menu, or by Save, and left with Circle/Escape.
-            if currentView and currentView:shouldRequestFocus() and not currentView.ownsDirectionalInput then
+            -- Left in the menu column goes back into the option list (after Circle/Escape
+            -- left it). Inside the list, Left/Right belong to the options themselves.
+            if currentView and currentView:shouldRequestFocus() then
                 currentView:requestFocus()
             else
                 self.menuView:pageLeft()
