@@ -626,3 +626,9 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - Fresh stick signals take over local movement while retaining targets. Pause my Trust controls job automation; Follow off disables only party requests. Active movement is cancelled with ownership-aware input release.
 - Stop/Stopall parks party movement/actions and requests disengage, replacing close-follow retreat. Automatic handoffs cannot unpark. Explicit Pause/Act releases park; fresh Follow is required to resume travel.
 - Explicit Assist Me stands up resting recipients with /heal; standing clients are not toggled into rest. Install the same test patch on participating clients. Live verification remains pending.
+
+### November 15, 2026 - Keep autorun on stick movement
+
+- New Movement options, both Off by default: **Keep autorun on stick movement** (`//trust keepautorun [on|off]`) and **Autorun on/off messages**. With Keep autorun on, a stick takeover no longer sends the native `windower.ffxi.follow()` cancel while you are autorunning yourself, so you can keep steering left/right as FFXI normally allows. Trust still pauses itself, remembers its targets and releases anything it was running; a Trust-owned run and a native `/follow` of another character are still cancelled.
+- With Autorun on/off messages on, Trust prints `[Trust] Autorun on.` / `Autorun off.` when your autorun changes (two matching samples, silent while Trust itself is running the character, silent baseline when enabled). Movement > Status now also reports both options and the autorun state Windower exposes.
+- If Windower does not expose autorun on `windower.ffxi.get_player()`, Trust behaves exactly as before and says so once. Live FFXI behavior is pending; see TESTING.md.
