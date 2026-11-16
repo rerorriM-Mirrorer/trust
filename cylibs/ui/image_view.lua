@@ -43,6 +43,33 @@ function ImageView:destroy()
     num_images_created = num_images_created - 1
 end
 
+---
+-- Moves this image above every other Trust image by replacing the underlying
+-- Windower image with a new one: Windower draws images in creation order, so the
+-- newest image is on top. Used for the menu cursor, which must never be covered
+-- by a menu that was rebuilt after the cursor was first created.
+function ImageView:bringToFront()
+    local old = self.image
+    local fresh = Image.new()
+    fresh:fit(true)
+    fresh:hide()
+    fresh:draggable(false)
+    local destroyables = self:getDisposeBag().destroyables
+    local replaced = false
+    for index = 1, destroyables:length() do
+        if destroyables[index] == old then
+            destroyables[index] = fresh
+            replaced = true
+            break
+        end
+    end
+    if not replaced then destroyables:append(fresh) end
+    self.image = fresh
+    self.imagePath = nil -- the next layout loads the path onto the new image
+    if old and old.destroy then old:destroy() end
+    self:setNeedsLayout()
+end
+
 function ImageView:loadImage(imagePath)
     if self.imagePath == imagePath then
         return

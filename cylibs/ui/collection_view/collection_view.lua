@@ -120,6 +120,13 @@ function CollectionView:moveCursorToIndexPath(cursorIndexPath)
         end
     end
 
+    -- Each time the cursor appears it is re-created so it is the newest image and
+    -- draws above every menu, including ones rebuilt since this view was made.
+    if isCursorVisible and not self.cursorShown and self.selectionBackground.bringToFront then
+        self.selectionBackground:bringToFront()
+    end
+    self.cursorShown = isCursorVisible
+
     self.selectionBackground:setVisible(isCursorVisible)
     self.selectionBackground:setNeedsLayout()
     self.selectionBackground:layoutIfNeeded()

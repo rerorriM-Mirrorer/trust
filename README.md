@@ -646,3 +646,10 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 ### November 15, 2026 - Loading Trust during a cutscene
 
 - Fixes `Trust.lua: attempt to index field 'main_job' a nil value` when Trust is loaded while a character is in a cutscene (Event status): the startup status check ran before the job trusts existed. No settings or behavior change otherwise.
+
+### November 15, 2026 - Autorun detection fixed; Movement and main menu reworked; new option-list controls
+
+- **Keep autorun** and **Autorun on/off messages** now read Windower's autorun direction (it is a direction, not a yes/no value, which is why the first version did nothing). Movement > Status shows the raw direction. Still pending a live check that the stick no longer stops autorun.
+- **Movement menu** is reordered and renamed: Pause on movement, Request follow, Request assist, Request others act, Request feedback, Automatic lock-on when engaging, Keep autorun on stick movement, Autorun on/off messages. Request others act now defaults Off (characters with a stored value keep it); Request feedback replaces Quiet movement follow feedback with the opposite meaning, carrying over your current choice. Delivery policy (advanced) is removed; Trust always uses Send.
+- **Main menu** order: Job, Subjob, Pulling, Following, Alter Egos, Movement, Recovery, Paths, Config. **Disable sound effects for this installation** moved from Config > Sounds to Config > Menu (still shared by every character).
+- **Option lists:** the cursor stays visible; Left/Right and X change an on/off option, Left/Right adjust sliders and choices immediately, Up/Down save and move, Circle/Esc returns to the menu column. Left/Right no longer jump between the menu and the options. The cursor is redrawn on top of neighbouring menus.

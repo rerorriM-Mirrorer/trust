@@ -25,6 +25,12 @@ function ImageCollectionViewCell.new(item)
     return self
 end
 
+-- Draws this image above all other Trust images (see ImageView:bringToFront).
+function ImageCollectionViewCell:bringToFront()
+    self.imageView:bringToFront()
+    self:setNeedsLayout()
+end
+
 function ImageCollectionViewCell:setItem(item)
     CollectionViewCell.setItem(self, item)
 

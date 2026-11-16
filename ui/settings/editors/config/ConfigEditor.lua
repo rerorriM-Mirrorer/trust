@@ -25,6 +25,7 @@ local TextItem = require('cylibs/ui/collection_view/items/text_item')
 local TextStyle = require('cylibs/ui/style/text_style')
 local ToggleButtonCollectionViewCell = require('cylibs/ui/collection_view/cells/toggle_button_collection_view_cell')
 local VerticalFlowLayout = require('cylibs/ui/collection_view/layouts/vertical_flow_layout')
+local Keyboard = require('cylibs/ui/input/keyboard')
 local MenuPreferences = require('cylibs/ui/menu/menu_preferences')
 local EditorValues = require('cylibs/ui/menu/editor_values')
 local SaveTrace = require('cylibs/ui/menu/menu_save_trace')
@@ -182,25 +183,16 @@ function ConfigEditor.new(trustSettings, configSettings, configItems, infoView, 
         if infoView then
             infoView:setDescription("Edit the selected item.")
         end
-        local configItem = self.configItems[indexPath.section]
-        local item = self:getDataSource():itemAtIndexPath(indexPath)
-        if (item.getCurrentValue and configItem.getInitialValue) then
-            self:onConfigItemChanged():trigger(configItem:getKey(), item:getCurrentValue(), configItem:getInitialValue())
-            SaveTrace.editor(self,'field-finished',configItem:getKey(),SaveTrace.enabled and self:readDraft() or nil)
-            --if item:getCurrentValue() ~= configItem:getInitialValue() then
-            if configItem.getDependencies then
-                for dependency in configItem:getDependencies():it() do
-                    if dependency.onReload then
-                        local allValues = dependency.onReload(configItem:getKey(), item:getCurrentValue(), configItem)
-                        dependency:setAllValues(allValues)
-
-                        self:reloadConfigItem(dependency)
-                    end
-                end
-            end
-            --end
-        end
+        self:fieldFinished(indexPath)
     end), self:getDelegate():didDeselectItemAtIndexPath())
+
+    -- Ordinary option editors act on the item under the cursor: no "select first",
+    -- the cursor stays visible, Left/Right adjust, Up/Down move and save, and
+    -- Circle/Escape returns to the menu column. Subclasses keep their own behavior.
+    if getmetatable(self) == ConfigEditor then
+        self.ownsDirectionalInput = true
+        self.resignFocusKeys = L{ 1 }
+    end
 
     self:setNeedsLayout()
     self:layoutIfNeeded()
@@ -209,6 +201,92 @@ function ConfigEditor.new(trustSettings, configSettings, configItems, infoView, 
     self.exitSourceValues = EditorValues.copy(self.configSettings)
     SaveTrace.editor(self,'editor-opened')
     return self
+end
+
+-- Runs when the user has finished with one option: reports the change, then reloads
+-- any options that depend on it. Called when a selected item is deselected, and
+-- directly after an in-place Left/Right/Confirm change.
+function ConfigEditor:fieldFinished(indexPath)
+    local configItem = self.configItems[indexPath.section]
+    local item = self:getDataSource():itemAtIndexPath(indexPath)
+    if configItem and item and item.getCurrentValue and configItem.getInitialValue then
+        self:onConfigItemChanged():trigger(configItem:getKey(), item:getCurrentValue(), configItem:getInitialValue())
+        SaveTrace.editor(self,'field-finished',configItem:getKey(),SaveTrace.enabled and self:readDraft() or nil)
+        if configItem.getDependencies then
+            for dependency in configItem:getDependencies():it() do
+                if dependency.onReload then
+                    local allValues = dependency.onReload(configItem:getKey(), item:getCurrentValue(), configItem)
+                    dependency:setAllValues(allValues)
+
+                    self:reloadConfigItem(dependency)
+                end
+            end
+        end
+    end
+end
+
+-- Changes the item under the cursor by one step without selecting it. Returns true
+-- when the item type supports in-place changes (even if the value could not move).
+-- direction is -1/1 for Left/Right, or nil to toggle a boolean.
+function ConfigEditor:adjustItem(item, direction, flags)
+    if item.__type == FFXIToggleButtonItem.__type then
+        item:setEnabled(not item:getEnabled())
+        return true
+    elseif item.__type == SliderItem.__type then
+        if direction then item:setCurrentValue(item:getCurrentValue() + direction * item:getInterval()) end
+        return direction ~= nil
+    elseif item.__type == PickerItem.__type and not item:getAllowsMultipleSelection() then
+        if not direction then return false end
+        local values = item:getAllValues()
+        local count = values:length()
+        if count == 0 then return true end
+        local index = values:indexOf(item:getCurrentValue()) or 1
+        local step = (flags == 1) and 50 or 1
+        index = index + direction * step
+        if index < 1 then index = count elseif index > count then index = 1 end
+        item:setCurrentValue(values[index])
+        return true
+    end
+    return false
+end
+
+function ConfigEditor:onKeyboardEvent(key, pressed, flags, blocked, keyName)
+    if not self.ownsDirectionalInput or not pressed or blocked or self.destroyed or not self:isVisible() then
+        return FFXIWindow.onKeyboardEvent(self, key, pressed, flags, blocked, keyName)
+    end
+    local name = Keyboard.input():getKey(key, flags)
+    local indexPath = self:getDelegate():getCursorIndexPath()
+    local item = indexPath and self:getDataSource():itemAtIndexPath(indexPath)
+    if name == 'Left' or name == 'Right' then
+        if item and self:adjustItem(item, name == 'Left' and -1 or 1, flags) then
+            self:playSoundsForKey(name)
+            self:refreshCursorCell(indexPath, item)
+            self:fieldFinished(indexPath)
+            return true
+        end
+        return true -- never hand Left/Right to the menu column from an options list
+    elseif name == 'Enter' then
+        if item then
+            if self:adjustItem(item, nil) then
+                self:refreshCursorCell(indexPath, item)
+                self:fieldFinished(indexPath)
+                return true
+            elseif item.__type == SliderItem.__type or (item.__type == PickerItem.__type and not item:getAllowsMultipleSelection()) then
+                -- Confirm on a slider or choice saves; it changes nothing else.
+                self:onConfirmClick()
+                return true
+            end
+        end
+    elseif name == 'Up' or name == 'Down' then
+        -- Moving to another option finishes this one, exactly like leaving the editor.
+        if not self:commitOnExit('cursor-move') then return true end
+    end
+    return FFXIWindow.onKeyboardEvent(self, key, pressed, flags, blocked, keyName)
+end
+
+function ConfigEditor:refreshCursorCell(indexPath, item)
+    local cell = self:getDataSource():cellForItemAtIndexPath(indexPath)
+    if cell then cell:setItem(item) end
 end
 
 function ConfigEditor:destroy()

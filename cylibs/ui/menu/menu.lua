@@ -88,6 +88,10 @@ function Menu:showMenu(menuItem)
             local currentView = self.contentViewStack:getCurrentView()
             if currentView and type(currentView.onSelectMenuItemAtIndexPath) == 'function' then
                 if currentView:onSelectMenuItemAtIndexPath(textItem, indexPath) == false then return end
+                -- Save from the menu column puts the cursor back in the option list.
+                if currentView.ownsDirectionalInput and textItem:getText() == 'Save' then
+                    self:focusOptionsEditor()
+                end
             end
 
             local childMenuItem = self.menuView:getItem():getChildMenuItem(textItem:getText())
@@ -154,9 +158,12 @@ function Menu:showMenu(menuItem)
 end
 
 function Menu:focusOptionsEditor()
-    if not MenuPreferences.get('save_on_exit') or self.isChatOpen
-            or windower.ffxi.get_info().chat_open then return false end
     local view = self.contentViewStack:getCurrentView()
+    -- Option lists that own Left/Right must always be reachable, whatever the
+    -- Save options on exit preference says (that only controls autosaving).
+    local direct = view and view.ownsDirectionalInput
+    if (not direct and not MenuPreferences.get('save_on_exit')) or self.isChatOpen
+            or windower.ffxi.get_info().chat_open then return false end
     if view and view.canSaveOnExit and view:canSaveOnExit() and view:shouldRequestFocus()
             and view:getDelegate():getCursorIndexPath() then
         -- Focus the list, not its field: opening must never toggle an option.
@@ -226,7 +233,9 @@ function Menu:onKeyboardEvent(key, pressed, flags, blocked)
 
         if keyName == 'Left' then
             local currentView = self.contentViewStack:getCurrentView()
-            if currentView and currentView:shouldRequestFocus() then
+            -- Option lists own Left/Right (they change values); they are entered by
+            -- opening the menu, or by Save, and left with Circle/Escape.
+            if currentView and currentView:shouldRequestFocus() and not currentView.ownsDirectionalInput then
                 currentView:requestFocus()
             else
                 self.menuView:pageLeft()
