@@ -89,7 +89,12 @@ function Pull:step()
     if not o.eligible() then self:finish(false,'pull action no longer available');return end
     if o.melee then self:engage(mob,now) end
     local distance=math.sqrt(mob.distance)
-    if distance>o.range then
+    -- Melee hysteresis: approach a little inside range, then stay settled until the
+    -- target drifts clearly outside it, so a moving mob does not flip the pull
+    -- between approaching and stopped at the range edge every step.
+    local limit=o.range
+    if o.melee then limit=self.settled and o.range+.5 or math.max(.5,o.range-.3) end
+    if distance>limit then
         self.settled=nil
         self:note('approaching '..o.ability:get_name()..' range')
         local p=windower.ffxi.get_mob_by_id(windower.ffxi.get_player().id)

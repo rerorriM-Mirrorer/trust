@@ -86,6 +86,15 @@ function M.close()
     if M.dispose_bag then M.dispose_bag:destroy();M.dispose_bag=nil end
     M.reset(true)
 end
+-- Windower exposes menu_open as a flag, not a menu ID, and it stays true for
+-- the whole time the character is engaged (the battle command menu), including
+-- the moment right after a kill while the dead target is still selected. Treat
+-- any engaged state as the battle menu unless a sub-target cursor is open.
+function M.battle_menu(character)
+    character = character or windower.ffxi.get_player()
+    if not character or character.status ~= 1 then return false end
+    return not windower.ffxi.get_mob_by_target('st')
+end
 local function suspended(ordinary_follow, following)
     local info=windower.ffxi.get_info();local character=windower.ffxi.get_player()
     if not info or not info.logged_in or not character then return true, 'character unavailable' end
@@ -95,13 +104,8 @@ local function suspended(ordinary_follow, following)
     local travel_follow = following and (character.status == 0 or mounted_follow)
     if info.chat_open and not travel_follow then return true, 'chat input open' end
     -- An idle or mounted follower can travel with an ordinary inventory window open.
-    if info.menu_open and not travel_follow then
-        -- Windower exposes a flag rather than a menu ID. Recognize the
-        -- engaged enemy cursor as the battle menu unless subtargeting.
-        local target = character.status == 1 and windower.ffxi.get_mob_by_target('t')
-        local battle_menu = target and target.spawn_type == 16 and target.hpp > 0
-            and not windower.ffxi.get_mob_by_target('st')
-        if not battle_menu then return true, 'Windower menu_open=true' end
+    if info.menu_open and not travel_follow and not M.battle_menu(character) then
+        return true, 'Windower menu_open=true'
     end
     if character.status~=0 and character.status~=1 and not mounted_follow then return true, 'character status '..tostring(character.status) end
     if not ordinary_follow and addon_enabled and not addon_enabled:getValue() then return true, 'Trust paused' end

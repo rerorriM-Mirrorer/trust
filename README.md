@@ -656,3 +656,4 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 
 - Left in the menu column goes back into the option list after Circle/Esc. New `//trust menu cursorfront [on|off]` diagnostic (and a re-creation count in `//trust menu status`) for investigating the controller menu flash.
 - 2026-11-16 (Fix5): Act now lifts the stick-takeover movement gate and resumes following, so combat positioning (closing to combat distance) and return to camp work again after you steer a character.
+- 2026-11-16 (Fix6): the stick takeover and pulls no longer treat the engaged battle menu as an open game menu (stick now pauses Trust in combat; no 3 s pull stall after kills); melee pulls stop flapping at the 2-yalm edge.

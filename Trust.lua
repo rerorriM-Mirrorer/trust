@@ -508,9 +508,9 @@ function load_ui()
             local info=windower.ffxi.get_info()
             if not info or not info.logged_in then return 'logged out' end
             if info.chat_open then return 'chat input' end
-            if info.menu_open then return 'game menu' end
             local character=windower.ffxi.get_player()
             if not character then return 'no character' end
+            if info.menu_open and not require('cylibs/movement/recovery').battle_menu(character) then return 'game menu' end
             if character.status==4 then return 'event/cutscene' end
             if hud.trustMenu:isVisible() then return 'Trust menu' end
         end,

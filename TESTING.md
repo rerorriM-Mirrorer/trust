@@ -1,3 +1,17 @@
+# Fix6: engaged battle menu no longer blocks stick takeover or pulls; melee pull hysteresis - 2026-11-16
+
+Branch `test/autorun-and-settings-fix`, on top of Fix5. Source change plus host simulation only; **no live FFXI test of this batch.**
+
+**Evidence (user's Cioara chat log, 2026-11-16, read in full).** Movement > Status in combat: `received 143 | accepted 79 | ignored 64 | current: game menu | last: game menu`, later 149/79/70, all `game menu`. Pull lines: repeated `waiting: Windower menu_open=true` right after kills (2.2-12.6y away), several `pull released after 3s blocked: Windower menu_open=true`, plus `chat input open` and `Trust menu open` blocks (those two are real and stay). Many melee pulls flapped `approaching Approach range` / `in melee range; waiting for claim` 5-10 times before the claim.
+
+**Cause.** Windower's `menu_open` stays true while the character is engaged (the battle command menu). The stick receiver's `blocked` check (`Trust.lua`) treated any `menu_open` as "game menu", so every stick move while engaged was refused: Trust never paused and kept acting and pulling (the user's in-combat report). Recovery's readiness check (`cylibs/movement/recovery.lua`, used by pulls) already excused the battle menu, but only with a live, alive `<t>` mob, so right after a kill (dead target still selected) the next pull waited up to 3 s and was then released: the 3-4 s delay.
+
+**Change.** New `Recovery.battle_menu(character)`: engaged (status 1) and no sub-target cursor (`<st>`) open. Both the stick receiver and pull readiness use it; idle `menu_open`, a sub-target cursor, chat input and the Trust menu still block. Melee pulls (`pull_attempt.lua`) now approach to 1.7 yalms (0.3 inside the 2-yalm range) and, once settled, only re-approach when the mob is beyond 2.5; spell pulls are unchanged. **Trade-off to watch:** while engaged, a stick move with a spell/ability list open now counts as a takeover (Windower cannot tell that menu from the battle menu); if navigating combat menus with the stick pauses Trust, record it.
+
+Host verification: new `tests/menu_options/pull_hysteresis_battle_menu_test.lua` (production `pull_attempt.lua`: melee approach limit, settled hold, re-approach; production `battle_menu`; receiver ordering). `pull_attempt_test.lua` passes before and after when run with a `math.atan2` shim (Lua 5.5 lacks it; that is why it is in the baseline failures). Whole suite 50 pass, the same 9 fail. Changed files parse under Lua 5.1.
+
+Install: cumulative `Trust-Autorun-Menu-Fix6-20261116.zip` (replaces Fix5; adds `cylibs/movement/recovery.lua` and `cylibs/actions/pull_attempt.lua`).
+
 # Fix5: Act resumes movement after a stick takeover - 2026-11-16
 
 Branch `test/autorun-and-settings-fix`, on top of Fix4 (`8f65874`). Source change plus host simulation only; **no live FFXI test of this batch.** The menu flash work is on hold at the user's request.
