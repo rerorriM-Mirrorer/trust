@@ -631,3 +631,8 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 
 - `//trust autohide [on|off|<seconds>]` hides all Trust widgets together after a period without keyboard, mouse, controller or manual-movement input, and shows them again on the next input. Off by default; the default delay is 5 seconds (1-600). Trust's own follow and path movement does not count as activity. The delay pauses while a Trust menu is open or a widget is being dragged or used. `//trust status` reports the state.
 - Hide/show only for now; a fade is planned separately. Source change only; live testing is pending (see TESTING.md).
+### November 15, 2026 - Keep autorun on stick movement
+
+- New Movement options, both Off by default: **Keep autorun on stick movement** (`//trust keepautorun [on|off]`) and **Autorun on/off messages**. With Keep autorun on, a stick takeover no longer sends the native `windower.ffxi.follow()` cancel while you are autorunning yourself, so you can keep steering left/right as FFXI normally allows. Trust still pauses itself, remembers its targets and releases anything it was running; a Trust-owned run and a native `/follow` of another character are still cancelled.
+- With Autorun on/off messages on, Trust prints `[Trust] Autorun on.` / `Autorun off.` when your autorun changes (two matching samples, silent while Trust itself is running the character, silent baseline when enabled). Movement > Status now also reports both options and the autorun state Windower exposes.
+- If Windower does not expose autorun on `windower.ffxi.get_player()`, Trust behaves exactly as before and says so once. Live FFXI behavior is pending; see TESTING.md.
