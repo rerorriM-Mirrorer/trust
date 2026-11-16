@@ -89,11 +89,12 @@ hud.trustMenu={isVisible=function()return false end}
 hud.mainMenuItem=nil
 local fullRoot=hud:getMainMenuItem()
 assert(fullRoot.children.Commands and fullRoot.buttonItems[4]=='Commands')
+assert(fullRoot.buttonItems[5]=='Movement' and fullRoot.buttonItems[6]=='Recovery' and fullRoot.buttonItems[7]=='Config','Full layout keeps Config last')
 layout='Condensed'
 local condensedRoot=hud:getMainMenuItem()
 assert(condensedRoot~=fullRoot and fullRoot.dead and not condensedRoot.children.Commands)
 assert(condensedRoot.children.Following and hud.menuLayout=='Condensed')
 local names=condensedRoot.buttons
-assert(names[1]=='Bard' and names[2]=='White Mage' and names[3]=='Pulling' and names[4]=='Following' and names[5]=='Paths' and names[6]=='Alter Egos' and names[7]=='Config' and names[8]=='Movement' and names[9]=='Recovery' and #names==9)
+assert(names[1]=='Bard' and names[2]=='White Mage' and names[3]=='Pulling' and names[4]=='Following' and names[5]=='Alter Egos' and names[6]=='Movement' and names[7]=='Recovery' and names[8]=='Paths' and names[9]=='Config' and #names==9,'main menu order')
 assert(condensedRoot.children.Pulling and condensedRoot.children.Movement and condensedRoot.children.Recovery and not condensedRoot.children.Profiles)
 print('PASS direct job settings routing, correct owners and Modes-last ordering')

@@ -34,14 +34,9 @@ local parent={showMenu=function(_,shown)assert(shown==menu)end}
 c['Import Job'].callback(parent)
 assert(menu.buttonItems[1]=='Config' and #menu.buttonItems==8,'rebuild changed menu order')
 assert(writes[1][1]=='Pulling' and writes[1][2].Targets[1]=='legacy' and writes[1][2].Distance==12 and not writes[1][2].Gambits)
--- Actual sound menu method must use the shared owner, not addon config.
+-- Sounds is no longer its own menu; config_menu_sound_test.lua covers the shared sound option.
 local f=assert(io.open('ui/settings/menus/ConfigSettingsMenuItem.lua'));local source=f:read('*a');f:close()
-local env=setmetatable({ConfigSettingsMenuItem={},MenuItem=Menu,ButtonItem=package.loaded['cylibs/ui/collection_view/items/button_item'],ConfigEditor=package.loaded['ui/settings/editors/config/ConfigEditor'],BooleanConfigItem=package.loaded['ui/settings/editors/config/BooleanConfigItem']},{__index=_G})
-local method=assert(source:match('(function ConfigSettingsMenuItem:getSoundSettingsMenuItem.-)\nfunction '))
-assert(load(method,'actual sound menu','t',env))()
-local soundMenu=env.ConfigSettingsMenuItem:getSoundSettingsMenuItem(addon)
-local editor=soundMenu.contentViewConstructor()
-assert(editor.owner==soundOwner and editor.values==soundValues and soundMenu.titleText=='Sounds (shared)')
+assert(not source:find('getSoundSettingsMenuItem',1,true) and not source:find("'Sounds', 18",1,true),'Sounds menu is gone from Config')
 print('PASS actual shared menus: shared target/config/sound owners, per-character source choice, explicit import without actions, scope and reload controls')
 
 -- Actual job Pulling constructor/reload hides Config for shared and legacy scope.

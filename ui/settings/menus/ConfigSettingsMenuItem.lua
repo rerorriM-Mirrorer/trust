@@ -18,14 +18,13 @@ function ConfigSettingsMenuItem.new(addonSettings, trustSettings, trustSettingsM
         ButtonItem.default('Widgets', 18),
         ButtonItem.default('Menu', 18),
         ButtonItem.default('Remote', 18),
-        ButtonItem.default('Sounds', 18),
         ButtonItem.default('Logging', 18),
     }, {}, nil, "Config", "Configure addon settings."), ConfigSettingsMenuItem)
     if full then
         self.buttonItems=L{
             ButtonItem.default('Widgets',18),ButtonItem.default('Menu',18),
             ButtonItem.default('GearSwap',18),ButtonItem.default('Remote',18),
-            ButtonItem.default('Shortcuts',18),ButtonItem.default('Sounds',18),
+            ButtonItem.default('Shortcuts',18),
             ButtonItem.default('Language',18),ButtonItem.default('Logging',18),
         }
     end
@@ -53,14 +52,41 @@ function ConfigSettingsMenuItem:reloadSettings(addonSettings, trustSettings, tru
         ButtonItem.default('Save'),
     }, {}, function(_, infoView)
         local values = addonSettings:getSettings().menu
+        -- One editor, two homes. The menu options are per character, but "Disable
+        -- sound effects" lives in the shared installation file. The editor works on
+        -- a private copy; this adapter writes each value back to its own owner.
+        local menuKeys = { 'layout', 'save_on_exit', 'adjacent', 'ijkl' }
+        local work = {}
+        for _, key in ipairs(menuKeys) do work[key] = values[key] end
+        work.layout = work.layout or 'Condensed'
+        local soundOwner, soundError = require('settings/shared_preferences').shared():owner('Sounds')
+        if soundOwner then
+            work.sounds_disabled = soundOwner:getSettings().disabled == true
+        else
+            addon_system_error(soundError)
+        end
+        local adapter = {}
+        function adapter:getSettings() return work end
+        function adapter:saveSettings()
+            local current = addonSettings:getSettings().menu
+            for _, key in ipairs(menuKeys) do current[key] = work[key] end
+            addonSettings:saveSettings(true)
+            if soundOwner and soundOwner:getSettings().disabled ~= work.sounds_disabled then
+                soundOwner:getSettings().disabled = work.sounds_disabled
+                local saved, err = soundOwner:saveSettings(true)
+                if saved == false then return false, err end
+            end
+            return true
+        end
         local configItems = L{
-            PickerConfigItem.new('layout', values.layout or 'Condensed', L{'Condensed','Full'}, nil, 'Menu layout'),
+            PickerConfigItem.new('layout', work.layout, L{'Condensed','Full'}, nil, 'Menu layout'),
             BooleanConfigItem.new('save_on_exit', 'Save options on exit'),
             BooleanConfigItem.new('adjacent', 'Place editor beside menu'),
             BooleanConfigItem.new('ijkl', 'I/J/K/L navigate menus'),
+            BooleanConfigItem.new('sounds_disabled', 'Disable sound effects for this installation'),
         }
-        return ConfigEditor.new(addonSettings, values, configItems, infoView)
-    end, 'Menu', 'Choose Full or Condensed, save, then close and reopen Trust menus to apply the layout.'))
+        return ConfigEditor.new(adapter, work, configItems, infoView)
+    end, 'Menu', 'Choose Full or Condensed, save, then close and reopen Trust menus to apply the layout. Sound effects are shared by every character on this installation.'))
     self:setChildMenuItem("Widgets", WidgetSettingsMenuItem.new())
     self:setChildMenuItem("Logging", self:getLoggingMenuItem(addonSettings))
     self:setChildMenuItem("Remote", RemoteCommandsSettingsMenuItem.new(addonSettings))
@@ -69,9 +95,6 @@ function ConfigSettingsMenuItem:reloadSettings(addonSettings, trustSettings, tru
         self:setChildMenuItem('Shortcuts',ShortcutListMenuItem.new())
         self:setChildMenuItem('Language',self:getLanguageSettingsMenuItem(addonSettings))
     end
-    -- Keep Sounds last, including entries appended during reload.
-    self.buttonItems=self.buttonItems:filter(function(button) return button:getTextItem().text~='Sounds' end)
-    self:setChildMenuItem('Sounds',self:getSoundSettingsMenuItem(addonSettings))
 end
 
 function ConfigSettingsMenuItem:getGearSwapMenuItem(trustSettings, trustSettingsMode)
@@ -133,14 +156,6 @@ function ConfigSettingsMenuItem:getLoggingMenuItem(addonSettings)
     end, "Logging", "Clear debug logging filters."))
 
     return loggingMenuItem
-end
-
-function ConfigSettingsMenuItem:getSoundSettingsMenuItem(addonSettings)
-    return MenuItem.new(L{ButtonItem.default('Save')},{},function(_,info)
-        local owner,err=require('settings/shared_preferences').shared():owner('Sounds')
-        if not owner then addon_system_error(err);return nil end
-        return ConfigEditor.new(owner,owner:getSettings(),L{BooleanConfigItem.new('disabled','Disable sound effects for this installation')},info)
-    end,'Sounds (shared)','Saved for all characters using this Trust installation. Other clients update automatically.')
 end
 
 function ConfigSettingsMenuItem:getLanguageSettingsMenuItem(addonSettings)

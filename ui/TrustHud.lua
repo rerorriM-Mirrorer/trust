@@ -261,11 +261,11 @@ function TrustHud:getMainMenuItem()
         ButtonItem.localized(player.sub_job_name, i18n.resource('jobs', 'en', player.sub_job_name)),
         ButtonItem.default('Pulling',18),
         ButtonItem.localized('Following', i18n.translate('Button_Following')),
-        ButtonItem.localized('Paths', i18n.translate('Button_Paths')),
         ButtonItem.localized('Alter Egos', i18n.translate('Button_Alter_Egos')),
-        ButtonItem.default('Config', 18),
         ButtonItem.default('Movement',18),
         ButtonItem.default('Recovery',18),
+        ButtonItem.localized('Paths', i18n.translate('Button_Paths')),
+        ButtonItem.default('Config', 18),
     }, {
         Config = ConfigSettingsMenuItem.new(self.addon_settings, main_trust_settings, state.MainTrustSettingsMode, self.mediaPlayer),
     }, nil, "Jobs")
@@ -279,8 +279,9 @@ function TrustHud:getMainMenuItem()
             ButtonItem.localized(player.main_job_name,i18n.resource('jobs','en',player.main_job_name)),
             ButtonItem.localized(player.sub_job_name,i18n.resource('jobs','en',player.sub_job_name)),
             ButtonItem.localized('Profiles',i18n.translate('Button_Profiles')),
-            ButtonItem.default('Commands',18),ButtonItem.default('Config',18),
+            ButtonItem.default('Commands',18),
             ButtonItem.default('Movement',18),ButtonItem.default('Recovery',18),
+            ButtonItem.default('Config',18),
         }
         mainMenuItem:setChildMenuItem('Commands',require('ui/settings/menus/commands/CommandsMenuItem').new(self.commands))
     end
