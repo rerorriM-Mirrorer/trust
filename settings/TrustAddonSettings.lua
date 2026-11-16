@@ -81,6 +81,72 @@ default.sounds.sound_effects.disabled = true
 default.gearswap = {}
 
 
+-- A: several clients share one data/settings.xml, and Windower's config library
+-- has two habits that together made saved settings flip back on their own (for
+-- example "Others act on movement" returning to On after //am all reload):
+--
+--  1. config.save does not re-read the file. It merges this character's values
+--     into the copy of the WHOLE file parsed when this client loaded, then writes
+--     that copy back, so every other character's section is rewritten from this
+--     client's older copy and a newer save by another client is undone.
+--  2. When it parses the file it builds each character's section from the code's
+--     defaults, not from <global>, then compares against <global>. A character
+--     that merely inherits a <global> value that differs from today's default
+--     (this file's <global> still holds an older Off) therefore looks like it chose
+--     the default, and the next save writes that choice out for it.
+--
+-- Saves now go through a private "writer" table registered with the library. Before
+-- each write it is reset to the defaults, reloaded twice, and then given our values:
+-- the first reload runs with no character visible so the table becomes defaults +
+-- <global>, the baseline the library should have used; the second is the normal
+-- reload, so every character's section is current and compared against that
+-- baseline. The live settings table is never touched, so menus holding references
+-- to its inner tables keep working. If the library lacks these calls or fails, the
+-- old direct save is used so a change is never lost.
+local function deep_copy(value, seen)
+    if type(value) ~= 'table' then return value end
+    seen = seen or {}
+    if seen[value] then return seen[value] end
+    local copy = {}
+    seen[value] = copy
+    for k, v in pairs(value) do copy[deep_copy(k, seen)] = deep_copy(v, seen) end
+    return setmetatable(copy, getmetatable(value))
+end
+
+-- Runs fn while windower.ffxi.get_player() reports nobody, always restoring it.
+local function without_character(fn)
+    local ffxi = windower.ffxi
+    local real = ffxi.get_player
+    ffxi.get_player = function() return nil end
+    local ok, err = pcall(fn)
+    ffxi.get_player = real
+    if not ok then error(err, 0) end
+end
+
+local function refresh_writer(writer)
+    for key in pairs(writer) do writer[key] = nil end
+    for key, value in pairs(deep_copy(default)) do writer[key] = value end
+    without_character(function() config.reload(writer) end)
+    config.reload(writer)
+end
+
+local function save_with_fresh_file(owner, settings)
+    if type(config.load) == 'function' and type(config.reload) == 'function' then
+        local ok = pcall(function()
+            local writer = owner.file_writer
+            if not writer then
+                writer = config.load(default)
+                owner.file_writer = writer
+            end
+            refresh_writer(writer)
+            for key, value in pairs(settings) do writer[key] = value end
+            config.save(writer)
+        end)
+        if ok then return end
+    end
+    config.save(settings)
+end
+
 function TrustAddonSettings:onSettingsChanged()
     return self.settingsChanged
 end
@@ -129,7 +195,7 @@ function TrustAddonSettings:loadSettings()
         movement.recovery.verbose=true;movement.defaults_version=2
         movementDefaultsChanged=true
     end
-    if movementDefaultsChanged then config.save(settings) end
+    if movementDefaultsChanged then save_with_fresh_file(self, settings) end
     self.settings = settings
     require('settings/shared_preferences').configure(self)
     self:onSettingsChanged():trigger(self.settings)
@@ -141,7 +207,7 @@ function TrustAddonSettings:reloadSettings()
 end
 
 function TrustAddonSettings:saveSettings(saveToFile)
-    config.save(self.settings)
+    save_with_fresh_file(self, self.settings)
     require('cylibs/trust/commands/command_settings').recordSaved(self)
     self:onSettingsChanged():trigger(self.settings)
 end
