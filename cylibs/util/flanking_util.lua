@@ -52,6 +52,76 @@ function flanking_util.get_relative_location_for_target(mob_id, angle, distance)
 end
 
 -------
+-- Fork addition (Flank combat mode). The helpers below take mob tables instead of ids so
+-- they can be tested without the game, and they measure centre-to-centre distance like
+-- CombatMode Auto does (mob.distance), so the Combat > Config "Distance" slider means the
+-- same thing in Auto and Flank. The upstream function above adds model sizes on top,
+-- which would put a flanker further out than the same Distance in Auto.
+
+-- How far (degrees) a flanker may drift around the mob before it repositions. A wide
+-- margin keeps characters from shuffling every time the mob turns a little.
+flanking_util.ReturnAngle = 50
+
+-------
+-- Returns the mob's facing direction as a unit vector {x, y}. FFXI's facing angle runs
+-- the opposite way to math.atan2 (player_util.face turns to -atan2), hence -facing.
+function flanking_util.forward(mob)
+    return math.cos(-mob.facing), math.sin(-mob.facing)
+end
+
+-------
+-- Returns the x, y of the spot `radius` yalms from the mob's centre on the given side
+-- ("back", "left" or "right"; anything else means back).
+function flanking_util.flank_point(mob, side, radius)
+    local ux, uy = flanking_util.forward(mob)
+    if side == flanking_util.Left then
+        return mob.x - radius * uy, mob.y + radius * ux
+    elseif side == flanking_util.Right then
+        return mob.x + radius * uy, mob.y - radius * ux
+    end
+    return mob.x - radius * ux, mob.y - radius * uy
+end
+
+-------
+-- Returns the angle in degrees (0-180) between where `me` stands around the mob and
+-- where the flank spot is.
+function flanking_util.angle_off(mob, me, side)
+    local fx, fy = flanking_util.flank_point(mob, side, 1)
+    local ax, ay = fx - mob.x, fy - mob.y
+    local bx, by = me.x - mob.x, me.y - mob.y
+    local blen = math.sqrt(bx * bx + by * by)
+    if blen < 0.01 then
+        return 180 -- standing inside the mob's centre: treat as fully out of position
+    end
+    local cos = (ax * bx + ay * by) / blen
+    cos = math.max(-1, math.min(1, cos))
+    return math.deg(math.acos(cos))
+end
+
+-------
+-- Decides whether a flanker should move. Returns true plus a short reason when it should.
+-- `radius` is the target distance from the mob's centre (the Combat Distance setting).
+-- It does not move while the mob is targeting `me`: the mob would turn to face us and
+-- "behind" would keep moving, so CombatMode handles that case like Auto instead.
+function flanking_util.flank_needed(mob, me, side, radius)
+    if mob == nil or me == nil or mob.facing == nil then
+        return false, 'no mob'
+    end
+    if me.index ~= nil and mob.target_index == me.index then
+        return false, 'mob targeting me'
+    end
+    local dx, dy = me.x - mob.x, me.y - mob.y
+    local distance = math.sqrt(dx * dx + dy * dy)
+    if distance > radius + 1 then
+        return true, 'too far'
+    end
+    if flanking_util.angle_off(mob, me, side) > flanking_util.ReturnAngle then
+        return true, 'off angle'
+    end
+    return false, 'in position'
+end
+
+-------
 -- Gets the closest point to a target within a given radius not overlapped by a given radius from
 -- a second target
 -- @tparam number target_1_id ID of the first target, which will be the center of the inclusion area

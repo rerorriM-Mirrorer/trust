@@ -657,3 +657,10 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - Left in the menu column goes back into the option list after Circle/Esc. New `//trust menu cursorfront [on|off]` diagnostic (and a re-creation count in `//trust menu status`) for investigating the controller menu flash.
 - 2026-11-16 (Fix5): Act now lifts the stick-takeover movement gate and resumes following, so combat positioning (closing to combat distance) and return to camp work again after you steer a character.
 - 2026-11-16 (Fix6): the stick takeover and pulls no longer treat the engaged battle menu as an open game menu (stick now pauses Trust in combat; no 3 s pull stall after kills); melee pulls stop flapping at the 2-yalm edge.
+
+### November 16, 2026 - Flank combat mode
+
+- New **Combat Mode: Flank** (Job > Combat > Modes, or `//trust set combatmode flank`). The character stands behind its target at the Combat > Config **Distance**, the same distance Auto uses. It only repositions once it has drifted about 50 degrees around the target, so it doesn't shuffle every time the target turns.
+- While the target is attacking this character, or **Auto Tank Mode** is Auto, Flank acts exactly like Auto (keeps the distance, doesn't chase the back).
+- A character on **Mirror** that assists a Flank character follows it behind the target, because Mirror stands near the assisted character.
+- Live FFXI behavior is pending; see TESTING.md.

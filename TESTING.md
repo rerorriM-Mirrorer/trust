@@ -1,3 +1,25 @@
+# Flank1: Flank combat mode - 2026-11-16
+
+Branch `test/flank-mode`, on top of Fix6 (`39553d5`, live-confirmed). Source change plus host simulation only; **no live FFXI test of this batch.**
+
+**Request (user, 2026-11-16).** An option to move behind the enemy so a character stays out of the way while a tank holds hate; a Mirror character assisting that character should then end up behind too; Auto Tank Mode ignores Flank. Asked whether Flank belongs as an on/off toggle or as a CombatMode value next to Auto and Mirror.
+
+**Design choice.** Flank is a fourth **CombatMode** value (`Off, Auto, Mirror, Flank`), because CombatMode is the positioning choice and the three are mutually exclusive. Found while reading: upstream already declares `state.FlankMode` (`Off/Back/Left/Right`) and `cylibs/util/flanking_util.lua`, but its only use in `combat_mode.lua` is commented out. FlankMode stays as it is (saved in every modes file, so removing values would raise "has no value" errors on load) and is still unused; Flank always goes behind. Side selection (Left/Right) is a possible follow-up.
+
+**Behavior.**
+- Goal: the point behind the target (opposite its facing) at Combat Distance measured centre to centre, like Auto (`mob.distance`). Upstream's helper adds model sizes, which would put a flanker further out than Auto at the same setting; the new helpers do not.
+- Move only when engaged and either more than Distance + 1 from the target or more than 50 degrees around it from the back spot; then run to within 0.6 yalms of the spot and face the target. Re-checked by the normal CombatMode cycle (2 s cooldown).
+- Hold (acts like Auto with the same distance band) when the target's `target_index` is this character, or `AutoTankMode` is `Auto`.
+- Mirror is unchanged: it runs to within Mirror Distance of the assisted character, so it follows a flanking leader around.
+
+**Files.** `cylibs/trust/roles/combat_mode.lua` (mode value, description, two gambits), new `cylibs/battle/flank.lua` (gambit action: RunToLocation to the spot, then face), new `cylibs/conditions/flank_position.lua` (`move`/`hold`), `cylibs/util/flanking_util.lua` (new `forward`, `flank_point`, `angle_off`, `flank_needed`; upstream function untouched), `ui/settings/menus/CombatModeSettingsMenuItem.lua` (Distance description mentions Flank).
+
+**Host verification.** New `tests/menu_options/flank_mode_test.lua`: facing convention (east facing 0, north facing -pi/2, matching `player_util.face`), back/left/right points, angle measure, 50-degree hysteresis, too-far rule, no move while targeted, condition `move`/`hold` with Auto Tank Mode. 18 pass under Lua 5.1 (lupa). Changed files compile under Lua 5.1. The facing convention is taken from `player_util.face` and upstream's comment, not observed in game.
+
+**Live checks.** (1) Two characters: the tank (or one with Auto Tank Mode Auto) engages; set the other to Flank. It should move to the back of the mob and face it, and not move again for small turns. If it goes to the front or a side, the facing sign is wrong: record which. (2) Let the mob turn to face the flanker (pull hate with it): it should stop circling and hold distance like Auto. (3) Turn Auto Tank Mode on for the flanker: it should behave like Auto. (4) Leader on Flank, a second character on Mirror assisting the leader: the second should end up near the leader behind the mob. (5) Change Combat > Config Distance while flanking: the next reposition uses the new distance. (6) Note whether the straight run through the mob looks wrong or gets caught on large mobs.
+
+Install: cumulative `Trust-Flank1-20261116.zip` (Fix6 files plus this batch; replaces Fix6).
+
 # Fix6: engaged battle menu no longer blocks stick takeover or pulls; melee pull hysteresis - 2026-11-16
 
 Branch `test/autorun-and-settings-fix`, on top of Fix5. Source change plus host simulation only; **no live FFXI test of this batch.**

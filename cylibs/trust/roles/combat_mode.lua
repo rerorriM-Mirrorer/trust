@@ -5,6 +5,8 @@ local GambitTarget = require('cylibs/gambits/gambit_target')
 local IsAssistTargetCondition = require('cylibs/conditions/is_assist_target')
 local player_util = require('cylibs/util/player_util')
 local flanking_util = require("cylibs/util/flanking_util")
+local Flank = require('cylibs/battle/flank')
+local FlankPositionCondition = require('cylibs/conditions/flank_position')
 
 local Gambiter = require('cylibs/trust/roles/gambiter')
 local CombatMode = setmetatable({}, {__index = Gambiter })
@@ -15,9 +17,12 @@ state.AutoFaceMobMode = M{['description'] = 'Auto Face Mob Mode', 'Auto', 'Away'
 state.AutoFaceMobMode:set_description('Auto', "Automatically turn to face the mob.")
 state.AutoFaceMobMode:set_description('Away', "Automatically face away from the mob.")
 
-state.CombatMode = M{['description'] = 'Combat Mode', 'Off', 'Auto', 'Mirror'}
+-- Fork: 'Flank' added. CombatMode is the positioning choice (Auto, Mirror, Flank are
+-- mutually exclusive ways to stand), so Flank lives here rather than as a separate toggle.
+state.CombatMode = M{['description'] = 'Combat Mode', 'Off', 'Auto', 'Mirror', 'Flank'}
 state.CombatMode:set_description('Auto', "Maintain a specified distance from the target.")
 state.CombatMode:set_description('Mirror', "Mirror the position of the party member you are assisting.")
+state.CombatMode:set_description('Flank', "Stand behind the target at the combat distance. Acts like Auto while the target is attacking you or Auto Tank Mode is on.")
 
 state.FlankMode = M{['description'] = 'Flanking Mode', 'Off', 'Back', 'Left', 'Right'}
 state.FlankMode:set_description('Back', "Stand behind the mob.")
@@ -120,6 +125,37 @@ function CombatMode:set_combat_settings(combat_settings)
         RunTo.new(self.distance), GambitTarget.TargetType.Enemy)
     )
 
+    -- Fork: Flank. Read the distance live so Config changes apply without a reload.
+    local function flank_radius()
+        return self.distance
+    end
+    -- 1) Move behind the target when out of position (see FlankPositionCondition 'move').
+    gambit_settings.Gambits:append(
+        Gambit.new(GambitTarget.TargetType.Enemy, L{
+            GambitCondition.new(ModeCondition.new('CombatMode', 'Flank'), GambitTarget.TargetType.Self),
+            GambitCondition.new(StatusCondition.new('Engaged'), GambitTarget.TargetType.Self),
+            GambitCondition.new(FlankPositionCondition.new('move', flank_radius), GambitTarget.TargetType.Enemy),
+        },
+        Flank.new(flank_radius), GambitTarget.TargetType.Enemy)
+    )
+    -- 2) Behave like Auto when the target is attacking us or we are tanking: keep the
+    --    combat distance and don't chase a spot that turns with us.
+    local flank_hold_distance_condition
+    if self.distance < 4 then
+        flank_hold_distance_condition = GambitCondition.new(DistanceCondition.new(self.distance, Condition.Operator.GreaterThan), GambitTarget.TargetType.Enemy)
+    else
+        flank_hold_distance_condition = GambitCondition.new(ConditionalCondition.new(L{ DistanceCondition.new(self.distance + 1, Condition.Operator.GreaterThan), DistanceCondition.new(self.distance - 1, Condition.Operator.LessThan) }, Condition.LogicalOperator.Or), GambitTarget.TargetType.Enemy)
+    end
+    gambit_settings.Gambits:append(
+        Gambit.new(GambitTarget.TargetType.Enemy, L{
+            GambitCondition.new(ModeCondition.new('CombatMode', 'Flank'), GambitTarget.TargetType.Self),
+            GambitCondition.new(StatusCondition.new('Engaged'), GambitTarget.TargetType.Self),
+            GambitCondition.new(FlankPositionCondition.new('hold', flank_radius), GambitTarget.TargetType.Enemy),
+            flank_hold_distance_condition,
+        },
+        RunTo.new(self.distance), GambitTarget.TargetType.Enemy)
+    )
+
     for gambit in gambit_settings.Gambits:it() do
         gambit.conditions = gambit.conditions:filter(function(condition)
             return condition:is_editable()
@@ -163,6 +199,8 @@ function CombatMode:allows_duplicates()
 end
 
 --[[
+Upstream's dormant flanking sketch, kept for reference. The fork's Flank combat mode
+(above) replaces it; FlankMode (Back/Left/Right) is still unused.
 
 if not L{'Off'}:contains(state.FlankMode.value) then
                 -- If we have a relative location, use that

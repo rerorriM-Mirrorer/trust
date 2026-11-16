@@ -52,7 +52,7 @@ function CombatModeSettingsMenuItem:getConfigMenuItem()
 
         self.disposeBag:add(configEditor:getDelegate():didMoveCursorToItemAtIndexPath():addAction(function(indexPath)
             if indexPath.section == 1 then
-                infoView:setDescription("Distance from enemy when engaged and CombatMode is Auto.")
+                infoView:setDescription("Distance from enemy when engaged and CombatMode is Auto or Flank.")
             elseif indexPath.section == 2 then
                 infoView:setDescription("Maximum distance to engage enemy when AutoEngageMode is set to Always.")
             elseif indexPath.section == 3 then
