@@ -771,7 +771,15 @@ function handle_status_change(new_status_id, old_status_id)
 			handle_unload()
 		end
 	elseif player.status == 'Event' then
-		for queue in L{ action_queue, player.trust.main_job:role_with_type("follower").walk_action_queue }:it() do
+		-- A: this also runs once during startup, before the job trusts exist
+		-- (player.trust.main_job is built later in loaded()), so loading Trust
+		-- while a character is in a cutscene used to fail here. Clear whatever
+		-- queues exist; the follower's queue starts empty when it is created.
+		local queues = { action_queue }
+		local main_job = player.trust and player.trust.main_job
+		local follower = main_job and main_job:role_with_type("follower")
+		if follower then queues[#queues + 1] = follower.walk_action_queue end
+		for _, queue in ipairs(queues) do
 			queue:clear()
 		end
 	end
