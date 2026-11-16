@@ -10,6 +10,7 @@ local Buffer = require('cylibs/trust/roles/buffer')
 local MagicBurster = require('cylibs/trust/roles/magic_burster')
 local Nuker = require('cylibs/trust/roles/nuker')
 local StatusRemover = require('cylibs/trust/roles/status_remover')
+local Tanker = require('cylibs/trust/roles/tanker') -- fork: pulls loose enemies off the party
 
 function PaladinTrust.new(settings, action_queue, battle_settings, trust_settings)
 	local job = Paladin.new(trust_settings.CureSettings)
@@ -20,6 +21,7 @@ function PaladinTrust.new(settings, action_queue, battle_settings, trust_setting
 		Nuker.new(action_queue, trust_settings.NukeSettings, 0.8, L{}, job),
 		Puller.new(action_queue, trust_settings.PullSettings, job),
 		StatusRemover.new(action_queue, trust_settings.StatusRemovalSettings, job),
+		Tanker.new(action_queue),
 	}
 	local self = setmetatable(Trust.new(action_queue, roles, trust_settings, job), PaladinTrust)
 

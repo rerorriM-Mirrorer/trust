@@ -664,3 +664,8 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - While the target is attacking this character, or **Auto Tank Mode** is Auto, Flank acts exactly like Auto (keeps the distance, doesn't chase the back).
 - A character on **Mirror** that assists a Flank character follows it behind the target, because Mirror stands near the assisted character.
 - Live FFXI behavior is pending; see TESTING.md.
+
+### November 16, 2026 - PLD pulls loose enemies off the party (Auto Tank Mode)
+
+- With **Auto Tank Mode** on and engaged, a PLD now watches for enemies attacking other party members and pulls them back: **Banishga** when two or more are bunched together and no uninvolved monster is near enough to get caught, otherwise **Flash** on the enemy hitting the lowest-HP member, or **Provoke** if Flash isn't ready (needs a WAR subjob). It never runs toward an enemy (out-of-range enemies are skipped), never changes its engaged target, and leaves each enemy alone for 6 seconds after an attempt.
+- PLD only for now. Live FFXI behavior is pending; see TESTING.md.

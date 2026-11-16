@@ -1,3 +1,26 @@
+# Tank1: PLD pulls loose enemies off the party - 2026-11-16
+
+Branch `test/flank-mode`, on top of Flank1 (`ca9f9aa`). Source change plus host simulation only; **no live FFXI test of this batch.**
+
+**Flank1 live result (user, 2026-11-16).** Working well: the leader on Flank moved behind the tank's target and shifted a little as hate moved between the two tanking characters; the Mirror character joined her behind the target.
+
+**Request.** Make the tank proactive about pulling hate: Flash or Provoke an enemy attacking another party member, Banishga when several are, without moving the party deeper and while staying on the leader's target. User chose a dedicated tank helper (option 2) over a new gambit target type, PLD first.
+
+**Design.** New role `Tanker` (`cylibs/trust/roles/tanker.lua`), added to PLD only (`cylibs/trust/data/PLD.lua`), active while `AutoTankMode` is `Auto` and the PLD is engaged. Decisions in `cylibs/util/tank_util.lua` (pure, tested):
+- Loose enemy: live monster (`spawn_type` 16, HP > 0, status 0/1) whose `target_index` is a party member other than the tank, unclaimed or claimed by the party, within 20 yalms. Ordered by the attacked member's HP%, then distance.
+- Retry delay: 6 s per enemy after any attempt.
+- Banishga when 2+ loose enemies are within 7 yalms of a centre enemy (centre within 19 of the tank) and no uninvolved monster (alive, not attacking the party, not party-claimed) is within 11 of the centre. Radii are conservative guesses, not measured.
+- Otherwise Flash (19 yalms) on the first loose enemy, else Provoke (16 yalms; needs WAR sub). Out of range: skipped, never approached.
+- Readiness: known (`is_valid`), recast ready (ability conditions), and MP for spells. Aimed by index, so the engaged target does not change. The queued action re-validates just before firing (enemy alive and not already on the tank). One tanker action queued at a time, priority medium, re-checked each second; paused while a pull is in progress.
+- Existing PLD gambits (Flash on the engaged target under Auto Tank Mode) are unchanged.
+- Note: Spell actions stop movement before casting (existing behavior), so a following PLD pauses briefly when it casts.
+
+**Host verification.** New `tests/menu_options/tank_util_test.lua` (12 pass: loose detection incl. other-party claim, dead, out of range, NPC; HP ordering; Flash/Provoke fallback and ranges; retry delay; Banishga clustering and the uninvolved-monster block) and `tanker_role_test.lua` (8 pass: idle does nothing; engaged queues Flash at the loose enemy with identifier/priority; validate flips when the enemy turns to the tank; retry delay; mode Off; no MP). `flank_mode_test.lua` still 18 pass. Lua 5.1 (lupa); changed files compile.
+
+**Live checks (Clairvaux PLD, Auto Tank Mode Auto, GearSwap loaded).** (1) One add hits Myrr or Cioara: Clairvaux should Flash it without changing her target or moving. (2) Flash on cooldown with WAR sub: Provoke. (3) Two adds bunched on the party, nothing else nearby: Banishga; with an idle monster close by: Flash instead. (4) An add beyond ~19 yalms: nothing. (5) Watch for spam: the same enemy should not be hit again within ~6 s. (6) Auto Tank Mode Off: none of this. Report any wrong pick, Banishga catching something it shouldn't, or casts refused as out of range (ranges may need tuning).
+
+Install: cumulative `Trust-Tank1-20261116.zip` (replaces Flank1).
+
 # Flank1: Flank combat mode - 2026-11-16
 
 Branch `test/flank-mode`, on top of Fix6 (`39553d5`, live-confirmed). Source change plus host simulation only; **no live FFXI test of this batch.**

@@ -41,7 +41,7 @@ function LoadGlobalsAction:perform()
     state.AutoRestoreManaMode:set_description('Auto', "Use weapon skills to recover MP when low.")
 
     state.AutoTankMode = M{['description'] = 'Auto Tank Mode', 'Off', 'Auto'}
-    state.AutoTankMode:set_description('Auto', "Use job abilities and spells to maintain hate on the mob.")
+    state.AutoTankMode:set_description('Auto', "Use job abilities and spells to maintain hate on the mob. PLD also Flashes, Provokes or Banishgas enemies attacking other party members.")
 
     self:complete(true)
 end
