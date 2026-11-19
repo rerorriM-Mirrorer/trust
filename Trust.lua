@@ -564,6 +564,11 @@ function load_ui()
         save=function() return addon_settings:saveSettings(true) end,
         clock=require('socket').gettime,
         focused=windower.has_focus,
+        -- Show When Engaged: this character is fighting (status 1 = engaged).
+        engaged=function()
+            local me=windower.ffxi.get_player()
+            return me~=nil and me.status==1
+        end,
         apply=function(visible) if widgets then widgets:setAutohidden(not visible) end end,
         position=function()
             local me=windower.ffxi.get_mob_by_target('me')

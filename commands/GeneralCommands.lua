@@ -54,7 +54,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('fanall', self.handle_fan_all, 'Set Fan Out on all receiving clients: //trust fanall [on|off]')
     self:add_command('combat', self.handle_combat, 'Show or set combat positioning: //trust combat [auto|mirror|off]')
     self:add_command('widget', self.handle_widget, 'Set widget appearance: // trust widget [full|compact|toggle] [all|trust|party|target]')
-    self:add_command('autohide', self.handle_autohide, 'Hide all widgets when idle: // trust autohide [on|off|seconds]')
+    self:add_command('autohide', self.handle_autohide, 'Hide all widgets when idle: // trust autohide [on|off|engaged|seconds]')
     self:add_command('menuperf', self.handle_menuperf, 'Measure CPU time opening Trust menu: // trust menuperf [on|off]')
 
     -- Modes
@@ -311,8 +311,8 @@ function GeneralTrustCommands:handle_widget(_, mode, scope)
     return true, 'Widget appearance: '..mode..' ('..scope..')'
 end
 
--- // trust autohide [on|off|<seconds>]
--- Bare command toggles; on/off/<seconds> are idempotent, and a duration also
+-- // trust autohide [on|off|engaged|<seconds>]
+-- Bare command toggles; engaged = stay visible while engaged; on/off/<seconds> are idempotent, and a duration also
 -- turns autohide on. The controller owns the behavior (ui/WidgetAutohide.lua).
 function GeneralTrustCommands:handle_autohide(_, value, ...)
     local autohide = windower.trust.autohide
@@ -320,7 +320,7 @@ function GeneralTrustCommands:handle_autohide(_, value, ...)
         return false, 'Widget autohide is unavailable'
     end
     if select('#', ...) > 0 or (value ~= nil and type(value) ~= 'string' and type(value) ~= 'number') then
-        return false, 'Usage: //trust autohide [on|off|<seconds>]'
+        return false, 'Usage: //trust autohide [on|off|engaged|<seconds>]'
     end
     return autohide:command(value)
 end

@@ -78,22 +78,41 @@ function WidgetSettingsMenuItem:getLayoutMenuItem()
         local allAlignments = L{ 'Left', 'Right' }
 
         local trustWidget = windower.trust.ui.get_widget('trust')
+        -- Fork: widget autohide mode lives here too (Off / On / Show When Engaged).
+        local autohide = windower.trust.autohide
+        local autohideModes = L{ 'Off', 'On', 'Show When Engaged' }
         local layoutSettings = {
             -- Show the actual compact anchor rather than resetting the picker
             -- to Left every time the menu is opened.
-            Alignment = trustWidget and trustWidget.compactAlignment or allAlignments[1]
+            Alignment = trustWidget and trustWidget.compactAlignment or allAlignments[1],
+            Autohide = autohide and autohide:mode() or 'Off',
         }
+        local initialAutohide = layoutSettings.Autohide
 
         local configItems = L{
             PickerConfigItem.new('Alignment', layoutSettings.Alignment, allAlignments, function(alignment)
                 return alignment
             end, "Alignment"),
+            PickerConfigItem.new('Autohide', layoutSettings.Autohide, autohideModes, function(mode)
+                return mode
+            end, "Autohide widget"),
         }
         local configEditor = ConfigEditor.new(nil, layoutSettings, configItems)
         -- The existing onConfigChanged handler persists the widget positions.
         configEditor:setSaveOnExit(true, function() end)
 
         self.disposeBag:add(configEditor:onConfigChanged():addAction(function(newSettings, _)
+            -- Fork: apply the autohide mode. A confirm that only changes autohide
+            -- leaves the widgets where they are; otherwise arrange them as before.
+            if autohide and newSettings.Autohide and newSettings.Autohide ~= initialAutohide then
+                local ok, why = autohide:set_mode(newSettings.Autohide)
+                if ok == false then addon_system_error(why) end
+                initialAutohide = newSettings.Autohide
+                if newSettings.Alignment == (trustWidget and trustWidget.compactAlignment or allAlignments[1]) then
+                    return
+                end
+            end
+
             local yPos = windower.get_windower_settings().ui_y_res / 2 - 75
 
             -- The compact name belongs to Trust's slot: the left preset
@@ -125,7 +144,7 @@ function WidgetSettingsMenuItem:getLayoutMenuItem()
         end), configEditor:onConfigChanged())
 
         return configEditor
-    end, "Widgets", "Group and arrange widgets on the screen.")
+    end, "Widgets", "Group and arrange widgets on the screen, and choose whether they hide when idle (Show When Engaged keeps them up during fights).")
     return layoutMenuItem
 end
 

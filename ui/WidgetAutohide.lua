@@ -13,6 +13,13 @@
 --   awake   enabled and counting idle time; widgets are shown.
 --   hidden  idle time elapsed; widgets are hidden until the next activity.
 --
+-- Modes (setting `autohide_mode`; the older `autohide` true/false is kept in step):
+--   Off                 never hide.
+--   On                  hide after the idle time.
+--   Show When Engaged   as On, but while this character is engaged the widgets stay
+--                       visible (like an open menu); the idle time restarts when the
+--                       fight ends.
+--
 -- Only *player* activity restarts the timer: keyboard, mouse, controller
 -- commands, regaining window focus, and the player's own movement. Movement
 -- that Trust itself produces (follow, pathing, queued runs) is excluded, so
@@ -21,6 +28,8 @@
 local M = {}
 
 M.DEFAULT_SECONDS = 5
+M.MODES = { 'Off', 'On', 'Show When Engaged' }
+local VALID = { Off = true, On = true, ['Show When Engaged'] = true }
 M.MIN_SECONDS = 1
 M.MAX_SECONDS = 600
 
@@ -47,8 +56,16 @@ function M.new(options)
         return options.settings()
     end
 
+    function self:mode()
+        local values = settings()
+        if VALID[values.autohide_mode] then
+            return values.autohide_mode
+        end
+        return values.autohide == true and 'On' or 'Off'
+    end
+
     function self:is_enabled()
-        return settings().autohide == true
+        return self:mode() ~= 'Off'
     end
 
     function self:seconds()
@@ -133,6 +150,15 @@ function M.new(options)
             end
             return
         end
+        -- Show When Engaged: a fight holds the widgets up just like a menu does.
+        if self:mode() == 'Show When Engaged' and options.engaged and options.engaged() then
+            self.suspended_by = 'engaged'
+            self.last = now
+            if self.state == 'hidden' then
+                show(self)
+            end
+            return
+        end
         self.suspended_by = nil
 
         if self.state == 'awake' and now - self.last >= self:seconds() then
@@ -150,9 +176,14 @@ function M.new(options)
         return true
     end
 
-    function self:set_enabled(enabled)
+    function self:set_mode(mode)
+        if not VALID[mode] then
+            return false, 'Autohide must be Off, On or Show When Engaged'
+        end
         local values = settings()
-        if values.autohide ~= enabled then
+        local enabled = mode ~= 'Off'
+        if values.autohide_mode ~= mode or values.autohide ~= enabled then
+            values.autohide_mode = mode
             values.autohide = enabled
             local ok, why = persist()
             if not ok then
@@ -164,6 +195,15 @@ function M.new(options)
         return true
     end
 
+    -- On keeps Show When Engaged if that is already chosen.
+    function self:set_enabled(enabled)
+        if not enabled then
+            return self:set_mode('Off')
+        end
+        local current = self:mode()
+        return self:set_mode(current ~= 'Off' and current or 'On')
+    end
+
     -- A duration also turns autohide on, as in `//trust autohide 10`.
     function self:set_seconds(value)
         local seconds = tonumber(value)
@@ -171,9 +211,11 @@ function M.new(options)
             return false, 'Seconds must be '..M.MIN_SECONDS..'-'..M.MAX_SECONDS
         end
         local values = settings()
-        local changed = values.autohide_seconds ~= seconds or values.autohide ~= true
+        local mode = self:mode() ~= 'Off' and self:mode() or 'On'
+        local changed = values.autohide_seconds ~= seconds or values.autohide ~= true or values.autohide_mode ~= mode
         values.autohide_seconds = seconds
         values.autohide = true
+        values.autohide_mode = mode
         if changed then
             local ok, why = persist()
             if not ok then
@@ -189,10 +231,14 @@ function M.new(options)
         if not self:is_enabled() then
             return 'OFF'
         end
-        return 'ON, hide after '..self:seconds()..'s'
+        local text = 'ON, hide after '..self:seconds()..'s'
+        if self:mode() == 'Show When Engaged' then
+            text = text..', shown while engaged'
+        end
+        return text
     end
 
-    -- //trust autohide [on|off|<seconds>]
+    -- //trust autohide [on|off|engaged|<seconds>]
     -- A bare command toggles. Explicit on/off/<seconds> are idempotent.
     function self:command(value)
         local ok, why
@@ -204,10 +250,12 @@ function M.new(options)
                 ok, why = self:set_enabled(true)
             elseif text == 'off' then
                 ok, why = self:set_enabled(false)
+            elseif text == 'engaged' or text == 'combat' then
+                ok, why = self:set_mode('Show When Engaged')
             elseif tonumber(text) then
                 ok, why = self:set_seconds(tonumber(text))
             else
-                return false, 'Usage: //trust autohide [on|off|<seconds>]'
+                return false, 'Usage: //trust autohide [on|off|engaged|<seconds>]'
             end
         end
         if not ok then
