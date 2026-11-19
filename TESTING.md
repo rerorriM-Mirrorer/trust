@@ -1,3 +1,30 @@
+# Recovery2: combat positioning recovery; hardcoded 1 s check and 3 + 3 yalm detours - 2026-11-19
+
+Branch `test/combat-recovery`, on top of FanOut1 (`8bc51c99`). Source change plus host simulation only; **no live FFXI test of this batch.**
+
+**FanOut1 live result (user, 2026-11-19).** With Fan Out settle time at 0.3 s, settling "is actually seeming to work pretty well." (Default left at 1 s; say if 0.3 should become the default.)
+
+**Requests and decisions (user, 2026-11-19).**
+- Combat positioning (Auto, and the same runs Mirror and Flank use) should use recovery detours and, while engaged, never give up after the set number of tries; only pause for queued actions and spells as elsewhere. Combat first, before Flank3.
+- First detour a hardcoded 3 yalms, each further attempt 3 yalms longer. Remove the Detour distance setting.
+- Remove the Stuck interval setting; hardcode 1 s.
+- Maximum detour attempts: user will set 6 for now.
+- 45-degree back-and-to-the-side detours for following only, to try it out; pulling, paths and combat keep side to side.
+
+**Changes.**
+- `cylibs/movement/stuck_detector.lua`: detour n reaches `detour_distance + detour_step x (n - 1)` (3, 6, 9 ... yalms). `shape='back'` aims 45 degrees back and to the side; otherwise the existing shape (sideways, slightly forward). Time allowed to reach a detour: max(2, 1 + yalms / 4) s (was 2 s).
+- `cylibs/movement/recovery.lua`: interval 1 s, first detour 3 yalms and step 3 yalms are hardcoded (saved `interval`/`detour_distance` from older settings files are ignored). Near-goal direct-steering range for following kept at 2 yalms (it was tied to Detour distance), so Fan Out settle is unchanged. New kind `combat` with toggle `combat` (default on). When detours run out while engaged, combat starts a new cycle with a fresh queue time budget; when not engaged it cancels. The queue time budget now covers growing detours (about 54 s for 6 attempts). Following uses the back shape.
+- `cylibs/battle/run_to.lua`: combat RunTo/RunAway sequences (Auto; Mirror; Flank's Auto-distance hold) are tagged `combat`. A puller's own pulling tag still replaces it for pulls.
+- `cylibs/actions/runaway.lua`: backing away now takes part in recovery, with its goal just past the distance on the far side from the target.
+- Not in this batch: Flank's run to the back (FlankRunAction) is not tagged, because Flank2's 3 s reach timeout would cut detours short. Flank3 will take this over.
+- Settings/menu: Recovery menu loses Stuck interval and Detour distance; gains **Recover combat positioning**. Maximum detour attempts range 1-8, default 6 (an existing saved value is kept; set it in the menu). Defaults in `settings/TrustAddonSettings.lua` match. Menu description updated.
+
+**Host verification.** New `tests/menu_options/combat_recovery_test.lua` pass (detours 3/6/9/12/15/18; first check after about 1 s; side shape alternates and leans forward; back shape exactly 45 degrees; saved interval/detour ignored; budget 21.75 s for 2 attempts and over 50 s for 6; engaged combat renews cycles and never cancels; not engaged cancels; cast pending holds; combat toggle; RunAway goal). `stuck_recovery_test.lua` simulated waits lengthened for the 1 s check (same assertions); `stuck_recovery_wiring_test.lua` expects the new 11-item Recovery menu. Full `tests/menu_options` run: no new failures (same 10 pre-existing host-Lua failures). Lua 5.1 (lupa/LuaJIT); changed files compile. Not simulated: the Gambiter path that builds RunTo in a live fight.
+
+**Live checks.** (1) Set Recovery > Maximum detour attempts to 6. (2) Following blocked by an obstacle: about 1 s after stopping, the follower steps back and to one side 3 yalms, then tries again; next attempts go 6, 9 ... yalms, alternating sides. Fan Out settling against a wall should be unchanged. (3) Auto in combat with a rock or pillar between you and the target: after about 1 s, side steps of 3, 6, 9 ... yalms; it keeps cycling while engaged and stops when the fight ends. With Distance 4 or more, backing away into a wall should also detour. (4) While casting, no detours. (5) Pull blocked: still skips the mob after the attempts (now up to 6 attempts with longer detours, so a skip takes longer). (6) Watch whether auto face-target fights the detour direction in combat.
+
+Install: cumulative `Trust-Recovery2-20261119.zip` (replaces FanOut1).
+
 # FanOut1: Fan Out settles short of an unreachable slot - 2026-11-19
 
 Branch `test/fanout-settle`, on top of FollowZone1 (`c2d3eed5`). Source change plus host simulation only; **no live FFXI test of this batch.**

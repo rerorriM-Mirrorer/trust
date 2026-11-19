@@ -686,3 +686,10 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - A Fan Out follower whose slot is behind a wall now stops after about a second without getting closer, and stays put until the leader moves on or you steer the leader again. New Recovery setting **Fan Out settle time** (default 1 second).
 - A fresh formation starts from the way the leader is facing instead of assuming east.
 - Live FFXI behavior is pending; see TESTING.md.
+
+### November 19, 2026 - Recovery in combat; longer detours
+
+- Combat positioning (Auto, Mirror, and Flank when it holds Auto distance) now tries detours when something blocks it, and keeps trying for as long as you're engaged. Casting still holds it. New Recovery setting **Recover combat positioning** (on).
+- Detours are checked every second. The first is 3 yalms and each one after is 3 yalms longer. The Stuck interval and Detour distance settings are gone; Maximum detour attempts now goes up to 8 (default 6).
+- Following tries its detours 45 degrees back and to the side; pulling, paths and combat still step side to side.
+- Live FFXI behavior is pending; see TESTING.md.
