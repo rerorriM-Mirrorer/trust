@@ -25,7 +25,7 @@ function FlankCommands:handle_status()
 end
 
 -- Another client announces its Auto Tank Mode (sent with --quiet, so nothing prints).
-function FlankCommands:handle_tank(name, value)
+function FlankCommands:handle_tank(_, name, value)
     if type(name) ~= 'string' or (value ~= 'on' and value ~= 'off') then
         return false, 'Usage: //trust flank tank <name> <on|off>'
     end
