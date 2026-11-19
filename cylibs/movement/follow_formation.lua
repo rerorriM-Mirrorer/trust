@@ -4,7 +4,7 @@ local Formation={}
 Formation.__index=Formation
 local slots={{.7,.7},{-.7,.7},{0,1},{.7,1.1},{-.7,1.1}}
 function Formation.new()return setmetatable({dx=1,dy=0},Formation)end
-function Formation:goal(leader_id,zone,position,ids,self_id,distance)
+function Formation:goal(leader_id,zone,position,ids,self_id,distance,facing)
     local key=tostring(leader_id)..':'..tostring(zone)
     if self.key~=key then
         self.key=key;self.anchor=nil;self.dx=1;self.dy=0
@@ -17,7 +17,11 @@ function Formation:goal(leader_id,zone,position,ids,self_id,distance)
             if length<=16 then self.dx=dx/length;self.dy=dy/length end
             self.anchor={position[1],position[2]}
         end
-    else self.anchor={position[1],position[2]} end
+    else
+        self.anchor={position[1],position[2]}
+        -- A: until the leader has moved, use the way it faces rather than due east.
+        if type(facing)=='number' then self.dx=math.cos(-facing);self.dy=math.sin(-facing) end
+    end
     local members,seen={},{}
     for _,id in ipairs(ids) do
         if type(id)=='number' and not seen[id] then members[#members+1]=id;seen[id]=true end

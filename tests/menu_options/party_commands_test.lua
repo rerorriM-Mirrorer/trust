@@ -18,7 +18,7 @@ local env=setmetatable({GeneralTrustCommands=methodsTable,select=select,Control=
  windower={ffxi={get_player=function()return{name=current,status=0,id=current=='Cioara' and 1 or 2}end,get_mob_by_target=function()return nil end,get_info=function()return{zone=1}end,run=function()end,follow=function()end},add_to_chat=function(c,s)assert(c==0);acks[#acks+1]=s end},
  CommandMessage={new=function(c,n)return{command=c,target=n}end},
  IpcRelay={shared=function()return{send_message=function(_,m)assert(not receiving,'receiver rebroadcast');messages[#messages+1]=m end}end},
- require=function(n)if n=='cylibs/util/command_feedback' then return Feedback elseif n=='chat' then return{} elseif n=='cylibs/movement/recovery' then return{reset=function()end}end error(n)end,
+ require=function(n)if n=='cylibs/util/command_feedback' then return Feedback elseif n=='chat' then return{} elseif n=='cylibs/movement/recovery' then return{reset=function()end,clear_settle=function()end}end error(n)end,
  shortcuts={},
 },{__index=_G})
 methods('commands/GeneralCommands.lua','function GeneralTrustCommands:handle_party_request','-- // trust startall',env)
@@ -81,7 +81,7 @@ c.enabled=false;assert(c:handle_ready('ready'));assert(not c.enabled and c.chang
 -- Real Follow handler must not reset a live destination/formation on same leader.
 local FollowTrustCommands={};local resets,starts,sets=0,0,0
 local followenv=setmetatable({FollowTrustCommands=FollowTrustCommands,state={AutoFollowMode={value='Always'}},
- command_feedback=Feedback,require=function()return{reset=function()resets=resets+1 end}end},{__index=_G})
+ command_feedback=Feedback,require=function()return{reset=function()resets=resets+1 end,clear_settle=function()end}end},{__index=_G})
 methods('commands/FollowCommands.lua','function FollowTrustCommands:handle_follow_party_member','-- // trust follow distance',followenv)
 local follower={manual_pause=false,recovery_paused=false,is_valid_target=function()return true end,
  get_follow_target=function()return{get_name=function()return'Cioara'end}end,

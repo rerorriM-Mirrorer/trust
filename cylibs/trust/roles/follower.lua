@@ -227,8 +227,10 @@ function Follower:check_distance()
         if self.fan_out and self.action_queue.control_state ~= 'Retreat'
                 and (self.action_queue.is_enabled ~= false or self.action_queue.control_state == 'Paused') and self.state_var.value=='Always' and (player.status==0 or player.status==5 or player.status==85)
                 and distance<self.maxfollowdistance then
+            local leader_mob=follow_target.get_mob and follow_target:get_mob()
             local goal,radius=self.formation:goal(follow_target:get_id(),windower.ffxi.get_info().zone,
-                {x,y,z},self:get_party():get_party_member_ids(),player.id,self:get_distance())
+                {x,y,z},self:get_party():get_party_member_ids(),player.id,self:get_distance(),
+                leader_mob and leader_mob.facing)
             if goal then
                 self:follow_formation_goal(goal,radius,follow_target)
                 return
@@ -260,6 +262,8 @@ function Follower:follow_formation_goal(goal,radius,target)
         return
     end
     if player_util.distance(player_util.get_player_position(),goal)<=radius+.15 then return end
+    -- A: stay put after settling short of an unreachable slot until the slot moves on.
+    if require('cylibs/movement/recovery').is_settled('following:'..tostring(target),goal) then return end
     local action=RunToLocation.new(goal[1],goal[2],goal[3],radius)
     action.formation=true
     action.follow_while_stopped=true
@@ -321,6 +325,7 @@ function Follower:set_follow_target(target)
 
     self.follow_target = target
     self.formation = require('cylibs/movement/follow_formation').new()
+    require('cylibs/movement/recovery').clear_settle()
     self.follow_target_dispose_bag:destroy()
 
     if self.follow_target then

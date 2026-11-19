@@ -6,14 +6,14 @@ local clock=require('socket').gettime
 local M={skips={},last='idle'}
 local detector=Detector.new(clock)
 local defaults={mode='Detour',pulling=true,following=true,paths=true,interval=2,
-    min_movement=.5,detour_distance=2,attempts=2,pull_cooldown=30,diagnostics=true,verbose=true}
+    min_movement=.5,detour_distance=2,attempts=2,pull_cooldown=30,settle_time=1,diagnostics=true,verbose=true}
 local function settings()
     local saved=addon_settings and addon_settings:getSettings().movement
     saved=saved and saved.recovery or {}
     local result={}
     for k,v in pairs(defaults) do if saved[k]==nil then result[k]=v else result[k]=saved[k] end end
     if result.mode~='Detour' and result.mode~='Pause' then result.mode='Off' end
-    local limits={interval={.5,15},min_movement={.1,3},detour_distance={.5,5},attempts={1,4},pull_cooldown={5,180}}
+    local limits={interval={.5,15},min_movement={.1,3},detour_distance={.5,5},attempts={1,4},pull_cooldown={5,180},settle_time={.3,5}}
     for k,range in pairs(limits) do
         local n=tonumber(result[k]);if not n or n~=n then n=defaults[k] end
         result[k]=math.max(range[1],math.min(range[2],n))
@@ -36,6 +36,17 @@ end
 function M.reset(clear_skips)
     detector:reset();M.last='idle'
     if clear_skips then M.skips={} end
+end
+-- A: Fan Out settle bookkeeping. The follower asks before starting a new slot
+-- run; a slot that has moved 1 yalm or more from the settled one re-arms it.
+function M.clear_settle() M.formation_settled=nil end
+function M.is_settled(key,goal)
+    local s=M.formation_settled
+    if not s then return false end
+    if s.key~=key then M.formation_settled=nil;return false end
+    local dx,dy=goal[1]-s.x,goal[2]-s.y
+    if math.sqrt(dx*dx+dy*dy)>=1 then M.formation_settled=nil;return false end
+    return true
 end
 function M.status()return settings().mode..' | '..M.last end
 local function report(text,config,important,display)
@@ -125,6 +136,7 @@ M.suspended=suspended
 function M.step(action,pos,goal,radius)
     local meta=action.recovery
     if not meta then return false end
+    if action.completed then return true end
     local config=settings()
     if config.mode=='Off' or config[meta.kind]==false then detector:reset();return false end
     -- Following must not overwrite a puller's steering in the other queue.
@@ -155,13 +167,42 @@ function M.step(action,pos,goal,radius)
             if near then
                 -- A cosmetic slot correction must never send the follower farther
                 -- sideways than its actual destination. Keep steering directly.
+                local here=math.sqrt(dx*dx+dy*dy)
                 if not meta.follow_near then
-                    report(string.format('following near goal; direct steering without detours; formation=%s distance=%.2f radius=%.2f goal=%.2f,%.2f', tostring(action.formation==true),math.sqrt(dx*dx+dy*dy),radius,goal[1],goal[2]), {diagnostics=config.diagnostics,verbose=false}, false)
+                    report(string.format('following near goal; direct steering without detours; formation=%s distance=%.2f radius=%.2f goal=%.2f,%.2f', tostring(action.formation==true),here,radius,goal[1],goal[2]), {diagnostics=config.diagnostics,verbose=false}, false)
+                    meta.settle=nil
                 end
                 meta.follow_near=true;meta.follow_retry=nil;detector:reset()
+                -- A: Fan Out settle. A slot inside or behind a wall can never be
+                -- reached, and detours are off this close, so without this the
+                -- follower pushes into the wall forever. If it makes no progress
+                -- for settle_time while the slot itself holds still, accept the
+                -- current spot. A moving leader moves the slot, which keeps the
+                -- timer from running, so walking along with the leader never settles.
+                if action.formation then
+                    local now=clock();local st=meta.settle
+                    if not st then
+                        meta.settle={best=here,since=now,gx=goal[1],gy=goal[2]}
+                    else
+                        local mx,my=goal[1]-st.gx,goal[2]-st.gy
+                        if math.sqrt(mx*mx+my*my)>=.3 then
+                            st.best=here;st.since=now;st.gx=goal[1];st.gy=goal[2]
+                        elseif here<st.best-.1 then
+                            st.best=here;st.since=now
+                        elseif now-st.since>=config.settle_time then
+                            windower.ffxi.run(false)
+                            M.formation_settled={key=meta.key,x=goal[1],y=goal[2],at=now}
+                            M.last='following settled near slot'
+                            report(string.format('following settled %.2f from slot (no progress for %.1fs)',here,config.settle_time),{diagnostics=config.diagnostics,verbose=false},false)
+                            meta.settle=nil
+                            if not action.completed and action.complete then action:complete(true) end
+                            return true
+                        end
+                    end
+                end
                 return false
             end
-            meta.follow_near=false
+            meta.follow_near=false;meta.settle=nil
             if meta.follow_retry then
                 local retry=meta.follow_retry
                 local gx,gy=goal[1]-retry.goal[1],goal[2]-retry.goal[2]

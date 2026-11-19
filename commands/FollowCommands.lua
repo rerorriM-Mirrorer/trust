@@ -270,6 +270,8 @@ function FollowTrustCommands:handle_follow_party_member(party_member_name)
         if state.AutoFollowMode.value == 'Always' and current
                 and current:get_name():lower() == party_member_name:lower()
                 and not follower.manual_pause and not follower.recovery_paused then
+            -- A: a fresh stick handoff re-arms a follower that settled near its slot.
+            require('cylibs/movement/recovery').clear_settle()
             return true, 'Following: '..party_member_name
         end
         if self.action_queue then self.action_queue.movement_suspended=false end

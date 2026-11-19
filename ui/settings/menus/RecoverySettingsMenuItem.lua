@@ -23,6 +23,8 @@ function M.new(owner)
                 ConfigItem.new('detour_distance',.5,5,.5,function(v)return v..' yalms'end,'Detour distance'),
                 ConfigItem.new('attempts',1,4,1,nil,'Maximum detour attempts'),
                 ConfigItem.new('pull_cooldown',5,180,5,function(v)return v..' seconds'end,'Pull target cooldown'),
+                -- A: Fan Out stops short of a slot it can't reach after this long without progress.
+                ConfigItem.new('settle_time',.3,5,.1,function(v)return string.format('%.1f seconds',v)end,'Fan Out settle time'),
                 BooleanConfigItem.new('diagnostics','Write recovery diagnostics'),
                 BooleanConfigItem.new('verbose','Show recovery messages'),
             },infoView)

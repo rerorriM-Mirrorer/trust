@@ -32,7 +32,7 @@ local env=setmetatable({Follower=methods,state={AutoFollowMode={value='Always'}}
  player_util={get_player_position=function()return{point.x,point.y,point.z}end,
  distance=function(a,b)return math.sqrt((a[1]-b[1])^2+(a[2]-b[2])^2+(a[3]-b[3])^2)end},
  RunToLocation={new=function(x,y,z,r)created=created+1;local a={x=x,y=y,z=z,distance=r,is_cancelled=function()return false end,cancel=function()queue.current_action=nil end};dest=a;return a end},
- require=function(name)assert(name=='cylibs/movement/recovery');return{tag=function()tags=tags+1 end}end},{__index=_G})
+ require=function(name)assert(name=='cylibs/movement/recovery');return{tag=function()tags=tags+1 end,is_settled=function()return false end,clear_settle=function()end}end},{__index=_G})
 for _,name in ipairs({'check_distance','follow_formation_goal'})do
  local body=assert(src:match('(function Follower:'..name..'%(.-)\nfunction Follower:'))
  assert(load(body,'actual '..name,'t',env))()
