@@ -1,3 +1,27 @@
+# Edge1: combat positioning measured between body edges (option) - 2026-11-19
+
+Branch `test/edge-distance`, on top of Flank3b (`9c940663`). Source change plus host simulation only; **no live FFXI test of this batch.**
+
+**User request (2026-11-19).** After a fight with a large enemy: try combat positioning as model radius to model radius instead of centre to centre. (Earlier plan: following and Mirror edge to edge first. Combat came first instead. Following and Mirror are unchanged in this batch.)
+
+**Changes.**
+- New `cylibs/util/combat_distance.lua`: edge to edge = Distance + target model_size + own model_size as the centre distance; Auto's band rules unchanged (under 4: only too far; 4 and up: plus or minus 1), decided by the configured Distance.
+- New `cylibs/conditions/combat_distance.lua` (CombatDistanceCondition): per-target band check. It replaces the fixed DistanceCondition pair in CombatMode for Auto and for Flank's Auto-like hold. Centre mode gives the same results as before.
+- `cylibs/battle/run_to.lua`: optional edge function (4th argument). With it on, run-in and back-off use Distance + sizes. Saved gambits have none (always centres). `copy` keeps it.
+- `cylibs/battle/flank.lua`, `cylibs/conditions/flank_position.lua`: Flank's spot and band use Distance + sizes when on. Flank's close try was already edge to edge 0.
+- `cylibs/trust/roles/combat_mode.lua`: reads `CombatSettings.EdgeDistance` (default off); passes it to all of the above.
+- `ui/settings/menus/CombatModeSettingsMenuItem.lua`: Combat > Config gains **Measure from body edges**; Combat Distance minimum lowered from 1 to 0 (0 = touching with edges on). Per job settings like Distance.
+- `commands/FlankCommands.lua`: `//trust flank status` adds the current target's model size, yours, and the centre and edge distances, for tuning.
+- Not changed: Mirror Distance (assist target), following.
+
+**Host verification.** New `tests/menu_options/edge_distance_test.lua` 16 pass (sizes; off unchanged; on = Distance + sizes; band too far/too close/in band for centres and edges; RunTo run-in/back-off distances, saved-gambit RunTo stays centre, copy; Flank spot 4.5 yalms with Distance 1 against size 3 + 0.5). Full `tests/menu_options`: no new failures (same 10 pre-existing). Changed files compile (Lua 5.1).
+
+**Unknowns.** Windower's `model_size` is a rough body size; how it relates to melee reach is not known. With edges on, the same Distance puts you farther out, so lower it (start around 0.5-1) or auto-attacks may be out of range. Use the `//trust flank status` numbers against a small and a large enemy.
+
+**Live checks.** (1) Combat > Config: turn on Measure from body edges and set Combat Distance to about 1 on a melee job. (2) Large enemy: you should stand about as close to its body as you do to a small one. (3) Auto-attacks still land; if "too far away" appears, lower Distance. (4) Flank: the spot opposite the ally keeps the same body gap. (5) With it off, positioning is exactly as before.
+
+Install: cumulative `Trust-Edge1-20261119.zip` (replaces Flank3b).
+
 # Flank3b: tank announcement fix; queue makes room for priority; Holy; Recovery switch removed - 2026-11-19
 
 Branch `test/flank3-fix`, on top of Flank3 (`074514e6`): `6ba10237` (tank announcement), `a632b4b3` (queue, Holy), `8d7679fb` (Recovery switch), `6749e18b` (tests). Source change plus host simulation only; **no live FFXI test of this batch.**

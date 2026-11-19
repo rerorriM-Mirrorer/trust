@@ -707,3 +707,9 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - When Trust's action queue is full, a more important action (the PLD tank helper's Flash/Banish, an urgent cure) now replaces the least important waiting one instead of being dropped.
 - The PLD tank helper uses **Holy** as a last resort after Banish.
 - Recovery no longer has an Off/Detour/Pause switch; use the per-situation switches (pulling, following, paths, combat).
+
+### November 19, 2026 - Combat distance from body edges (option)
+
+- Combat > Config has **Measure from body edges**. When it's on, Auto and Flank keep Combat Distance between your body and the enemy's instead of between centres, so big enemies get the same gap as small ones. Lower Combat Distance when you turn it on (it can now go down to 0, which means touching).
+- `//trust flank status` shows the target's size and yours, plus the centre and edge distances.
+- Live FFXI behavior is pending; see TESTING.md.
