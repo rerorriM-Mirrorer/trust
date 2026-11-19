@@ -676,3 +676,13 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - Flank now moves at most every 3 seconds, allows 66 degrees of drift, and settles for 5 seconds after arriving. If it can't reach the back within 3 seconds (wall, obstruction), or moves 3 times within 9 seconds, it acts like Auto for 9 seconds before trying again.
 - `//trust flank status` shows what Flank last did and why.
 - The PLD tank helper's actions now run at high priority (ahead of buffs, gambits and ordinary cures; emergency cures, weaponskills and skillchains still first).
+
+### November 18, 2026 - Follow requests skip characters in other zones
+
+- Steering a leader, follow confirmations and `//trust follow me` are no longer sent to characters the party list shows in another zone, so parked characters stop printing "not a valid party member or is not in range". Typed `follow me` summaries list who was skipped.
+
+### November 19, 2026 - Fan Out settles near walls
+
+- A Fan Out follower whose slot is behind a wall now stops after about a second without getting closer, and stays put until the leader moves on or you steer the leader again. New Recovery setting **Fan Out settle time** (default 1 second).
+- A fresh formation starts from the way the leader is facing instead of assuming east.
+- Live FFXI behavior is pending; see TESTING.md.

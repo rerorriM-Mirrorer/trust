@@ -1,3 +1,38 @@
+# FanOut1: Fan Out settles short of an unreachable slot - 2026-11-19
+
+Branch `test/fanout-settle`, on top of FollowZone1 (`c2d3eed5`). Source change plus host simulation only; **no live FFXI test of this batch.**
+
+**User observation (2026-11-18).** Clairvaux kept trying to get into his Fan Out slot behind Cioara near a wall and never settled.
+
+**Cause (source reading).** Within max(radius, Detour distance = 2 yalms) of its slot, recovery switches to direct steering without detours (so slot corrections never swing wide) and resets the stuck detector. A slot inside or behind a wall could therefore never fail or settle: the follower pushed toward it until the leader moved. Arrival needs 0.15-0.35 yalm.
+
+**User decision.** "When it's near the slot but hasn't made progress for about a second, accept where it's standing and stop."
+
+**Changes.**
+- `cylibs/movement/recovery.lua`: in that near-slot range, a Fan Out (formation) run that gains less than 0.1 yalm for **Settle time** (new setting, default 1 s, 0.3-5) while its slot holds still (moves less than 0.3 yalm) stops running and completes. The settled spot is remembered per leader. A moving leader keeps moving the slot, so walking along never settles. Ordinary following, paths and pulling are unchanged. New `clear_settle`/`is_settled` helpers; a completed run never steers again.
+- `cylibs/trust/roles/follower.lua`: no new slot run while settled, until the slot has moved 1 yalm or more from the settled one. A new follow target clears it.
+- `commands/FollowCommands.lua`: a stick handoff (follow request for the leader already being followed) clears the settle, so steering the leader always re-arms followers. The live destination is still not reset.
+- `cylibs/movement/follow_formation.lua`: a fresh formation takes its heading from the leader's facing until the leader has moved, instead of assuming due east (could give an odd first step after a pause).
+- Settings: `movement.recovery.settle_time = 1` (addon default and `TrustAddonSettings`); Recovery menu item **Fan Out settle time** after Pull target cooldown.
+
+**Host verification.** New `tests/menu_options/fanout_settle_test.lua` pass (settles after 1 s blocked 0.8 yalm short; a completed run never steers; small slot moves stay settled, 1 yalm re-arms; steady progress, a walking leader and ordinary following never settle; different leader never matches; handoff clears; heading seeded from facing). `follow_formation_test.lua`, `stuck_recovery_test.lua`, `stuck_recovery_wiring_test.lua` (now 12 Recovery items) and `party_commands_test.lua` pass after adding the new helpers to their stand-ins. Full `tests/menu_options` run: no new failures (the same 10 tests already failed under this host Lua before the change, e.g. `quiet_test.lua` lacks a `register_event` mock). Lua 5.1 (lupa/LuaJIT); changed files compile.
+
+**Live checks.** (1) Park the leader with a follower's slot against a wall (the Clairvaux/Cioara spot): the follower should push for about a second, stop, and stay put. The Trust diagnostics log should show "following settled ... from slot". (2) Leader steps a little (under 1 yalm): follower stays. Leader walks off or you push the stick: follower moves again normally. (3) Ordinary Fan Out travel in the open: no stopping while the leader walks; followers still reach their slots. (4) After Pause and resuming, the first Fan Out step should go behind the leader, not east.
+
+Install: cumulative `Trust-FanOut1-20261119.zip` (replaces FollowZone1).
+
+# FollowZone1: follow requests skip other-zone clients - 2026-11-18
+
+Branch `test/follow-zone-filter`, on top of Flank2 (`dade5c7`), commit `c2d3eed5`. (Recorded here on 2026-11-19; the FollowZone1 package was delivered without this entry or copies of WORKFLOW.md/TESTING.md.)
+
+**User observation.** Characters parked in another zone printed "<leader> is not a valid party member or is not in range" on every stick push (99 times in Myrr's 2026-11-18 log). Asked whether it caused a processing hangup: no, each was one party lookup, one chat line and one IPC reply.
+
+**User decision.** Of the options offered (follower-side de-duplication, clearer message text, sender-side zone filter), only the sender-side filter.
+
+**Changes.** `commands/FollowCommands.lua`: party/alliance members the party list shows in another zone are left out of the stick movement handoff, follow receipts and `//trust follow me`. `follow me` now sends a targeted `trust follow <leader>` to each same-zone client instead of a broadcast (same command text). Unknown zone: still sent. Typed summaries add " - other zone: X, Y". New `tests/menu_options/follow_zone_filter_test.lua`.
+
+**Live result (user, 2026-11-18).** Working. Myrr and Cioara parked together followed each other; Clairvaux in another zone caused no spam on the other two clients, and vice versa. Pushed to the fork.
+
 # Flank2: calmer Flank; tank helper priority high - 2026-11-16
 
 Branch `test/flank-mode`, on top of Tank2 (`f02dd05`). Source change plus host simulation only; **no live FFXI test of this batch.**
