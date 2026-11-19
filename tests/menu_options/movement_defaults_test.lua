@@ -20,7 +20,8 @@ assert(m.recovery.verbose==true)
 assert(m.recovery.interval==4,'migration overwrote user timing')
 assert(m.defaults_version==3 and writes==1)
 assert(factory.movement.stop_on_movement and not factory.movement.start_others and not factory.movement.auto_lockon and factory.movement.feedback==false)
-assert(factory.movement.recovery.mode=='Detour' and factory.movement.recovery.diagnostics)
+-- The recovery master mode was removed from the factory defaults (2026-11-19).
+assert(factory.movement.recovery.mode==nil and factory.movement.recovery.diagnostics)
 -- A user's later opt-out is preserved, not overwritten on every job/reload.
 m.stop_on_movement=false;m.start_others=false;m.auto_lockon=true;m.recovery.mode='Off';m.recovery.diagnostics=false;m.recovery.verbose=false
 owner:saveSettings(true);owner:reloadSettings();m=owner:getSettings().movement

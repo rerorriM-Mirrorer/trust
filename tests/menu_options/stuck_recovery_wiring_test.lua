@@ -47,14 +47,13 @@ local options={movement={policy='Ready',recovery={mode='Detour'}}};local owner={
 local menu=real_require('ui/settings/menus/MovementSettingsMenuItem').new(owner)
 assert(not menu.children['Stuck Recovery'] and not menu.children.Recovery)
 local sub=real_require('ui/settings/menus/RecoverySettingsMenuItem').new(owner);assert(sub.title=='Recovery')
-local editor=sub.view();assert(editor.data==options.movement.recovery and #editor.items==11)
-local expected={'mode','pulling','following','paths','combat','min_movement','attempts','pull_cooldown','settle_time','diagnostics','verbose'}
+local editor=sub.view();assert(editor.data==options.movement.recovery and #editor.items==10)
+local expected={'pulling','following','paths','combat','min_movement','attempts','pull_cooldown','settle_time','diagnostics','verbose'}
 for i,key in ipairs(expected)do assert(editor.items[i].args[1]==key)end
 local mv=menu.view();assert(mv.data==options.movement)
 local movementKeys={'stop_on_movement','enabled','assist_others','start_others','feedback','auto_lockon','keep_autorun','autorun_messages'}
 assert(#mv.items==#movementKeys,'Delivery policy is no longer in the Movement menu')
 for i,key in ipairs(movementKeys)do assert(mv.items[i].args[1]==key,'Movement menu order: '..key)end
-assert(editor.items[1].args[2]=='Detour','saved Recovery selection was reset to Off')
-options.movement.recovery.mode='Pause';assert(sub.view().items[1].args[2]=='Pause')
-options.movement.recovery.mode='Off';assert(sub.view().items[1].args[2]=='Off')
-print('PASS actual run/follow/location hooks replace steering and separate Recovery config preserves saved selections and exposes all controls')
+-- The Off/Detour/Pause master switch was removed (2026-11-19): no menu item reads it.
+for _,item in ipairs(editor.items)do assert(item.args[1]~='mode','Recovery master switch still in the menu')end
+print('PASS actual run/follow/location hooks replace steering and separate Recovery config exposes the per-situation switches and settings (no master switch)')

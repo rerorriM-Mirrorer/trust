@@ -32,7 +32,7 @@ print('PASS detector: progress, moving goals, finite alternating offsets/timeout
 
 -- Exercise the actual adapter and its zone-local temporary skip authority.
 package.preload['socket']=function()return{gettime=clock}end
-local config={mode='Pause',interval=.5,min_movement=.5,detour_distance=2,attempts=2,pull_cooldown=5,diagnostics=false}
+local config={attempts=1,interval=.5,min_movement=.5,detour_distance=2,pull_cooldown=5,diagnostics=false,verbose=false}
 addon_settings={getSettings=function()return{movement={recovery=config}}end}
 local position={x=0,y=0,z=0,id=1};local goal={x=10,y=0,z=0,id=42}
 local character={id=1,status=0,target_index=2,buffs={}}
@@ -47,7 +47,7 @@ local function action()
  return {is_cancelled=function(s)return s.cancelled end,cancel=function(s)s.cancelled=true;cancelled=cancelled+1 end}
 end
 local a=action();R.tag(a,'pulling',42)
-for i=1,12 do now=now+.1;R.step(a,{0,0,0},{10,0,0},1) end
+for i=1,60 do now=now+.1;R.step(a,{0,0,0},{10,0,0},1) end
 assert(a.cancelled and R.is_skipped(42) and cancelled==1 and #messages==1)
 for i=1,5 do now=now+.1;R.step(a,{0,0,0},{10,0,0},1) end
 assert(cancelled==1 and #messages==1,'failure must not report/cancel repeatedly')
@@ -55,29 +55,29 @@ info.zone=101;assert(not R.is_skipped(42));info.zone=100;assert(R.is_skipped(42)
 now=now+6;assert(not R.is_skipped(42),'cooldown must expire')
 local b=action();R.tag(b,'pulling',42);assert(not R.step(b,{0,0,0},{10,0,0},1),'expiry must permit a fresh observation window')
 -- Off and individual scope switches bypass steering and exclusions.
-config.mode='Off';assert(not R.step(b,{0,0,0},{10,0,0},1))
-config.mode='Detour';config.pulling=false;assert(not R.step(b,{0,0,0},{10,0,0},1));config.pulling=true
+-- (The Off/Detour/Pause master switch was removed 2026-11-19; per-situation switches remain.)
+config.pulling=false;assert(not R.step(b,{0,0,0},{10,0,0},1));config.pulling=true
 R.reset();character.status=4;assert(R.step(b,{0,0,0},{10,0,0},1));character.status=0
 -- A paused follower keeps its target, disables walking, and is cancelled once.
-config.mode='Pause';R.reset();local stopped=0
+R.reset();local stopped=0
 local follower={stop_following=function()stopped=stopped+1 end}
 player={trust={main_job={role_with_type=function()return follower end}}}
 local f=action();R.tag(f,'paths',nil,'waypoint:7')
-for i=1,12 do now=now+.1;R.step(f,{0,0,0},{10,0,0},1) end
+for i=1,60 do now=now+.1;R.step(f,{0,0,0},{10,0,0},1) end
 assert(f.cancelled and follower.recovery_paused and stopped==1)
 -- Recursive tags preserve one root owner across nested sequences.
 local child=action();local root=action();root.queue={it=function()local done=false;return function()if not done then done=true;return child end end end}
 R.tag(root,'pulling',42);assert(child.recovery.root==root and child.recovery.id==42)
-print('PASS adapter: local ID/zone cooldown, expiry, cancellation, scope/Off bypass, event guard and retained path pause')
+print('PASS adapter: local ID/zone cooldown, expiry, cancellation, per-situation bypass, event guard and retained path pause')
 -- Engaged failure disengages immediately through the existing action, before
 -- root cancellation can expose the next action. Guards share the ID cooldown.
 local order={}
 package.loaded['cylibs/actions/disengage']={new=function()return{
  perform=function()order[#order+1]='disengage'end,destroy=function()end}end}
-R.reset(true);character.status=1;config.mode='Pause'
+R.reset(true);character.status=1;config.attempts=1
 local engaged=action();engaged.cancel=function(s)s.cancelled=true;order[#order+1]='cancel'end
 R.tag(engaged,'pulling',42)
-for i=1,12 do now=now+.1;R.step(engaged,{0,0,0},{10,0,0},1)end
+for i=1,60 do now=now+.1;R.step(engaged,{0,0,0},{10,0,0},1)end
 assert(table.concat(order,',')=='disengage,cancel' and R.is_skipped(42))
 local function method(path,first,last,env)
  local file=assert(io.open(path));local s=file:read('*a');file:close()
@@ -93,7 +93,7 @@ local Gambiter={};method('cylibs/trust/roles/gambiter.lua','function Gambiter:pe
  {Gambiter=Gambiter,logger={isEnabled=false}})
 Gambiter.perform_gambit({},nil,{get_mob=function()return goal end}) -- must return before ability access
 -- Fresh tag grants enough action lifetime for the configured finite attempts.
-config.mode='Detour';local timed=action();timed.gettype=function()return'followaction'end
+local timed=action();timed.gettype=function()return'followaction'end
 R.tag(timed,'pulling',43);assert(timed.recovery_timeout>=12)
 -- Player spell event binding suspends the detector and is disposed on rebind.
 local callbacks={};local disposed=0
@@ -109,7 +109,7 @@ R.bind(actor);assert(disposed==1);R.close();assert(disposed==2 and not R.is_skip
 print('PASS engaged failure ordering, actual pull/engage/gambit exclusion gates, action timeout budget and spell-event lifecycle')
 
 -- Verbose messages show detour/retry transitions; Off keeps them quiet.
-config.mode='Detour';config.verbose=true;config.diagnostics=false;character.status=0;R.reset(true)
+config.attempts=2;config.verbose=true;config.diagnostics=false;character.status=0;R.reset(true)
 local startMessages=#messages;local trial=action();R.tag(trial,'pulling',43)
 for i=1,40 do now=now+.1;R.step(trial,{0,0,0},{10,0,0},1)end
 assert(#messages>=startMessages+2 and messages[startMessages+1]:find('detour',1,true))
@@ -172,7 +172,7 @@ character.status=0
 print('PASS Mount/Chocobo travel, overlays, cast preference, incapacitation and non-follow status guards')
 
 -- Ordinary following must not detour away from small formation corrections.
-config.mode='Detour';config.following=true;config.verbose=false;config.interval=.5
+config.following=true;config.verbose=false;config.interval=.5
 character.status=0;character.buffs={};info.chat_open=false;info.menu_open=false;hud=nil
 R.reset(true);local near=action();near.follow_while_stopped=true;R.tag(near,'following',nil,'leader')
 for i=1,80 do now=now+.1;assert(not R.step(near,{0,0,0},{.63,0,0},.2),'near formation correction detoured/paused')end
@@ -197,10 +197,10 @@ assert(not far.cancelled)
 follow_settings.auto_pause=true;R.casting_until=now+10
 assert(R.step(far,{0,0,0},{.63,0,0},.2));R.casting_until=0;follow_settings.auto_pause=false
 print('PASS near-goal follow without detours, recoverable far obstruction, goal/timed retry and cast guard')
--- Recovery Pause mode still avoids detours but ordinary follow can retry.
-config.mode='Pause';R.reset(true);local gentle=action();gentle.follow_while_stopped=true;R.tag(gentle,'following',nil,'leader')
+-- With a single detour attempt, ordinary follow still waits and retries (formerly Pause mode).
+config.attempts=1;R.reset(true);local gentle=action();gentle.follow_while_stopped=true;R.tag(gentle,'following',nil,'leader')
 waiting=false
-for i=1,30 do now=now+.1;R.step(gentle,{0,0,0},{12,0,0},.2);if R.status():find('waiting',1,true)then waiting=true;break end end
+for i=1,80 do now=now+.1;R.step(gentle,{0,0,0},{12,0,0},.2);if R.status():find('waiting',1,true)then waiting=true;break end end
 assert(waiting and not gentle.cancelled)
 now=now+1.1;assert(not R.step(gentle,{0,0,0},{12,0,0},.2))
-print('PASS ordinary follow retry in recovery Pause mode')
+print('PASS ordinary follow retry after a single detour attempt')
