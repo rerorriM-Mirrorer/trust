@@ -65,24 +65,48 @@ function FollowTrustCommands:handle_travel()
 end
 
 -- Human party clients are eligible for receipts; summoned alter egos are not
--- Windower IPC clients. Keep the existing broadcast for other participating
--- clients and for backward compatibility with older Trust installations.
-function FollowTrustCommands:get_receipt_recipients()
-    local recipients, seen = {}, {}
+-- Windower IPC clients. A: members the party list shows in another zone are
+-- left out entirely - they could never accept the follow, so sending to them
+-- only produced "not a valid party member" errors on parked characters.
+-- A member whose zone is unknown is still included.
+local function collect_party_clients(slots)
+    local recipients, other_zone, seen = {}, {}, {}
     local party = windower.ffxi.get_party()
     local self_name = windower.ffxi.get_player().name:lower()
-    for i = 0, 5 do
-        local member = party and party['p'..i]
+    local info = windower.ffxi.get_info()
+    local my_zone = info and info.zone
+    for _, slot in ipairs(slots) do
+        local member = party and party[slot]
         local name = member and member.name
         if type(name) == 'string' and name:match('^%a+$')
                 and name:lower() ~= self_name and not seen[name:lower()]
                 and not (member.mob and member.mob.is_npc) then
             seen[name:lower()] = true
-            recipients[#recipients + 1] = name
+            if my_zone and member.zone and member.zone ~= 0 and member.zone ~= my_zone then
+                other_zone[#other_zone + 1] = name
+            else
+                recipients[#recipients + 1] = name
+            end
         end
     end
     table.sort(recipients)
-    return recipients
+    table.sort(other_zone)
+    return recipients, other_zone
+end
+
+local party_slots = { 'p0', 'p1', 'p2', 'p3', 'p4', 'p5' }
+local alliance_slots = { 'p0', 'p1', 'p2', 'p3', 'p4', 'p5',
+    'a10', 'a11', 'a12', 'a13', 'a14', 'a15', 'a20', 'a21', 'a22', 'a23', 'a24', 'a25' }
+
+-- Returns same-zone party clients, then (second value) those in another zone.
+function FollowTrustCommands:get_receipt_recipients()
+    return collect_party_clients(party_slots)
+end
+
+-- Followers may be alliance members too (Follower:is_valid_target accepts any
+-- alliance member), so the follow request itself covers the whole alliance.
+function FollowTrustCommands:get_follow_recipients()
+    return collect_party_clients(alliance_slots)
 end
 
 function FollowTrustCommands:send_follow_receipt(recipient, pending)
@@ -114,6 +138,7 @@ function FollowTrustCommands:finish_follow_receipts()
     local detail = #accepted..'/'..pending.total
     if #rejected > 0 then detail = detail..' - rejected: '..table.concat(rejected, ', ') end
     if #missing > 0 then detail = detail..' - unconfirmed: '..table.concat(missing, ', ') end
+    detail = detail..(pending.other_zone_note or '')
     require('chat')
     windower.add_to_chat(0, '[Trust] ':color(200)..'Following: ':color(167)..detail:color(0))
 end
@@ -140,8 +165,15 @@ function FollowTrustCommands:handle_follow_me(response_only)
     self:get_follower():set_follow_target(nil)
     local leader = windower.ffxi.get_player().name
     local quiet_flag = command_feedback.is_quiet() and ' --quiet' or ''
-    -- The original broadcast remains effective even with an older recipient.
-    IpcRelay.shared():send_message(CommandMessage.new('trust follow '..leader..quiet_flag))
+    -- A: send the follow request to each same-zone party/alliance client
+    -- instead of broadcasting it, so characters parked in another zone are
+    -- never asked. The plain 'trust follow <leader>' command is unchanged, so
+    -- older Trust installs still understand it.
+    local follow_targets, other_zone = self:get_follow_recipients()
+    for _, name in ipairs(follow_targets) do
+        IpcRelay.shared():send_message(CommandMessage.new('trust follow '..leader..quiet_flag, name))
+    end
+    local other_zone_note = #other_zone > 0 and (' - other zone: '..table.concat(other_zone, ', ')) or ''
 
     -- Only All can receive the confirmations. Send retains ordinary following
     -- and reports that the remote state cannot be verified.
@@ -160,10 +192,10 @@ function FollowTrustCommands:handle_follow_me(response_only)
         self.pending_follow = nil
         if response_only == true and not command_feedback.is_quiet() then
             require('chat')
-            windower.add_to_chat(0, '[Trust] ':color(200)..'Following: ':color(167)..'0/0':color(0))
+            windower.add_to_chat(0, '[Trust] ':color(200)..'Following: ':color(167)..('0/0'..other_zone_note):color(0))
             return true
         end
-        return true, 'Follow request sent; no other player clients to confirm'
+        return true, 'Follow request sent; no other player clients to confirm'..other_zone_note
     end
     self.follow_request_sequence = self.follow_request_sequence + 1
     local pending = {
@@ -174,6 +206,7 @@ function FollowTrustCommands:handle_follow_me(response_only)
         retried = false,
         targets = {},
         total = #recipients,
+        other_zone_note = other_zone_note,
     }
     self.pending_follow = pending
     for _, name in ipairs(recipients) do pending.targets[name] = 'pending' end
