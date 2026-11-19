@@ -693,3 +693,10 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - Detours are checked every second. The first is 3 yalms and each one after is 3 yalms longer. The Stuck interval and Detour distance settings are gone; Maximum detour attempts now goes up to 8 (default 6).
 - Following tries its detours 45 degrees back and to the side; pulling, paths and combat still step side to side.
 - Live FFXI behavior is pending; see TESTING.md.
+
+### November 19, 2026 - Flank3: Flank follows the fight, not the timer
+
+- **Flank** now waits until the target auto-attacks one of your allies, then stands opposite that ally at your Distance. It moves again only when the target starts hitting someone else and you're more than 60 degrees off the new spot, or when you're out of distance. Spells and TP moves don't count. Until the first swing, and while the target is on you, it acts like Auto.
+- With a party member on **Auto Tank Mode**, Flank ignores hits on everyone else and lines up only against the tank. Tanks announce themselves to the other characters quietly when Trust loads, when the mode changes, and on Act; `//trust flank status` lists them.
+- If the spot can't be reached, Flank settles after about a second (trying once right against the target if needed) and stays until you move it yourself or the fight changes.
+- The old 3-second checks, 5-second settle and 9-second pauses are gone. Live FFXI behavior is pending; see TESTING.md.

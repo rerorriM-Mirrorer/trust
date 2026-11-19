@@ -1,3 +1,30 @@
+# Flank3: event-driven Flank (opposite the ally being fought; tank announcement) - 2026-11-19
+
+Branch `test/flank3`, on top of Recovery2 (`5180d355`). Source change plus host simulation only; **no live FFXI test of this batch.**
+
+**Recovery2 live notes (user, 2026-11-19, following only so far).** The 45-degree back-and-to-the-side detour is "kind of working." The left/right alternation doesn't seem to make sense; the user suggested trying whichever side is toward the target when facing it directly (to be clarified, not changed in this batch). Combat recovery not yet seen live.
+
+**User decisions (2026-11-19).**
+- Flank acts like Auto until the target auto-attacks any ally; then stand opposite that ally. Reposition only when the target hits a different ally and this character is outside the 120-degree rear cone, or when outside the combat distance (still going to the flank spot).
+- If a party member has Auto Tank Mode on, ignore hits on other allies; flank only when the target hits the tank and this character is outside the cone. Count only the target's auto-attacks.
+- Tank known by the Auto Tank Mode character announcing itself quietly; also repeated on Act.
+- Flank spot unreachable: settle after 1 s if within the 180-degree rear half; otherwise one attempt at edge to edge 0, then settle. Try again after this character's own movement (not the tank's).
+
+**Changes.**
+- `cylibs/movement/flank_state.lua` rewritten (Flank2 timers retired: 3 s check interval, 5 s settle, 3 s reach timeout, 9 s pause, 3 moves in 9 s). Per-enemy record of auto-attack targets (category 1 only; spells and TP moves ignored), with a sequence number per change of target and a separate tank sequence. Pure `decide()` returns hold (act like Auto), move (with the spot) or stay. The cone is measured around the enemy against the spot opposite the anchor ally. Settled state blocks moves until this character moves 1 yalm or more on its own, a trigger needs a move, or the enemy is more than Distance + 4 away. `announce_tank()` sends `trust flank tank <name> on|off --quiet` (only with IPC Send/All). `//trust flank status` now lists known tanks and moves/settles.
+- `cylibs/conditions/flank_position.lua` rewritten: builds allies (party and alliance members incl. alter egos, plus their live pets; a pet is never the tank) and asks `flank_state.decide`. 'hold' = decide is hold; 'move' = decide is move; neither while in position, settled or mid-run.
+- `cylibs/battle/flank.lua`: FlankRunAction commits the trigger when the run starts, watches progress (0.1 yalm within 1 s), then settles (rear half) or tries once against the enemy (edge to edge 0: centre distance = both model sizes, at least 0.5) and then settles. 9 s cap. No stuck-recovery detours for this run. `Flank:to_action` asks the same decision.
+- `cylibs/trust/roles/combat_mode.lua`: listens to `WindowerEvents.Action` for enemy (spawn_type 16) melee rounds; announces Auto Tank Mode on load and on every change. Flank mode description updated.
+- `commands/GeneralCommands.lua`: Act repeats the announcement (best effort, cannot break Act).
+- `commands/FlankCommands.lua`: new `//trust flank tank <name> <on|off>` (sent between clients). `cylibs/trust/commands/trust_commands.lua`: the flank group now honours a trailing `--quiet`, like follow/assist, so the announcement prints nothing.
+- Tests: `flank_mode_test.lua` and `flank_run_action_test.lua` replaced with Flank3 versions (the Flank2 timer tests no longer apply).
+
+**Host verification.** `flank_mode_test.lua` 30 pass (spot and cone geometry; hold before any ally hit; spells/TP moves ignored; first hit moves opposite the ally; same ally stays; new ally outside/inside the cone; distance band; enemy on me / targeting me / my tank mode hold; announced tank: others ignored, return to the tank moves, a pet is never the tank; settled stays, small drift stays, own 1.5 yalm move re-arms, new trigger re-arms; mid-run stays; announcement on/off/IPC off; status). `flank_run_action_test.lua` 9 pass (start commits trigger; arrive faces; blocked outside the rear half tries against the enemy at 1.6 yalms (sizes 1.2 + 0.4), then settles; blocked inside the rear half settles at once; progress keeps running; destroy releases; never performed). Full `tests/menu_options`: no new failures (same 10 pre-existing host-Lua failures). Lua 5.1 (lupa/LuaJIT); changed files compile. Not simulated: real action packets, IPC delivery, the Gambiter loop.
+
+**Live checks.** (1) Flank character, no tank announced: it holds at Auto distance until the enemy swings at someone, then runs opposite that person and stays while the enemy keeps hitting them. (2) Enemy switches targets: it moves only if more than 60 degrees off the new spot. (3) Clairvaux with Auto Tank Mode on: `//trust flank status` on the others should list `clairvaux` under tanks (after load, mode change or Act). Hits on others are then ignored; Flank moves only when the enemy returns to Clairvaux and it's out of the cone. (4) Spot behind a wall: within about 1 s it settles (or first tries standing right against the enemy). It stays until you steer it, or the enemy turns to someone who needs a move. (5) Enemy on the flanker: it holds at Auto distance. (6) Watch for the announcement printing anything (it shouldn't).
+
+Install: cumulative `Trust-Flank3-20261119.zip` (replaces Recovery2).
+
 # Recovery2: combat positioning recovery; hardcoded 1 s check and 3 + 3 yalm detours - 2026-11-19
 
 Branch `test/combat-recovery`, on top of FanOut1 (`8bc51c99`). Source change plus host simulation only; **no live FFXI test of this batch.**
