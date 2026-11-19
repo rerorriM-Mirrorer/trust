@@ -40,11 +40,12 @@ end
 function TrustCommands:handle_command(...)
     local args = { ... }
     local argc = select('#', ...)
-    -- Only follow/assist reserve a trailing --quiet flag. Forwarded text,
+    -- Only follow/assist/flank reserve a trailing --quiet flag. Forwarded text,
     -- paths and arguments belonging to other command groups stay untouched.
+    -- (flank: the Flank3 tank announcement between clients is sent quietly.)
     local group = self:get_command_name()
     local quiet = command_feedback.is_quiet()
-    if (group == 'follow' or group == 'assist') and argc >= 2
+    if (group == 'follow' or group == 'assist' or group == 'flank') and argc >= 2
             and type(args[argc]) == 'string' and args[argc]:lower() == '--quiet' then
         quiet = true
         args[argc] = nil

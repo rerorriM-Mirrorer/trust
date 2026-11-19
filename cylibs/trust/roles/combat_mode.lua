@@ -22,7 +22,7 @@ state.AutoFaceMobMode:set_description('Away', "Automatically face away from the 
 state.CombatMode = M{['description'] = 'Combat Mode', 'Off', 'Auto', 'Mirror', 'Flank'}
 state.CombatMode:set_description('Auto', "Maintain a specified distance from the target.")
 state.CombatMode:set_description('Mirror', "Mirror the position of the party member you are assisting.")
-state.CombatMode:set_description('Flank', "Stand behind the target at the combat distance. Acts like Auto while the target is attacking you or Auto Tank Mode is on.")
+state.CombatMode:set_description('Flank', "Stand opposite the ally the target is auto-attacking (the tank, if one has Auto Tank Mode on), at the combat distance. Acts like Auto until then, and while the target is attacking you or your Auto Tank Mode is on.")
 
 state.FlankMode = M{['description'] = 'Flanking Mode', 'Off', 'Back', 'Left', 'Right'}
 state.FlankMode:set_description('Back', "Stand behind the mob.")
@@ -57,6 +57,22 @@ function CombatMode:on_add()
             self:check_gambits()
         end
     end), WindowerEvents.ActionMessage)
+
+    -- Fork (Flank3): learn whom each enemy auto-attacks, and announce this character's
+    -- Auto Tank Mode to the other clients (now, and whenever it changes).
+    local flank_state = require('cylibs/movement/flank_state')
+    self.dispose_bag:add(WindowerEvents.Action:addAction(function(act)
+        flank_state.on_action(act, FlankPositionCondition.allies, function(id)
+            local mob = windower.ffxi.get_mob_by_id(id)
+            return mob ~= nil and mob.spawn_type == 16
+        end)
+    end), WindowerEvents.Action)
+    if state.AutoTankMode then
+        self.dispose_bag:add(state.AutoTankMode:on_state_change():addAction(function()
+            flank_state.announce_tank()
+        end), state.AutoTankMode:on_state_change())
+    end
+    flank_state.announce_tank()
 
     self.timer:onTimeChange():addAction(function(_)
         if not self.addon_enabled:getValue()

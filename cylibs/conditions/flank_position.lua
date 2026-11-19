@@ -1,16 +1,16 @@
 ---------------------------
 -- Fork addition: condition used by CombatMode's Flank setting.
 --   FlankPositionCondition.new('move') is satisfied when this character should run to
---     its flank spot behind the enemy (out of position, mob not targeting us, not tanking).
+--     its flank spot (Flank3: opposite the ally the enemy is auto-attacking; see
+--     cylibs/movement/flank_state.lua for the triggers).
 --   FlankPositionCondition.new('hold') is satisfied when Flank should behave like Auto
---     instead: the mob is targeting us (it would turn and "behind" would keep moving),
---     AutoTankMode is Auto (a tank stays in front), or flank has given up for a while
---     (see cylibs/movement/flank_state.lua).
+--     instead: this character is tanking, the enemy is on this character, or the enemy
+--     hasn't auto-attacked an ally yet (or, with a tank announced, the tank).
+-- Neither is satisfied while Flank stays put (in position, settled, or mid-run).
 -- Not offered in the gambit editor; CombatMode builds it in code.
 -- @class module
 -- @name FlankPositionCondition
 
-local flanking_util = require('cylibs/util/flanking_util')
 local flank_state = require('cylibs/movement/flank_state')
 
 local Condition = require('cylibs/conditions/condition')
@@ -33,38 +33,81 @@ local function is_tanking()
     return state.AutoTankMode ~= nil and state.AutoTankMode.value == 'Auto'
 end
 
-function FlankPositionCondition:is_satisfied(target_index)
+local alliance_slots = { 'p0', 'p1', 'p2', 'p3', 'p4', 'p5',
+    'a10', 'a11', 'a12', 'a13', 'a14', 'a15', 'a20', 'a21', 'a22', 'a23', 'a24', 'a25' }
+
+-------
+-- Party/alliance members (alter egos included) and their pets, by entity id.
+-- Shared with CombatMode's action listener.
+function FlankPositionCondition.allies()
+    local result = {}
+    local party = windower.ffxi.get_party()
+    if party == nil then
+        return result
+    end
+    for _, slot in ipairs(alliance_slots) do
+        local member = party[slot]
+        local mob = member and member.mob
+        if mob and mob.id then
+            result[mob.id] = { name = member.name, is_pet = false }
+            if mob.pet_index then
+                local pet = windower.ffxi.get_mob_by_index(mob.pet_index)
+                if pet and pet.id and (pet.hpp or 0) > 0 then
+                    result[pet.id] = { name = member.name, is_pet = true }
+                end
+            end
+        end
+    end
+    return result
+end
+
+-------
+-- Whether an announced tank is in this party/alliance and loaded nearby.
+function FlankPositionCondition.tank_present(allies)
+    for _, ally in pairs(allies) do
+        if not ally.is_pet and flank_state.tanks[(ally.name or ''):lower()] then
+            return true
+        end
+    end
+    return false
+end
+
+-------
+-- Builds the context and asks flank_state what to do for this enemy.
+function FlankPositionCondition.decide(target_index, radius)
     local mob = windower.ffxi.get_mob_by_index(target_index)
     local player = windower.ffxi.get_player()
     local me = player and windower.ffxi.get_mob_by_index(player.index)
     if mob == nil or me == nil then
-        return false
+        return 'none'
     end
-    local targeting_me = mob.target_index ~= nil and mob.target_index == me.index
-    local now = flank_state.clock()
+    local allies = FlankPositionCondition.allies()
+    return flank_state.decide({
+        mob = mob, me = me, radius = radius, now = flank_state.clock(),
+        i_am_tank = is_tanking(),
+        tank_present = FlankPositionCondition.tank_present(allies),
+        get_ally = function(id)
+            if allies[id] == nil then return nil end
+            local ally = windower.ffxi.get_mob_by_id(id)
+            if ally == nil or (ally.hpp or 0) <= 0 then return nil end
+            return ally
+        end,
+    })
+end
+
+function FlankPositionCondition:is_satisfied(target_index)
+    local decision = FlankPositionCondition.decide(target_index, self.get_radius())
     if self.mode == 'hold' then
-        -- Flank2: also act like Auto while flank is paused (gave up), but never while a
-        -- flank run is still under way.
-        return is_tanking() or targeting_me
-            or (flank_state.is_paused(now) and not flank_state.running)
+        return decision == 'hold'
     end
-    if is_tanking() then
-        return false
-    end
-    local needed, reason = flanking_util.flank_needed(mob, me, flanking_util.Back, self.get_radius())
-    if not needed then
-        return false
-    end
-    local angle = flanking_util.angle_off(mob, me, flanking_util.Back)
-    local allowed, _ = flank_state.can_start(now, angle, reason == 'too far')
-    return allowed
+    return decision == 'move'
 end
 
 function FlankPositionCondition:tostring()
     if self.mode == 'hold' then
-        return "Flank: tanking or mob targeting me"
+        return "Flank: tanking, enemy on me, or no ally hit yet"
     end
-    return "Flank: out of position behind mob"
+    return "Flank: move opposite the ally the enemy is fighting"
 end
 
 function FlankPositionCondition.valid_targets()

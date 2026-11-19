@@ -451,6 +451,12 @@ function GeneralTrustCommands:handle_start(_, include_party)
     local message
 
     Control.set(self.action_queue, self.addon_enabled, self.trust, 'Active')
+    -- Fork (Flank3): Act also repeats this character's Auto Tank Mode to the others.
+    -- Best effort: an announcement must never be able to break Act.
+    local announced, flank_state = pcall(require, 'cylibs/movement/flank_state')
+    if announced and type(flank_state) == 'table' and flank_state.announce_tank then
+        flank_state.announce_tank()
+    end
     -- Act also lifts the stick-takeover gate: combat positioning, return to
     -- camp and following all resume (previously only a follow command did).
     if self.action_queue and self.action_queue.control_state == 'Active' then
