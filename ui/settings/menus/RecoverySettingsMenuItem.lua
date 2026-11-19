@@ -2,7 +2,6 @@
 local MenuItem=require('cylibs/ui/menu/menu_item')
 local ButtonItem=require('cylibs/ui/collection_view/items/button_item')
 local ConfigEditor=require('ui/settings/editors/config/ConfigEditor')
-local PickerConfigItem=require('ui/settings/editors/config/PickerConfigItem')
 local BooleanConfigItem=require('ui/settings/editors/config/BooleanConfigItem')
 local ConfigItem=require('ui/settings/editors/config/ConfigItem')
 local M={}
@@ -10,11 +9,9 @@ function M.new(owner)
     return MenuItem.new(L{ButtonItem.default('Save'),ButtonItem.default('Status')},{
             Status=MenuItem.action(function()
                 addon_system_message('Recovery | '..require('cylibs/movement/recovery').status())
-            end,'Recovery','Current recovery mode and most recent result.')
+            end,'Recovery','Most recent recovery result.')
         },function(_,infoView)
-            local values=owner:getSettings().movement.recovery
             return ConfigEditor.new(owner,owner:getSettings().movement.recovery,L{
-                PickerConfigItem.new('mode',values.mode or 'Off',L{'Off','Detour','Pause'},nil,'Recovery'),
                 BooleanConfigItem.new('pulling','Recover pulling'),
                 BooleanConfigItem.new('following','Recover following'),
                 BooleanConfigItem.new('paths','Recover paths'),
@@ -27,6 +24,6 @@ function M.new(owner)
                 BooleanConfigItem.new('diagnostics','Write recovery diagnostics'),
                 BooleanConfigItem.new('verbose','Show recovery messages'),
             },infoView)
-        end,'Recovery','Detours of 3, 6, 9... yalms, checked every second. Then skip a blocked pull mob or pause following/path; combat keeps trying while engaged. Stop cancels recovery. No terrain route finding.')
+        end,'Recovery','Turn recovery on or off for each situation below. Detours of 3, 6, 9... yalms, checked every second. Then skip a blocked pull mob or pause following/path; combat keeps trying while engaged. Stop cancels recovery. No terrain route finding.')
 end
 return M

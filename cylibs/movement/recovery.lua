@@ -20,7 +20,10 @@ local function settings()
     saved=saved and saved.recovery or {}
     local result={}
     for k,v in pairs(defaults) do if saved[k]==nil then result[k]=v else result[k]=saved[k] end end
-    if result.mode~='Detour' and result.mode~='Pause' then result.mode='Off' end
+    -- A: the Off/Detour/Pause master setting was removed (user request, 2026-11-19);
+    -- the per-situation switches (pulling, following, paths, combat) decide instead.
+    -- A saved mode from older settings files is ignored.
+    result.mode='Detour'
     local limits={min_movement={.1,3},attempts={1,8},pull_cooldown={5,180},settle_time={.3,5}}
     for k,range in pairs(limits) do
         local n=tonumber(result[k]);if not n or n~=n then n=defaults[k] end
@@ -57,7 +60,7 @@ function M.is_settled(key,goal)
     if math.sqrt(dx*dx+dy*dy)>=1 then M.formation_settled=nil;return false end
     return true
 end
-function M.status()return settings().mode..' | '..M.last end
+function M.status()return M.last end
 local function report(text,config,important,display)
     M.last=text
     if important or config.verbose then

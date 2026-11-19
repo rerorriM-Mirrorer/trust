@@ -31,7 +31,7 @@ default.character_modes = {}
 -- the menu no longer offers a policy (the sender always gets Send), and `feedback`
 -- (Request feedback, off by default) replaces the inverted `quiet`.
 default.movement = {policy='Send',quiet=true,feedback=false,enabled=true,assist_others=false,stop_on_movement=true,start_others=false,auto_lockon=false,keep_autorun=false,autorun_messages=false,defaults_version=0,
-    recovery={mode='Detour',pulling=true,following=true,paths=true,combat=true,min_movement=.5,
+    recovery={pulling=true,following=true,paths=true,combat=true,min_movement=.5,
         attempts=6,pull_cooldown=30,settle_time=1,diagnostics=true,verbose=true}}
 -- autohide: hide every Trust widget after `autohide_seconds` without player input.
 default.widgets = {hide_pet=true,autohide=false,autohide_seconds=5}

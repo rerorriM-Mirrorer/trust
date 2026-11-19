@@ -153,7 +153,10 @@ end
 
 function Follower:start_following(override)
     if self.recovery_paused then
-        if require('cylibs/movement/recovery').settings().mode=='Off' then self.recovery_paused=false
+        -- A: with following and path recovery both switched off, a stale recovery
+        -- pause must not block following (this used to check the removed master mode).
+        local recovery_settings=require('cylibs/movement/recovery').settings()
+        if recovery_settings.following==false and recovery_settings.paths==false then self.recovery_paused=false
         else return end
     end
     -- Ordinary following survives Stop; recorded paths and manual takeover do not.
