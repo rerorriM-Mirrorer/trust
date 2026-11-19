@@ -21,8 +21,9 @@ tank_util.BanishRange = 19
 -- Single-target order after the AoE check. Provoke (a WAR subjob ability) comes before the
 -- Banishes because it builds far more hate; Banish II/Banish are the PLD-native fallbacks
 -- when Flash is on cooldown.
-tank_util.SingleOrder = { 'Flash', 'Provoke', 'Banish II', 'Banish' }
-tank_util.Ranges = { Flash = 19, Provoke = 16, ['Banish II'] = 19, Banish = 19 }
+-- Holy (PLD 55) is the last resort (user request, 2026-11-19).
+tank_util.SingleOrder = { 'Flash', 'Provoke', 'Banish II', 'Banish', 'Holy' }
+tank_util.Ranges = { Flash = 19, Provoke = 16, ['Banish II'] = 19, Banish = 19, Holy = 19 }
 tank_util.BanishgaRange = 19
 -- Banishga: loose mobs within ClusterRadius of the centre mob count as caught; any
 -- uninvolved monster within SafetyRadius of the centre blocks the cast (it would be
@@ -108,7 +109,7 @@ function tank_util.aoe_center(ctx, loose)
 end
 
 -------
--- Chooses what to do. `ready` maps 'Banishga'/'Flash'/'Provoke'/'Banish II'/'Banish' to true when that action
+-- Chooses what to do. `ready` maps 'Banishga'/'Flash'/'Provoke'/'Banish II'/'Banish'/'Holy' to true when that action
 -- is known and ready; `recent` maps mob id -> time last acted on; `now` is the clock.
 -- @treturn table|nil { name = action name, target = mob, marks = list of mobs to mark }
 function tank_util.choose(ctx, ready, recent, now)

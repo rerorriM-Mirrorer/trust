@@ -208,7 +208,15 @@ function ActionQueue:push_action(action, check_duplicates)
     if self.movement_suspended and require('cylibs/movement/takeover').is_movement(action) then require('cylibs/movement/takeover').discard(action); return end
 	self:cleanup()
 
-	if not self.is_enabled or (check_duplicates and check_duplicates == true and self:contains(action)) or self:length() >= self.max_size then
+	if not self.is_enabled or (check_duplicates and check_duplicates == true and self:contains(action)) then
+		action:destroy()
+		return
+	end
+	-- Fork: a full priority queue used to drop every new action, whatever its priority,
+	-- so e.g. the PLD tank helper's Banish (high) was lost behind five queued buffs and
+	-- debuffs. Now a higher-priority action replaces the lowest-priority waiting one;
+	-- the role that queued that one simply queues it again on a later check.
+	if self:length() >= self.max_size and not (self.is_priority_queue and self:evict_lower_than(action)) then
 		action:destroy()
 		return
 	end
@@ -231,6 +239,30 @@ function ActionQueue:push_action(action, check_duplicates)
 	else
 		self:on_action_queued():trigger(self)
 	end
+end
+
+-- Fork: removes the lowest-priority waiting action if it ranks below `action`.
+-- Returns true when room was made. The running action is never touched.
+function ActionQueue:evict_lower_than(action)
+	local incoming = action:getpriority() or 0
+	local lowest, lowest_priority = nil, nil
+	for queued in self.queue:it() do
+		local p = queued:getpriority() or 0
+		if lowest_priority == nil or p < lowest_priority then
+			lowest, lowest_priority = queued, p
+		end
+	end
+	if lowest == nil or lowest_priority >= incoming then
+		return false
+	end
+	local kept = {}
+	for queued in self.queue:it() do
+		if queued ~= lowest then kept[#kept + 1] = queued end
+	end
+	self.queue:clear()
+	for _, queued in ipairs(kept) do self.queue:push(queued) end
+	lowest:destroy()
+	return true
 end
 
 -- Pushes the given actions onto the queue

@@ -3,7 +3,7 @@
 -- it pulls loose enemies (ones attacking another party member) back onto itself:
 --   two or more loose enemies close together, nothing else nearby -> Banishga
 --   otherwise, the enemy hitting the lowest-HP party member -> Flash, else Provoke
---   (WAR subjob), else Banish II, else Banish
+--   (WAR subjob), else Banish II, else Banish, else Holy (last resort)
 -- "Party" includes alter egos (trusts) and every party member's pet.
 -- It never moves and never changes the engaged target: spells and abilities are aimed at
 -- the loose enemy by index, so the tank stays on the party leader's target. Each enemy is
@@ -29,6 +29,7 @@ function Tanker.new(action_queue)
         Provoke = JobAbility.new('Provoke', L{}, L{}),
         ['Banish II'] = Spell.new('Banish II', L{}, L{}),
         Banish = Spell.new('Banish', L{}, L{}),
+        Holy = Spell.new('Holy', L{}, L{}),
     }
     return self
 end
