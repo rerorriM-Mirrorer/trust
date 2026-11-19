@@ -47,7 +47,7 @@ local function action()
  return {is_cancelled=function(s)return s.cancelled end,cancel=function(s)s.cancelled=true;cancelled=cancelled+1 end}
 end
 local a=action();R.tag(a,'pulling',42)
-for i=1,8 do now=now+.1;R.step(a,{0,0,0},{10,0,0},1) end
+for i=1,12 do now=now+.1;R.step(a,{0,0,0},{10,0,0},1) end
 assert(a.cancelled and R.is_skipped(42) and cancelled==1 and #messages==1)
 for i=1,5 do now=now+.1;R.step(a,{0,0,0},{10,0,0},1) end
 assert(cancelled==1 and #messages==1,'failure must not report/cancel repeatedly')
@@ -63,7 +63,7 @@ config.mode='Pause';R.reset();local stopped=0
 local follower={stop_following=function()stopped=stopped+1 end}
 player={trust={main_job={role_with_type=function()return follower end}}}
 local f=action();R.tag(f,'paths',nil,'waypoint:7')
-for i=1,8 do now=now+.1;R.step(f,{0,0,0},{10,0,0},1) end
+for i=1,12 do now=now+.1;R.step(f,{0,0,0},{10,0,0},1) end
 assert(f.cancelled and follower.recovery_paused and stopped==1)
 -- Recursive tags preserve one root owner across nested sequences.
 local child=action();local root=action();root.queue={it=function()local done=false;return function()if not done then done=true;return child end end end}
@@ -77,7 +77,7 @@ package.loaded['cylibs/actions/disengage']={new=function()return{
 R.reset(true);character.status=1;config.mode='Pause'
 local engaged=action();engaged.cancel=function(s)s.cancelled=true;order[#order+1]='cancel'end
 R.tag(engaged,'pulling',42)
-for i=1,8 do now=now+.1;R.step(engaged,{0,0,0},{10,0,0},1)end
+for i=1,12 do now=now+.1;R.step(engaged,{0,0,0},{10,0,0},1)end
 assert(table.concat(order,',')=='disengage,cancel' and R.is_skipped(42))
 local function method(path,first,last,env)
  local file=assert(io.open(path));local s=file:read('*a');file:close()
@@ -111,12 +111,12 @@ print('PASS engaged failure ordering, actual pull/engage/gambit exclusion gates,
 -- Verbose messages show detour/retry transitions; Off keeps them quiet.
 config.mode='Detour';config.verbose=true;config.diagnostics=false;character.status=0;R.reset(true)
 local startMessages=#messages;local trial=action();R.tag(trial,'pulling',43)
-for i=1,30 do now=now+.1;R.step(trial,{0,0,0},{10,0,0},1)end
+for i=1,40 do now=now+.1;R.step(trial,{0,0,0},{10,0,0},1)end
 assert(#messages>=startMessages+2 and messages[startMessages+1]:find('detour',1,true))
 assert(messages[startMessages+2]:find('retrying original',1,true))
 config.verbose=false;R.reset(true);trial=action();R.tag(trial,'pulling',44)
 startMessages=#messages
-for i=1,8 do now=now+.1;R.step(trial,{0,0,0},{10,0,0},1)end
+for i=1,12 do now=now+.1;R.step(trial,{0,0,0},{10,0,0},1)end
 assert(#messages==startMessages)
 local originalColor=string.color;local colored
 string.color=function(s,n)return '<'..n..'>'..s end
@@ -182,7 +182,7 @@ R.reset(true);follower.recovery_paused=false;local old_stopped=stopped
 local renewed=0
 local far=action();far.set_start_time=function()renewed=renewed+1 end;far.follow_while_stopped=true;R.tag(far,'following',nil,'leader')
 local waiting=false
-for i=1,150 do
+for i=1,400 do
  now=now+.1;R.step(far,{0,0,0},{10,0,0},.2)
  if R.status():find('waiting',1,true)then waiting=true;break end
 end
@@ -190,8 +190,8 @@ assert(renewed>0,'walking queue timeout budget was not renewed')
 assert(waiting and not far.cancelled and not follower.recovery_paused and stopped==old_stopped,'ordinary following permanently gave up')
 -- A moved leader resumes immediately; otherwise the bounded wait also expires.
 now=now+.1;assert(not R.step(far,{0,0,0},{12,0,0},.2),'new leader goal did not release retry wait')
-for i=1,150 do now=now+.1;R.step(far,{0,0,0},{12,0,0},.2);if R.status():find('waiting',1,true)then break end end
-now=now+config.interval+.1;assert(not R.step(far,{0,0,0},{12,0,0},.2),'timed retry did not resume')
+for i=1,400 do now=now+.1;R.step(far,{0,0,0},{12,0,0},.2);if R.status():find('waiting',1,true)then break end end
+now=now+1.1;assert(not R.step(far,{0,0,0},{12,0,0},.2),'timed retry did not resume')
 assert(not far.cancelled)
 -- A deliberate cast/input/status hold is still respected, even close to goal.
 follow_settings.auto_pause=true;R.casting_until=now+10
@@ -202,5 +202,5 @@ config.mode='Pause';R.reset(true);local gentle=action();gentle.follow_while_stop
 waiting=false
 for i=1,30 do now=now+.1;R.step(gentle,{0,0,0},{12,0,0},.2);if R.status():find('waiting',1,true)then waiting=true;break end end
 assert(waiting and not gentle.cancelled)
-now=now+config.interval+.1;assert(not R.step(gentle,{0,0,0},{12,0,0},.2))
+now=now+1.1;assert(not R.step(gentle,{0,0,0},{12,0,0},.2))
 print('PASS ordinary follow retry in recovery Pause mode')

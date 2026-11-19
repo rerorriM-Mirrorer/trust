@@ -18,16 +18,15 @@ function M.new(owner)
                 BooleanConfigItem.new('pulling','Recover pulling'),
                 BooleanConfigItem.new('following','Recover following'),
                 BooleanConfigItem.new('paths','Recover paths'),
-                ConfigItem.new('interval',.5,15,.5,function(v)return v..' seconds'end,'Stuck interval'),
+                BooleanConfigItem.new('combat','Recover combat positioning'),
                 ConfigItem.new('min_movement',.1,3,.1,function(v)return string.format('%.1f yalms',v)end,'Minimum movement'),
-                ConfigItem.new('detour_distance',.5,5,.5,function(v)return v..' yalms'end,'Detour distance'),
-                ConfigItem.new('attempts',1,4,1,nil,'Maximum detour attempts'),
+                ConfigItem.new('attempts',1,8,1,nil,'Maximum detour attempts'),
                 ConfigItem.new('pull_cooldown',5,180,5,function(v)return v..' seconds'end,'Pull target cooldown'),
                 -- A: Fan Out stops short of a slot it can't reach after this long without progress.
                 ConfigItem.new('settle_time',.3,5,.1,function(v)return string.format('%.1f seconds',v)end,'Fan Out settle time'),
                 BooleanConfigItem.new('diagnostics','Write recovery diagnostics'),
                 BooleanConfigItem.new('verbose','Show recovery messages'),
             },infoView)
-        end,'Recovery','Try bounded detours, then skip a blocked pull mob or pause following/path. Stop cancels recovery. No terrain route finding.')
+        end,'Recovery','Detours of 3, 6, 9... yalms, checked every second. Then skip a blocked pull mob or pause following/path; combat keeps trying while engaged. Stop cancels recovery. No terrain route finding.')
 end
 return M

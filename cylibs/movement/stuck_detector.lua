@@ -54,9 +54,22 @@ function M.new(clock)
             x,y=x/length,y/length
             c.attempts=c.attempts+1
             local side=c.attempts%2==1 and 1 or -1
-            local scale=settings.detour_distance/math.sqrt(1+.35*.35)
-            c.detour={pos[1]+(.35*x-side*y)*scale,pos[2]+(.35*y+side*x)*scale,pos[3]}
-            c.until_time=now+2
+            -- A: each detour in a row is longer: detour_distance, then + detour_step
+            -- per further attempt (3, 6, 9 ... yalms with the hardcoded values).
+            local reach=settings.detour_distance+(settings.detour_step or 0)*(c.attempts-1)
+            if settings.shape=='back' then
+                -- 45 degrees back and to the side (following only, for now): step
+                -- away from the corner caught on, and around it at the same time.
+                local k=reach*math.sqrt(.5)
+                c.detour={pos[1]+(-x-side*y)*k,pos[2]+(-y+side*x)*k,pos[3]}
+            else
+                -- Mostly sideways, slightly forward (unchanged shape).
+                local scale=reach/math.sqrt(1+.35*.35)
+                c.detour={pos[1]+(.35*x-side*y)*scale,pos[2]+(.35*y+side*x)*scale,pos[3]}
+            end
+            c.reach=reach
+            -- Time to run there: at least 2 s, about 4 yalms a second beyond that.
+            c.until_time=now+math.max(2,1+reach/4)
             self.last='detour '..c.attempts;return 'detour',c.detour,true
         end
         self.last='watching';return 'normal'

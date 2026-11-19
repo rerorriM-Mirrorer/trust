@@ -90,16 +90,21 @@ end
 -- @treturn Action Action to use ability
 function RunTo:to_action(target_index, _)
     local target = windower.ffxi.get_mob_by_index(target_index)
+    local action
     if target.distance:sqrt() > self.distance then
-        return SequenceAction.new(L{
+        action = SequenceAction.new(L{
             BlockAction.new(function() player_util.face(windower.ffxi.get_mob_by_index(target_index))  end),
             RunToAction.new(target_index, self.distance),
         }, self.__class..'_run_to')
     else
-        return SequenceAction.new(L{
+        action = SequenceAction.new(L{
             RunAwayAction.new(target_index, self.distance),
         }, self.__class..'_run_to')
     end
+    -- A: combat positioning (Auto, Mirror, Flank holding Auto distance) now uses
+    -- stuck recovery: side-to-side detours, and it never gives up while engaged.
+    require('cylibs/movement/recovery').tag(action, 'combat', target and target.id, 'combat:'..tostring(target and target.id))
+    return action
 end
 
 function RunTo:serialize()

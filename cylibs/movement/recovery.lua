@@ -5,19 +5,28 @@ local Detector=require('cylibs/movement/stuck_detector')
 local clock=require('socket').gettime
 local M={skips={},last='idle'}
 local detector=Detector.new(clock)
-local defaults={mode='Detour',pulling=true,following=true,paths=true,interval=2,
-    min_movement=.5,detour_distance=2,attempts=2,pull_cooldown=30,settle_time=1,diagnostics=true,verbose=true}
+local defaults={mode='Detour',pulling=true,following=true,paths=true,combat=true,
+    min_movement=.5,attempts=6,pull_cooldown=30,settle_time=1,diagnostics=true,verbose=true}
+-- A: hardcoded by user request (2026-11-19): check for "stuck" every second; the
+-- first detour is 3 yalms and each further one 3 yalms longer. Saved interval and
+-- detour_distance values from older settings files are ignored.
+local INTERVAL,DETOUR_FIRST,DETOUR_STEP=1,3,3
+-- Within this distance of a following goal, steer directly (no detours). This was
+-- max(radius, detour_distance=2) before detours were hardcoded; kept at 2 so Fan Out
+-- settling behaves as live-tested.
+local NEAR_GOAL=2
 local function settings()
     local saved=addon_settings and addon_settings:getSettings().movement
     saved=saved and saved.recovery or {}
     local result={}
     for k,v in pairs(defaults) do if saved[k]==nil then result[k]=v else result[k]=saved[k] end end
     if result.mode~='Detour' and result.mode~='Pause' then result.mode='Off' end
-    local limits={interval={.5,15},min_movement={.1,3},detour_distance={.5,5},attempts={1,4},pull_cooldown={5,180},settle_time={.3,5}}
+    local limits={min_movement={.1,3},attempts={1,8},pull_cooldown={5,180},settle_time={.3,5}}
     for k,range in pairs(limits) do
         local n=tonumber(result[k]);if not n or n~=n then n=defaults[k] end
         result[k]=math.max(range[1],math.min(range[2],n))
     end
+    result.interval=INTERVAL;result.detour_distance=DETOUR_FIRST;result.detour_step=DETOUR_STEP
     return result
 end
 M.settings=settings
@@ -68,8 +77,12 @@ function M.tag(action,kind,id,key,root)
     local config=settings()
     local type_name=action.gettype and action:gettype() or ''
     if config.mode~='Off' and config[kind]~=false and
-        (type_name=='sequenceaction' or type_name=='followaction' or type_name=='runtoaction' or type_name=='runtolocationaction') then
-        local budget=(config.interval+2)*(config.attempts+1)+5
+        (type_name=='sequenceaction' or type_name=='followaction' or type_name=='runtoaction' or type_name=='runawayaction' or type_name=='runtolocationaction') then
+        -- Room for every detour: the stuck check, the run out and back, plus slack.
+        local budget=5
+        for i=1,config.attempts+1 do
+            budget=budget+config.interval+2+math.max(2,1+(config.detour_distance+config.detour_step*(i-1))/4)
+        end
         action.recovery_timeout=budget
         if action.max_duration then action.max_duration=math.max(action.max_duration,budget) end
     end
@@ -163,7 +176,7 @@ function M.step(action,pos,goal,radius)
         end
         if not blocked then
             local dx,dy=goal[1]-pos[1],goal[2]-pos[2]
-            local near=math.sqrt(dx*dx+dy*dy)<=math.max(radius,config.detour_distance)
+            local near=math.sqrt(dx*dx+dy*dy)<=math.max(radius,NEAR_GOAL)
             if near then
                 -- A cosmetic slot correction must never send the follower farther
                 -- sideways than its actual destination. Keep steering directly.
@@ -220,6 +233,9 @@ function M.step(action,pos,goal,radius)
             meta.follow_retry.until_time=clock()+config.interval
         end
     end
+    -- A: following tries the 45-degree back-and-to-the-side detour; pulling,
+    -- paths and combat keep the side-to-side shape.
+    config.shape=meta.kind=='following' and 'back' or 'side'
     local decision,offset,started=detector:sample(key,pos,goal,radius,config,blocked)
     if decision=='normal' then
         M.last=detector.last
@@ -235,7 +251,7 @@ function M.step(action,pos,goal,radius)
             if windower.ffxi.get_player().target_locked then windower.send_command('input /lockon') end
             report(string.format('%s %s: detour %d from %.2f,%.2f toward %.2f,%.2f; goal %.2f,%.2f',
                 meta.kind,tostring(meta.id or meta.key),detector.context.attempts,pos[1],pos[2],offset[1],offset[2],goal[1],goal[2]),config,false,
-                meta.kind..': detour '..detector.context.attempts..' '..(detector.context.attempts%2==1 and 'left' or 'right')..' ('..config.detour_distance..' yalms)')
+                meta.kind..': detour '..detector.context.attempts..' '..(detector.context.attempts%2==1 and 'left' or 'right')..' ('..tostring(detector.context.reach)..' yalms)')
         end
         windower.ffxi.run(offset[1]-pos[1],offset[2]-pos[2],pos[3])
     elseif decision=='failed' and following then
@@ -247,6 +263,18 @@ function M.step(action,pos,goal,radius)
         -- silently retire the live action during repeated recovery cycles.
         if meta.root.set_start_time then meta.root:set_start_time(os.time()) end
         report('following waiting to retry; target retained',config,false)
+    elseif decision=='failed' and meta.kind=='combat' then
+        -- A: combat positioning never gives up while engaged. Start a fresh cycle
+        -- of detours (3, 6, 9 ... yalms again) and a fresh queue time budget.
+        -- Casts, menus and status effects still hold it (see suspended()).
+        local character=windower.ffxi.get_player()
+        if character and character.status==1 then
+            detector:reset()
+            if meta.root.set_start_time then meta.root:set_start_time(os.time()) end
+            report('combat: detours used up; starting another cycle',config,false)
+        elseif not meta.root:is_cancelled() and not meta.root.completed then
+            meta.root:cancel()
+        end
     elseif decision=='failed' and not meta.handled then
         meta.handled=true
         if meta.kind=='pulling' then

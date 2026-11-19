@@ -53,6 +53,18 @@ function RunAway:perform()
 		end
 
 		local player = windower.ffxi.get_mob_by_id(windower.ffxi.get_player().id)
+
+		-- A: stuck recovery while backing away. The goal is the point just beyond
+		-- self.distance on the far side from the target.
+		local ax, ay = player.x - target.x, player.y - target.y
+		local alen = math.sqrt(ax * ax + ay * ay)
+		if alen < 0.01 then ax, ay, alen = 1, 0, 1 end
+		local reach = self.distance + 0.3
+		if require('cylibs/movement/recovery').step(self, {player.x, player.y, player.z},
+				{target.x + ax / alen * reach, target.y + ay / alen * reach, player.z}, 0.3) then
+			return
+		end
+
 		local angle = (math.atan2((target.y - player.y), (target.x - player.x))*180/math.pi)*-1
 
 		windower.ffxi.follow()

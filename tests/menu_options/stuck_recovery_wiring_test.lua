@@ -47,8 +47,8 @@ local options={movement={policy='Ready',recovery={mode='Detour'}}};local owner={
 local menu=real_require('ui/settings/menus/MovementSettingsMenuItem').new(owner)
 assert(not menu.children['Stuck Recovery'] and not menu.children.Recovery)
 local sub=real_require('ui/settings/menus/RecoverySettingsMenuItem').new(owner);assert(sub.title=='Recovery')
-local editor=sub.view();assert(editor.data==options.movement.recovery and #editor.items==12)
-local expected={'mode','pulling','following','paths','interval','min_movement','detour_distance','attempts','pull_cooldown','settle_time','diagnostics','verbose'}
+local editor=sub.view();assert(editor.data==options.movement.recovery and #editor.items==11)
+local expected={'mode','pulling','following','paths','combat','min_movement','attempts','pull_cooldown','settle_time','diagnostics','verbose'}
 for i,key in ipairs(expected)do assert(editor.items[i].args[1]==key)end
 local mv=menu.view();assert(mv.data==options.movement)
 local movementKeys={'stop_on_movement','enabled','assist_others','start_others','feedback','auto_lockon','keep_autorun','autorun_messages'}
