@@ -1,3 +1,23 @@
+# Autohide2: widget autohide Off / On / Show When Engaged (Layout menu) - 2026-11-19
+
+Branch `test/autohide-engaged`, on top of Edge1 (`e094f5bd`). Source change plus host simulation only; **no live FFXI test of this batch.**
+
+**Edge1 live note (user, 2026-11-19).** Still testing, but "it seems to be working great."
+
+**User request.** An option in the widgets menu, under Layout: "Autohide widget" with Off, On, and a third setting that is the same as autohide except that it stays visible while engaged with an enemy.
+
+**Changes.**
+- `ui/WidgetAutohide.lua`: modes Off / On / Show When Engaged (setting `widgets.autohide_mode`; the older `widgets.autohide` true/false stays in step, and still decides when no mode is saved). In Show When Engaged, being engaged holds the widgets up like an open menu (status shows "paused: engaged"); the idle time restarts when the fight ends. On hides during fights as before. `set_mode`; turning on keeps Show When Engaged; a duration keeps the current mode. `//trust autohide engaged` (or `combat`) selects the new mode; describe/status say "shown while engaged".
+- `Trust.lua`: passes `engaged` (player status 1) to the controller.
+- `ui/settings/menus/widgets/WidgetSettingsMenuItem.lua`: Layout gains **Autohide widget** (Off / On / Show When Engaged). A confirm that only changes Autohide leaves the widgets where they are; changing Alignment (or confirming with nothing changed) arranges them as before.
+- `commands/GeneralCommands.lua`, `settings/TrustAddonSettings.lua`: usage/help text and settings comment.
+
+**Host verification.** New `tests/menu_options/widget_autohide_engaged_test.lua` 18 pass (older settings map to On/Off; engaged command and save; hidden when idle out of combat; engaging shows; stays the whole fight; idle time restarts after the fight; On still hides while engaged; on/off/seconds keep or set the mode; unknown mode rejected; usage; without an engaged hook it behaves like On). Existing `widget_autohide_test.lua` still passes. Full run: no new failures (same 10 pre-existing). Changed files compile (Lua 5.1). Not simulated: the Layout menu itself.
+
+**Live checks.** (1) Widgets > Layout: Autohide widget shows your current setting (On if autohide was on). (2) Choose Show When Engaged and confirm: widgets don't move. (3) Idle out of combat: they hide after the idle time. Engage: they appear and stay up all fight. After the fight they hide again after the idle time. (4) On: hides during fights too. Off: never hides. (5) `//trust status` / `//trust autohide` report the mode; survives reload.
+
+Install: cumulative `Trust-Autohide2-20261119.zip` (replaces Edge1).
+
 # Edge1: combat positioning measured between body edges (option) - 2026-11-19
 
 Branch `test/edge-distance`, on top of Flank3b (`9c940663`). Source change plus host simulation only; **no live FFXI test of this batch.**

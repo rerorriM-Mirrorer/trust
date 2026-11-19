@@ -713,3 +713,7 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - Combat > Config has **Measure from body edges**. When it's on, Auto and Flank keep Combat Distance between your body and the enemy's instead of between centres, so big enemies get the same gap as small ones. Lower Combat Distance when you turn it on (it can now go down to 0, which means touching).
 - `//trust flank status` shows the target's size and yours, plus the centre and edge distances.
 - Live FFXI behavior is pending; see TESTING.md.
+
+### November 19, 2026 - Autohide that stays up in fights
+
+- Widgets > Layout has **Autohide widget**: Off, On, or **Show When Engaged**. That last one hides the widgets when you're idle, like On, but keeps them on screen while you're engaged; the idle timer starts again when the fight ends. Also `//trust autohide engaged`.
