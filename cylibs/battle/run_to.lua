@@ -13,11 +13,14 @@ RunTo.__class = "RunTo"
 -------
 -- Default initializer for a new run to.
 -- @treturn RunTo A run to.
-function RunTo.new(distance, conditions, angle)
+function RunTo.new(distance, conditions, angle, get_edge)
     local self = setmetatable({}, RunTo)
     self.distance = distance or 3
     self.conditions = conditions or L{}
     self.angle = angle
+    -- Fork: CombatMode passes a function that is true when Combat Config measures from
+    -- body edges; saved gambits never have it (always centre to centre).
+    self.get_edge = get_edge
     return self
 end
 
@@ -91,14 +94,17 @@ end
 function RunTo:to_action(target_index, _)
     local target = windower.ffxi.get_mob_by_index(target_index)
     local action
-    if target.distance:sqrt() > self.distance then
+    -- Fork: with body edges, the run uses the centre distance that leaves this gap.
+    local distance = require('cylibs/util/combat_distance').effective(self.distance, target,
+        self.get_edge ~= nil and self.get_edge())
+    if target.distance:sqrt() > distance then
         action = SequenceAction.new(L{
             BlockAction.new(function() player_util.face(windower.ffxi.get_mob_by_index(target_index))  end),
-            RunToAction.new(target_index, self.distance),
+            RunToAction.new(target_index, distance),
         }, self.__class..'_run_to')
     else
         action = SequenceAction.new(L{
-            RunAwayAction.new(target_index, self.distance),
+            RunAwayAction.new(target_index, distance),
         }, self.__class..'_run_to')
     end
     -- A: combat positioning (Auto, Mirror, Flank holding Auto distance) now uses
@@ -120,7 +126,7 @@ function RunTo:copy()
     for condition in self:get_conditions():it() do
         conditions:append(condition:copy())
     end
-    return RunTo.new(self.distance, conditions)
+    return RunTo.new(self.distance, conditions, self.angle, self.get_edge)
 end
 
 function RunTo:__eq(otherItem)

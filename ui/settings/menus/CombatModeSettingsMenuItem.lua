@@ -1,6 +1,7 @@
 local ButtonItem = require('cylibs/ui/collection_view/items/button_item')
 local ConfigEditor = require('ui/settings/editors/config/ConfigEditor')
 local ConfigItem = require('ui/settings/editors/config/ConfigItem')
+local BooleanConfigItem = require('ui/settings/editors/config/BooleanConfigItem')
 local DisposeBag = require('cylibs/events/dispose_bag')
 local MenuItem = require('cylibs/ui/menu/menu_item')
 local ModesMenuItem = require('ui/settings/menus/ModesMenuItem')
@@ -44,10 +45,13 @@ function CombatModeSettingsMenuItem:getConfigMenuItem()
         local combatSettings = T(self.trustSettings:getSettings())[self.trustSettingsMode.value].CombatSettings
 
         local configItems = L{
-            ConfigItem.new('Distance', 1.0, 30.0, 0.1, function(value) return value.." yalms" end, "Combat Distance"),
+            ConfigItem.new('Distance', 0, 30.0, 0.1, function(value) return value.." yalms" end, "Combat Distance"),
             ConfigItem.new('EngageDistance', 5, 30, 1, function(value) return value.." yalms" end, "Engage Distance"),
             ConfigItem.new('MirrorDistance', 0.2, 10, 0.1, function(value) return value.." yalms" end, "Mirror Distance"),
+            -- Fork: Auto and Flank measure Combat Distance between body edges instead of centres.
+            BooleanConfigItem.new('EdgeDistance', "Measure from body edges"),
         }
+        if combatSettings.EdgeDistance == nil then combatSettings.EdgeDistance = false end
         local configEditor = ConfigEditor.new(self.trustSettings, combatSettings, configItems)
 
         self.disposeBag:add(configEditor:getDelegate():didMoveCursorToItemAtIndexPath():addAction(function(indexPath)
@@ -57,6 +61,8 @@ function CombatModeSettingsMenuItem:getConfigMenuItem()
                 infoView:setDescription("Maximum distance to engage enemy when AutoEngageMode is set to Always.")
             elseif indexPath.section == 3 then
                 infoView:setDescription("Distance from party member when assisting and CombatMode is Mirror.")
+            elseif indexPath.section == 4 then
+                infoView:setDescription("On: Combat Distance is the gap between your body and the enemy's (0 = touching), so big enemies keep the same gap. Off: centre to centre.")
             end
         end), configEditor:getDelegate():didMoveCursorToItemAtIndexPath())
 

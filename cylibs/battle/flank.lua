@@ -139,9 +139,10 @@ Flank.ArriveDistance = 0.6
 
 -------
 -- @tparam function get_radius Returns the current Combat Distance (read live)
-function Flank.new(get_radius)
+function Flank.new(get_radius, get_edge)
     local self = setmetatable({}, Flank)
     self.get_radius = get_radius or function() return 3 end
+    self.get_edge = get_edge or function() return false end
     self.conditions = L{}
     return self
 end
@@ -176,7 +177,7 @@ function Flank:to_action(target_index, _)
     local mob = windower.ffxi.get_mob_by_index(target_index)
     local decision, details = 'none', nil
     if mob ~= nil then
-        decision, details = FlankPositionCondition.decide(target_index, self.get_radius())
+        decision, details = FlankPositionCondition.decide(target_index, self.get_radius(), self.get_edge())
     end
     if decision ~= 'move' then
         -- Gambiter assigns action.validate before checking for nil, so never return nil.

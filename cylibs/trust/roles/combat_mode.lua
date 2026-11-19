@@ -7,6 +7,7 @@ local player_util = require('cylibs/util/player_util')
 local flanking_util = require("cylibs/util/flanking_util")
 local Flank = require('cylibs/battle/flank')
 local FlankPositionCondition = require('cylibs/conditions/flank_position')
+local CombatDistanceCondition = require('cylibs/conditions/combat_distance')
 
 local Gambiter = require('cylibs/trust/roles/gambiter')
 local CombatMode = setmetatable({}, {__index = Gambiter })
@@ -126,19 +127,19 @@ function CombatMode:set_combat_settings(combat_settings)
         }
     }
 
-    local distance_condition
-    if self.distance < 4 then
-        distance_condition = GambitCondition.new(DistanceCondition.new(self.distance, Condition.Operator.GreaterThan), GambitTarget.TargetType.Enemy)
-    else
-        distance_condition = GambitCondition.new(ConditionalCondition.new(L{ DistanceCondition.new(self.distance + 1, Condition.Operator.GreaterThan), DistanceCondition.new(self.distance - 1, Condition.Operator.LessThan) }, Condition.LogicalOperator.Or), GambitTarget.TargetType.Enemy)
-    end
+    -- Fork: the band is checked per target so "Measure from body edges" can add the
+    -- target's and this character's sizes (see cylibs/util/combat_distance.lua).
+    self.edge_distance = combat_settings.EdgeDistance == true
+    local function combat_distance_now() return self.distance end
+    local function edge_now() return self.edge_distance end
+    local distance_condition = GambitCondition.new(CombatDistanceCondition.new(combat_distance_now, edge_now), GambitTarget.TargetType.Enemy)
     gambit_settings.Gambits:append(
         Gambit.new(GambitTarget.TargetType.Enemy, L{
             GambitCondition.new(ModeCondition.new('CombatMode', 'Auto'), GambitTarget.TargetType.Self),
             GambitCondition.new(StatusCondition.new('Engaged'), GambitTarget.TargetType.Self),
             distance_condition,
         },
-        RunTo.new(self.distance), GambitTarget.TargetType.Enemy)
+        RunTo.new(self.distance, nil, nil, edge_now), GambitTarget.TargetType.Enemy)
     )
 
     -- Fork: Flank. Read the distance live so Config changes apply without a reload.
@@ -150,26 +151,21 @@ function CombatMode:set_combat_settings(combat_settings)
         Gambit.new(GambitTarget.TargetType.Enemy, L{
             GambitCondition.new(ModeCondition.new('CombatMode', 'Flank'), GambitTarget.TargetType.Self),
             GambitCondition.new(StatusCondition.new('Engaged'), GambitTarget.TargetType.Self),
-            GambitCondition.new(FlankPositionCondition.new('move', flank_radius), GambitTarget.TargetType.Enemy),
+            GambitCondition.new(FlankPositionCondition.new('move', flank_radius, edge_now), GambitTarget.TargetType.Enemy),
         },
-        Flank.new(flank_radius), GambitTarget.TargetType.Enemy)
+        Flank.new(flank_radius, edge_now), GambitTarget.TargetType.Enemy)
     )
     -- 2) Behave like Auto when the target is attacking us or we are tanking: keep the
     --    combat distance and don't chase a spot that turns with us.
-    local flank_hold_distance_condition
-    if self.distance < 4 then
-        flank_hold_distance_condition = GambitCondition.new(DistanceCondition.new(self.distance, Condition.Operator.GreaterThan), GambitTarget.TargetType.Enemy)
-    else
-        flank_hold_distance_condition = GambitCondition.new(ConditionalCondition.new(L{ DistanceCondition.new(self.distance + 1, Condition.Operator.GreaterThan), DistanceCondition.new(self.distance - 1, Condition.Operator.LessThan) }, Condition.LogicalOperator.Or), GambitTarget.TargetType.Enemy)
-    end
+    local flank_hold_distance_condition = GambitCondition.new(CombatDistanceCondition.new(combat_distance_now, edge_now), GambitTarget.TargetType.Enemy)
     gambit_settings.Gambits:append(
         Gambit.new(GambitTarget.TargetType.Enemy, L{
             GambitCondition.new(ModeCondition.new('CombatMode', 'Flank'), GambitTarget.TargetType.Self),
             GambitCondition.new(StatusCondition.new('Engaged'), GambitTarget.TargetType.Self),
-            GambitCondition.new(FlankPositionCondition.new('hold', flank_radius), GambitTarget.TargetType.Enemy),
+            GambitCondition.new(FlankPositionCondition.new('hold', flank_radius, edge_now), GambitTarget.TargetType.Enemy),
             flank_hold_distance_condition,
         },
-        RunTo.new(self.distance), GambitTarget.TargetType.Enemy)
+        RunTo.new(self.distance, nil, nil, edge_now), GambitTarget.TargetType.Enemy)
     )
 
     for gambit in gambit_settings.Gambits:it() do

@@ -22,10 +22,12 @@ FlankPositionCondition.__class = "FlankPositionCondition"
 -------
 -- @tparam string mode 'move' or 'hold'
 -- @tparam function get_radius Returns the current Combat Distance (read live so Config changes apply)
-function FlankPositionCondition.new(mode, get_radius)
+-- @tparam function get_edge Returns true when Combat Config measures from body edges
+function FlankPositionCondition.new(mode, get_radius, get_edge)
     local self = setmetatable(Condition.new(), FlankPositionCondition)
     self.mode = mode or 'move'
     self.get_radius = get_radius or function() return 3 end
+    self.get_edge = get_edge or function() return false end
     return self
 end
 
@@ -74,13 +76,16 @@ end
 
 -------
 -- Builds the context and asks flank_state what to do for this enemy.
-function FlankPositionCondition.decide(target_index, radius)
+function FlankPositionCondition.decide(target_index, radius, edge)
     local mob = windower.ffxi.get_mob_by_index(target_index)
     local player = windower.ffxi.get_player()
     local me = player and windower.ffxi.get_mob_by_index(player.index)
     if mob == nil or me == nil then
         return 'none'
     end
+    -- With body edges, the spot and the distance band use the centre distance that
+    -- leaves `radius` between the two bodies.
+    radius = require('cylibs/util/combat_distance').effective(radius, mob, edge, me)
     local allies = FlankPositionCondition.allies()
     return flank_state.decide({
         mob = mob, me = me, radius = radius, now = flank_state.clock(),
@@ -96,7 +101,7 @@ function FlankPositionCondition.decide(target_index, radius)
 end
 
 function FlankPositionCondition:is_satisfied(target_index)
-    local decision = FlankPositionCondition.decide(target_index, self.get_radius())
+    local decision = FlankPositionCondition.decide(target_index, self.get_radius(), self.get_edge())
     if self.mode == 'hold' then
         return decision == 'hold'
     end
