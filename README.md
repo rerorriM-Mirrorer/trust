@@ -700,3 +700,10 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 - With a party member on **Auto Tank Mode**, Flank ignores hits on everyone else and lines up only against the tank. Tanks announce themselves to the other characters quietly when Trust loads, when the mode changes, and on Act; `//trust flank status` lists them.
 - If the spot can't be reached, Flank settles after about a second (trying once right against the target if needed) and stays until you move it yourself or the fight changes.
 - The old 3-second checks, 5-second settle and 9-second pauses are gone. Live FFXI behavior is pending; see TESTING.md.
+
+### November 19, 2026 - Flank3b: tanks announce properly; hate tools jump the queue; Holy
+
+- Fixed: Auto Tank Mode announcements were rejected (the other characters printed a usage line and never learned who the tank is). `//trust flank status` now lists the tank.
+- When Trust's action queue is full, a more important action (the PLD tank helper's Flash/Banish, an urgent cure) now replaces the least important waiting one instead of being dropped.
+- The PLD tank helper uses **Holy** as a last resort after Banish.
+- Recovery no longer has an Off/Detour/Pause switch; use the per-situation switches (pulling, following, paths, combat).

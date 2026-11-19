@@ -1,3 +1,28 @@
+# Flank3b: tank announcement fix; queue makes room for priority; Holy; Recovery switch removed - 2026-11-19
+
+Branch `test/flank3-fix`, on top of Flank3 (`074514e6`): `6ba10237` (tank announcement), `a632b4b3` (queue, Holy), `8d7679fb` (Recovery switch), `6749e18b` (tests). Source change plus host simulation only; **no live FFXI test of this batch.**
+
+**Flank3 live result (user, 2026-11-19).** "The flanking seems to be working very well already!" But `//trust flank status` showed no tank, and starting Trust on the other characters printed the `//trust flank tank <name> <on|off>` usage line.
+
+**Cause.** TrustCommands passes the command word (`tank`) as the first argument, so the handler read `tank` as the name and the name as on/off: every announcement failed (errors always print, even with `--quiet`) and no tank was ever registered. Flanking worked because, without a tank, Flank anchors on whichever ally the enemy hits. Flank3's tests called flank_state directly and missed the dispatcher.
+
+**Other user observations and requests.**
+- Clairvaux spent time on other buffs/debuffs instead of pulling hate off allies: Flash was on cooldown but Banish II and Banish were available. Asked for Holy on the list as a last resort.
+- Remove Recovery's master Off/Detour/Pause switch entirely; keep the per-situation switches.
+- AutoFaceMobMode set Off (it wasn't conflicting with truetargetlock anyway).
+- Left/right detour alternation: leave it for now (it sometimes sends a character further, but recovery is working well; a smooth arc might be better later).
+
+**Changes.**
+- `commands/FlankCommands.lua`: `handle_tank(_, name, value)`.
+- `cylibs/actions/action_queue.lua`: the main queue holds 5 waiting actions and used to drop every new one when full, whatever its priority. Likely cause of the tank observation: a high-priority Banish lost behind queued buffs/debuffs. (The tanker's 6 s per-enemy wait after an attempt may also play a part: after a Flash that didn't take hate, the next tool waits 6 s.) Now a higher-priority action replaces the lowest-priority waiting one; equal or lower is still dropped; the running action is never touched. This applies to every role: e.g. cures and weaponskills can now displace queued buffs when the queue is full.
+- `cylibs/util/tank_util.lua`, `cylibs/trust/roles/tanker.lua`: order Flash, Provoke, Banish II, Banish, **Holy** (PLD 55; range 19).
+- Recovery: master switch removed (`recovery.lua` forces it on, so saved `mode` values, including Off or Pause, are ignored; menu item and factory default removed; status shows the last result). `follower.lua` clears a stale recovery pause when both following and path recovery are off (it used to check mode Off).
+- Tests: new `tank_announce_queue_test.lua` 12 pass (announcement through the real TrustCommands dispatcher, quiet, on/off, usage error; full-queue eviction and its limits; Holy last). `stuck_recovery_test.lua` uses one detour attempt instead of Pause mode (longer simulated waits; same guarantees); `stuck_recovery_wiring_test.lua` expects 10 Recovery items and no master switch; `movement_defaults_test.lua` expects no factory `mode`. Full run: no new failures (same 10 pre-existing). Changed files compile (Lua 5.1).
+
+**Live checks.** (1) Load/reload Trust on all characters: no usage line. With Clairvaux on Auto Tank Mode, `//trust flank status` on Myrr and Cioara lists `clairvaux`. Flank then lines up only when the enemy hits Clairvaux. (2) Clairvaux with Flash on cooldown and an add on an ally: Banish II, then Banish, then Holy, ahead of queued buffs. A cast already under way still finishes first. (3) Watch for anything that now seems skipped under heavy load (lowest-priority actions get displaced). (4) Recovery menu: no Recovery Off/Detour/Pause line; each per-situation switch still turns its recovery off.
+
+Install: cumulative `Trust-Flank3b-20261119.zip` (replaces Flank3).
+
 # Flank3: event-driven Flank (opposite the ally being fought; tank announcement) - 2026-11-19
 
 Branch `test/flank3`, on top of Recovery2 (`5180d355`). Source change plus host simulation only; **no live FFXI test of this batch.**
