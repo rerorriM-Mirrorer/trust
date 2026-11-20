@@ -1,3 +1,9 @@
+## Current Development Status — 2026-11-20 (America/Chicago)
+
+- Docs sync to canon 2026-11-20.1 (`agents_shared_version` and `workflow_version`); project-specific lines moved to the AGENTS REPO block: none; no runtime change, no FFXI test.
+
+---
+
 # Autohide2: widget autohide Off / On / Show When Engaged (Layout menu) - 2026-11-19
 
 Branch `test/autohide-engaged`, on top of Edge1 (`e094f5bd`). Source change plus host simulation only; **no live FFXI test of this batch.**
