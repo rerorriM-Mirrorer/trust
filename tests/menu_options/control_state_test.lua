@@ -68,7 +68,7 @@ end
 env.addon_system_message=function(s)chat[#chat+1]=s end
 check(c:handle_stop(),'Stop dispatch succeeds')
 check(not enabled_value and q.control_state=='Parked' and following=='Old','Stop parks without changing remembered target')
-check(#sent==1 and sent[1].target=='Myrr' and sent[1].command=='trust partyrequest park Cioara','park scoped to real party')
+check(#sent==1 and sent[1].target==nil and sent[1].command=='trust partyrequest park Cioara','park broadcast to all clients (2026-11-21: party-list sends reached nobody live)')
 check(chat[#chat]:find('Parked locally',1,true),'park scope reported')
 c:handle_pause();q.movement_suspended=nil;follower.manual_pause=false
 local f=setmetatable({action_queue=q,distance=4},{__index=F})
@@ -90,7 +90,7 @@ check(not ok and message:find('Retreat active',1,true) and q.control_state=='Ret
 -- Local-only Stop works with IPC disabled and reports that scope.
 character.name='Cioara';character.id=1;character.status=0;env.state.IpcMode.value='Off';oldsent=#sent
 check(c:handle_stop() and #sent==oldsent,'IPC Off still retreats locally')
-check(chat[#chat]:find('requested on 0',1,true),'IPC Off does not imply remote success')
+check(chat[#chat]:find('IPC sending unavailable',1,true),'IPC Off does not imply remote success')
 env.state.IpcMode.value='All';oldsent=#sent
 c:handle_all(nil,'pause','party')
 check(#sent==oldsent+1 and sent[#sent].command=='trust pause' and sent[#sent].target=='Myrr','Pauseall party scopes/deduplicates without retreat')

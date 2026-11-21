@@ -369,9 +369,9 @@ function GeneralTrustCommands:handle_party_request(_, operation, leader, ...)
             or type(leader) ~= 'string' or not leader:match('^%a+$') then
         return false, 'Invalid coordinated party request'
     end
-    if operation=='park' then return self:apply_park() end
     local member = self.trust:get_party():get_party_member_named(leader, true)
     if not member then return false, 'Party leader '..leader..' is unavailable' end
+    if operation=='park' then return self:apply_park() end
     return require('cylibs/util/command_feedback').run(true, function()
         if operation == 'ready' then
             if self.action_queue.control_state == 'Retreat' then self:handle_pause() end
@@ -396,6 +396,14 @@ function GeneralTrustCommands:handle_party_request(_, operation, leader, ...)
         end
         return true
     end)
+end
+
+-- Fork (2026-11-21, live): sending to names from the in-game party list reached
+-- nobody, while startall/pauseall broadcasts did. Coordinated requests now go to
+-- every Trust client like startall; each receiver checks the sender is in its
+-- party (handle_party_request) before acting.
+function GeneralTrustCommands:broadcast_party_request(operation, leader)
+    IpcRelay.shared():send_message(CommandMessage.new('trust partyrequest '..operation..' '..leader))
 end
 
 function GeneralTrustCommands:request_party_state(operation)
@@ -428,24 +436,12 @@ function GeneralTrustCommands:request_party_state(operation)
     shortcuts.follow.pending_follow = nil
     local local_follower = shortcuts.follow:get_follower()
     if local_follower:get_follow_target() then local_follower:set_follow_target(nil) end
-    local sent,seen = 0,{}
-    for name in party_util.get_party_member_names(false):it() do
-        if type(name) == 'string' and name:match('^%a+$')
-                and name:lower() ~= leader:lower() and not seen[name:lower()] and not party_util.is_alter_ego(name) then
-            seen[name:lower()] = true
-            IpcRelay.shared():send_message(CommandMessage.new(
-                'trust partyrequest '..operation..' '..leader, name))
-            sent = sent + 1
-        end
-    end
+    self:broadcast_party_request(operation, leader)
     require('chat')
     local heading = operation == 'ready' and 'Stand ready!' or operation == 'act' and 'Act!' or 'Stand down!'
-    local detail = sent > 0 and (operation == 'ready' and 'assist, follow and Act requested; remote state unconfirmed'
-            or operation == 'act' and 'assist me and Act requested; remote state unconfirmed'
-            or 'Pause and follow requested; remote state unconfirmed')
-        or (operation == 'ready' and 'no other party clients; local Act/Pause unchanged'
-            or operation == 'act' and 'local Act only; no other party clients'
-            or 'local only; no other party members')
+    local detail = (operation == 'ready' and 'assist, follow and Act requested on all clients'
+            or operation == 'act' and 'assist me and Act requested on all clients'
+            or 'Pause and follow requested on all clients')..'; remote state unconfirmed'
     windower.add_to_chat(0, '[Trust] ':color(200)..heading:color(167)
         ..' -> ':color(200)..detail:color(0))
     return true
@@ -595,20 +591,11 @@ function GeneralTrustCommands:handle_stop(_, ...)
     local leader=windower.ffxi.get_player().name
     local ok,message=self:apply_park()
     self.action_queue.party_intent='stop'
-    local sent,seen = 0,{}
-    if state.IpcMode.value == 'All' or state.IpcMode.value == 'Send' then
-        local own_name = windower.ffxi.get_player().name:lower()
-        for name in party_util.get_party_member_names(false):it() do
-            if type(name) == 'string' and name:match('^%a+$') and name:lower() ~= own_name
-                    and not seen[name:lower()] and not party_util.is_alter_ego(name) then
-                seen[name:lower()] = true
-                IpcRelay.shared():send_message(CommandMessage.new('trust partyrequest park '..leader, name))
-                sent = sent + 1
-            end
-        end
-    end
+    local sent = state.IpcMode.value == 'All' or state.IpcMode.value == 'Send'
+    if sent then self:broadcast_party_request('park', leader) end
     require('chat')
-    addon_system_message('Stopped - Parked locally; requested on '..sent..' party clients.')
+    addon_system_message(sent and 'Stopped - Parked locally; requested on all clients.'
+        or 'Stopped - Parked locally; IPC sending unavailable.')
     return ok,message
 end
 

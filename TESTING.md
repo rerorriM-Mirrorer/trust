@@ -1,5 +1,23 @@
 ## Current Development Status — 2026-11-21 (America/Chicago)
 
+### Party requests broadcast like startall (Broadcast1)
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/party-broadcast`, on top of Engage1 (`a0a0a42`); installed_base `d5228fd`. Host simulation only for this fix.
+
+**Live finding (A, 2026-11-21, Engage1 package installed, other characters in the in-game party).** `//trust actall` printed "local Act only; no other party clients"; `//trust ready` printed "no other party clients; local Act/Pause unchanged"; `//trust stopall` stopped only the sender; `//trust startall` and `//trust pauseall` reached all clients. So the party-list sends (`party_util.get_party_member_names` + filters, per-name IPC) found no names, while untargeted IPC broadcasts work. Why the list came back empty is not known (Pending; not needed for the fix).
+
+**What changed (Verified, read this session).** New `GeneralTrustCommands:broadcast_party_request(operation, leader)` sends `trust partyrequest <op> <leader>` with no target, used by `request_party_state` (ready, act, standdown) and `handle_stop` (park). Receivers already reject a sender not in their Trust party; `park` now gets the same check (before, park was applied without it). Sender messages now say "requested on all clients; remote state unconfirmed" / "Stopped - Parked locally; requested on all clients." or "IPC sending unavailable". The optional `party` scope of startall/pauseall still uses the party list (Inferred: likely has the same problem).
+
+**Host verification.** `act_state_test.lua` 46 pass (actall and stop broadcast once with no target; outsider act/park rejected; party leader park applied). `control_state_test.lua` updated to the broadcast and passes. Full `tests/menu_options` + `tests/aggro`: same 11 host-Lua failures as before. Changed files compile on Lua 5.1.
+
+**Inferred risk.** The receiver's party check (`trust:get_party():get_party_member_named`) was never exercised live, because no request reached a receiver before. If it fails, the receiver prints "Party leader <name> is unavailable".
+
+**Live.** Startall/pauseall reach all clients (A). **Pending.** Broadcast1 checklist. **Next.** A's live check; later, the duplicate-code review A mentioned.
+
+---
+
+## Current Development Status — 2026-11-21 (America/Chicago)
+
 ### Auto Engage Defensive (was Aggro) and Aggressive (Engage1)
 
 Repository `rerorriM-Mirrorer/trust`, branch `test/engage-aggressive`, on top of Names1 (`5949503`), Publish1 and Act1; installed_base `d5228fd`. Host simulation only; **no live FFXI test.**

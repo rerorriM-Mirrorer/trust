@@ -98,6 +98,7 @@ cq.control_state='Retreat'
 check(c:handle_party_request(nil,'act','Cioara'),'partyrequest act accepted')
 check(cq.control_state=='Act' and assisted[#assisted]=='Cioara','receiver assists the sender and Acts')
 check(c:handle_party_request(nil,'nonsense','Cioara')==false,'unknown operation rejected')
+check(c:handle_party_request(nil,'act','Stranger')==false,'request from someone outside the party ignored')
 local gc=source('commands/GeneralCommands.lua')
 check(gc:find("self:add_command('act', self.handle_act",1,true) and gc:find("self:add_command('actall', self.handle_act_all",1,true),'act/actall registered')
 check(gc:find("self:add_command('start', self.handle_start",1,true) and gc:find("self:add_command('startall', self.handle_start_all",1,true),'start/startall unchanged')
@@ -115,6 +116,7 @@ string.color=function(t)return t end
 local rs=source('commands/GeneralCommands.lua')
 local a=assert(rs:find('function GeneralTrustCommands:request_party_state',1,true))
 local b=assert(rs:find('function GeneralTrustCommands:handle_standdown',a,true))
+local a=assert(rs:find('function GeneralTrustCommands:broadcast_party_request',1,true))
 local chunk=rs:sub(a,b-1):gsub("('[^'\n]*'):(%a+)%(",function(q,m)return '('..q..'):'..m..'(' end)
 assert(load(chunk,'actual request_party_state','t',env))()
 local old=env.require
@@ -122,7 +124,21 @@ env.require=function(n)if n=='chat'then return{} end return old(n) end
 assisted={};cq.control_state='Paused';enabled_value=false
 check(c:handle_act_all(),'actall succeeds')
 check(assisted[1]=='Cioara' and cq.control_state=='Act','actall: sender assists self and Acts')
-check(#sent==2 and sent[1].command=='trust partyrequest act Cioara' and sent[1].target=='Myrr' and sent[2].target=='Kaiu','actall: one act request per other client')
-check(chat[#chat]:find('Act!',1,true),'actall heading')
+check(#sent==1 and sent[1].command=='trust partyrequest act Cioara' and sent[1].target==nil,'actall: one broadcast to all clients, like startall')
+check(chat[#chat]:find('Act!',1,true) and chat[#chat]:find('on all clients',1,true),'actall heading')
 check(c:handle_act_all(nil,'party')==false,'actall rejects arguments')
+local notes={}
+env.addon_system_message=function(t)notes[#notes+1]=t end
+c.apply_park=function()cq.control_state='Parked';return true end
+sent={}
+c:handle_stop()
+check(#sent==1 and sent[1].command=='trust partyrequest park Cioara' and sent[1].target==nil,'stop: one park broadcast to all clients')
+check(notes[#notes]:find('requested on all clients',1,true),'stop message')
+local parked=0
+c.apply_park=function()parked=parked+1;return true end
+check(c:handle_party_request(nil,'park','Stranger')==false and parked==0,'park from outside the party ignored')
+check(c:handle_party_request(nil,'park','Cioara') and parked==1,'park from the party leader applied')
+local gs=source('commands/GeneralCommands.lua')
+local _,n=gs:gsub("party_util%.get_party_member_names",'')
+check(n==1,'only the optional [party] scope of startall/pauseall still reads the party list')
 print('PASS act_state_test: '..checks..' assertions')
