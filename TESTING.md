@@ -1,5 +1,21 @@
 ## Current Development Status — 2026-11-21 (America/Chicago)
 
+### Shorter mode commands (Names1)
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/mode-shortnames`, on top of Publish1 (`f2edfe5`) and Act1 (`1bca258`); installed_base `d5228fd`. Host simulation only; **no live FFXI test.**
+
+**What changed.** `cylibs/trust/commands/mode_aliases.lua` (the existing alias resolver at the top of `addon_command`) gets a third name tier: after the exact name and the name without `Mode`, a name without `Auto` and `Mode` (Verified, read this session). First tier with a match wins; within a tier, two matches are refused as ambiguous (unchanged rule). Registered commands still win (unchanged). Autocomplete lists the new names only where they resolve to that mode. `//trust set` / `//trust cycle` and saved profiles still use full names (not touched).
+
+**Collision check (Verified against the 72 modes declared in source).** 42 Auto...Mode modes get a working short name (e.g. engage, raise, magicburst, skillchain, pet, roll, song, tank, food, camp). Shadowed by existing commands, so the short name keeps running the command: buff, debuff, follow, heal, nuke, pull, statusremoval, target. One closer-tier win: `maneuver` = ManeuverMode, `automaneuver` = AutoManeuverMode (PUP). Job-specific command groups registered at runtime are checked live by the resolver (Inferred: same rule applies).
+
+**Host verification.** New `tests/menu_options/mode_shortnames_test.lua` 14 pass; existing `mode_aliases_test.lua` 74 pass. Full `tests/menu_options` + `tests/aggro`: same 11 host-Lua failures as before. Changed files compile on Lua 5.1.
+
+**Live.** None. **Pending.** Checklist delivered with Names1. **Next.** New engage mode (compare with Aggro first).
+
+---
+
+## Current Development Status — 2026-11-21 (America/Chicago)
+
 ### Control state for xivcrossbar toggles (Publish1)
 
 Repository `rerorriM-Mirrorer/trust`, branch `test/control-publish`, on top of Act1 (`1bca258`, `test/act-state`); installed_base `d5228fd`. Host simulation only; **no live FFXI test.**

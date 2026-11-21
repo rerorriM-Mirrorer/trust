@@ -1,18 +1,26 @@
 -- A: derive direct mode commands from the modes loaded for this job.
 -- Registered commands win. Exact mode names win over shortened names; ambiguous
 -- shortened names are never guessed. Dispatch still uses the original set/cycle.
+-- Name tiers, first match wins: exact (AutoEngageMode), without Mode
+-- (autoengage), without Auto and Mode (engage).
 local Aliases = {}
 
 local function registered(name, groups)
     return groups and (groups[name] or (groups.default and groups.default.commands and groups.default.commands[name]))
 end
 
-local function findMode(name, states, shortened)
+local tiers={false,'^(.-)mode$','^auto(.+)mode$'}
+Aliases.tiers=tiers
+local function short(key, tier)
+    local candidate=key:lower()
+    if tiers[tier] then candidate=candidate:match(tiers[tier]) end
+    return candidate
+end
+local function findMode(name, states, tier)
     local found={}
     for key,mode in pairs(states or {}) do
         if type(key)=='string' and type(mode)=='table' and mode._class=='mode' then
-            local candidate=key:lower()
-            if shortened then candidate=candidate:match('^(.-)mode$') end
+            local candidate=short(key, tier)
             if candidate==name then found[#found+1]=key end
         end
     end
@@ -31,8 +39,11 @@ Aliases.options=options
 function Aliases.resolve(command, args, groups, states)
     local name=type(command)=='string' and command:lower() or ''
     if registered(name,groups) then return nil end
-    local key,err=findMode(name,states,false)
-    if not key and not err then key,err=findMode(name,states,true) end
+    local key,err
+    for tier=1,#tiers do
+        key,err=findMode(name,states,tier)
+        if key or err then break end
+    end
     if err or not key then return nil,err end
     local mode=states[key]
     if not args or #args==0 then
@@ -67,12 +78,11 @@ function Aliases.commands(states, groups)
     local result,seen={},{}
     for key,mode in pairs(states or {}) do
         if type(key)=='string' and type(mode)=='table' and mode._class=='mode' then
-            local short=key:lower():match('^(.+)mode$')
-            for _,name in ipairs({key,short}) do
+            for _,name in ipairs({key,key:lower():match('^(.+)mode$'),short(key,3)}) do
                 local token=name:lower()
                 local resolved,err=Aliases.resolve(name,mode._type=='string' and {tostring(mode.value)} or {},groups,states)
                 if not registered(token,groups) and not seen[token] and not err
-                        and (resolved or mode._type=='string') then
+                        and (resolved or mode._type=='string') and (not resolved or resolved.mode==key) then
                     seen[token]=true
                     result[#result+1]='// trust '..name
                     for _,choice in ipairs(options(mode) or {}) do result[#result+1]='// trust '..name..' '..tostring(choice) end

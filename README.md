@@ -725,3 +725,7 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 ### November 21, 2026 - Crossbar toggles can see Trust's state
 
 Trust now keeps a tiny file, `data/control-state-<server>-<character id>.txt`, saying this character's state (act, start, pause, stop or retreat) and the last party-wide request sent from this character (actall, startall, pauseall/standdown, stop/stopall). xivcrossbar reads it to switch its Ready / Stand Down and Start / Stop slots. The file is rewritten when something changes and every 5 seconds, and removed when Trust unloads. Nothing else changes in how Trust behaves.
+
+### November 21, 2026 - Shorter mode commands
+
+Modes named Auto...Mode can now be typed without both words: `//trust engage mirror` sets Auto Engage Mode to Mirror, `//trust raise` cycles Auto Raise Mode. The longer forms still work (`//trust autoengage mirror`, `//trust AutoEngageMode Mirror`, `//trust set AutoEngageMode Mirror`). Existing commands always win, so `follow`, `pull`, `buff`, `debuff`, `heal`, `nuke`, `target` and `statusremoval` keep their own commands; use `//trust autofollow off` and so on for those modes. On PUP, `maneuver` means Maneuver Mode (the set) and `automaneuver` means Auto Maneuver Mode. Names that could mean two modes are refused with both names listed. Autocomplete shows the short names.
