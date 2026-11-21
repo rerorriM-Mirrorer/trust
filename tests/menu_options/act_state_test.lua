@@ -98,7 +98,8 @@ cq.control_state='Retreat'
 check(c:handle_party_request(nil,'act','Cioara'),'partyrequest act accepted')
 check(cq.control_state=='Act' and assisted[#assisted]=='Cioara','receiver assists the sender and Acts')
 check(c:handle_party_request(nil,'nonsense','Cioara')==false,'unknown operation rejected')
-check(c:handle_party_request(nil,'act','Stranger')==false,'request from someone outside the party ignored')
+cq.control_state='Paused';local before_assist=#assisted
+check(c:handle_party_request(nil,'act','Stranger') and cq.control_state=='Act' and #assisted==before_assist,'no party: Act set, assist skipped (like startall)')
 local gc=source('commands/GeneralCommands.lua')
 check(gc:find("self:add_command('act', self.handle_act",1,true) and gc:find("self:add_command('actall', self.handle_act_all",1,true),'act/actall registered')
 check(gc:find("self:add_command('start', self.handle_start",1,true) and gc:find("self:add_command('startall', self.handle_start_all",1,true),'start/startall unchanged')
@@ -136,8 +137,8 @@ check(#sent==1 and sent[1].command=='trust partyrequest park Cioara' and sent[1]
 check(notes[#notes]:find('requested on all clients',1,true),'stop message')
 local parked=0
 c.apply_park=function()parked=parked+1;return true end
-check(c:handle_party_request(nil,'park','Stranger')==false and parked==0,'park from outside the party ignored')
-check(c:handle_party_request(nil,'park','Cioara') and parked==1,'park from the party leader applied')
+check(c:handle_party_request(nil,'park','Stranger') and parked==1,'no party: park still applied (like startall)')
+check(c:handle_party_request(nil,'park','Cioara') and parked==2,'park from the party leader applied')
 local gs=source('commands/GeneralCommands.lua')
 local _,n=gs:gsub("party_util%.get_party_member_names",'')
 check(n==1,'only the optional [party] scope of startall/pauseall still reads the party list')

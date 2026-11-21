@@ -369,9 +369,19 @@ function GeneralTrustCommands:handle_party_request(_, operation, leader, ...)
             or type(leader) ~= 'string' or not leader:match('^%a+$') then
         return false, 'Invalid coordinated party request'
     end
-    local member = self.trust:get_party():get_party_member_named(leader, true)
-    if not member then return false, 'Party leader '..leader..' is unavailable' end
+    -- Like startall, these work without a party: Stop always parks, and
+    -- Ready/Act/Stand Down still set the state. Only assisting/following the
+    -- sender (and Retreat) need the sender in this client's party.
     if operation=='park' then return self:apply_park() end
+    local member = self.trust:get_party():get_party_member_named(leader, true)
+    if not member then
+        if operation == 'retreat' then return false, 'Party leader '..leader..' is unavailable' end
+        if self.action_queue.control_state == 'Retreat' then self:handle_pause() end
+        if operation == 'ready' then self:handle_start()
+        elseif operation == 'act' then self:handle_act()
+        else self:handle_pause() end
+        return true, leader..' is not in this party; state set, assist/follow skipped'
+    end
     return require('cylibs/util/command_feedback').run(true, function()
         if operation == 'ready' then
             if self.action_queue.control_state == 'Retreat' then self:handle_pause() end

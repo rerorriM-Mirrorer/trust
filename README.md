@@ -738,4 +738,4 @@ New **Aggressive**: join the assist target's fight once the assist target is eng
 
 ### November 21, 2026 - Party requests go to every client
 
-`//trust actall`, `//trust ready`, `//trust standdown` and `//trust stop`/`stopall` now send their request to every Trust client on this PC, the same way `startall` and `pauseall` always have. Each client then checks that you are in its party before it assists, follows, acts or parks. (Before, these four sent only to names read from the in-game party list, and in play that reached nobody.) The optional `party` word on `startall`/`pauseall` still uses the party list.
+`//trust actall`, `//trust ready`, `//trust standdown` and `//trust stop`/`stopall` now send their request to every Trust client on this PC, the same way `startall` and `pauseall` always have. Like startall, they work without a party: Stop always parks, and Ready, Act and Stand Down still set the state; assisting or following you only happens on clients that have you in their party. (Before, these four sent only to names in the in-game party list, so they needed a party.) The optional `party` word on `startall`/`pauseall` still uses the party list.

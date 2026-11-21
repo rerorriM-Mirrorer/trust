@@ -1,10 +1,26 @@
 ## Current Development Status — 2026-11-21 (America/Chicago)
 
+### Party requests work without a party, like startall (NoParty1)
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/party-broadcast-noparty`, on top of Broadcast1 (`8f92fbc`); installed_base `d5228fd`. Host simulation only.
+
+**Why.** A corrected the Broadcast1 finding: the other characters were not in the party (see the correction there). Under Broadcast1, receivers rejected a sender not in their party, so without a party actall/stopall would still do nothing. A wants these to work like startall, which needs no party.
+
+**What changed (Verified).** `handle_party_request`: `park` (stop/stopall) is applied without any party check. When the sender is not in this client's party, `act` still Acts, `ready` still Starts and `standdown` still Pauses; only assisting/following the sender is skipped (it needs a party member). `retreat` still needs the sender in the party. When the sender is in the party, behaviour is unchanged.
+
+**Host verification.** `act_state_test.lua` 46 pass (no party: Act set with no assist; park applied; party leader park applied). Full `tests/menu_options` + `tests/aggro`: same 11 host-Lua failures. Changed files compile on Lua 5.1.
+
+**Live.** startall/pauseall reach all clients without a party (A). **Pending.** NoParty1 checks, with and without a party. **Next.** A's live check.
+
+---
+
+## Current Development Status — 2026-11-21 (America/Chicago)
+
 ### Party requests broadcast like startall (Broadcast1)
 
 Repository `rerorriM-Mirrorer/trust`, branch `test/party-broadcast`, on top of Engage1 (`a0a0a42`); installed_base `d5228fd`. Host simulation only for this fix.
 
-**Live finding (A, 2026-11-21, Engage1 package installed, other characters in the in-game party).** `//trust actall` printed "local Act only; no other party clients"; `//trust ready` printed "no other party clients; local Act/Pause unchanged"; `//trust stopall` stopped only the sender; `//trust startall` and `//trust pauseall` reached all clients. So the party-list sends (`party_util.get_party_member_names` + filters, per-name IPC) found no names, while untargeted IPC broadcasts work. Why the list came back empty is not known (Pending; not needed for the fix).
+**Live finding (A, 2026-11-21, Engage1 package installed, ~~other characters in the in-game party~~).** `//trust actall` printed "local Act only; no other party clients"; `//trust ready` printed "no other party clients; local Act/Pause unchanged"; `//trust stopall` stopped only the sender; `//trust startall` and `//trust pauseall` reached all clients. ~~So the party-list sends (`party_util.get_party_member_names` + filters, per-name IPC) found no names, while untargeted IPC broadcasts work. Why the list came back empty is not known (Pending; not needed for the fix).~~ *Correction 2026-11-21 14:43 (A): the other characters were not in the party. The party list was correct; the party-list commands simply need a party, while startall/pauseall do not. A prefers the broadcast for all of them; see NoParty1.*
 
 **What changed (Verified, read this session).** New `GeneralTrustCommands:broadcast_party_request(operation, leader)` sends `trust partyrequest <op> <leader>` with no target, used by `request_party_state` (ready, act, standdown) and `handle_stop` (park). Receivers already reject a sender not in their Trust party; `park` now gets the same check (before, park was applied without it). Sender messages now say "requested on all clients; remote state unconfirmed" / "Stopped - Parked locally; requested on all clients." or "IPC sending unavailable". The optional `party` scope of startall/pauseall still uses the party list (Inferred: likely has the same problem).
 
