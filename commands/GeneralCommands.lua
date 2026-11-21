@@ -422,6 +422,8 @@ function GeneralTrustCommands:request_party_state(operation)
         return true
     end)
     if ok == false then return false,message end
+    -- Last party-wide request from this client (read by xivcrossbar toggles).
+    self.action_queue.party_intent = ({ready='start',act='act',standdown='pause'})[operation]
     -- The issuer is the anchor; do not let an old follow target create a loop.
     shortcuts.follow.pending_follow = nil
     local local_follower = shortcuts.follow:get_follower()
@@ -592,6 +594,7 @@ function GeneralTrustCommands:handle_stop(_, ...)
     if select('#', ...) > 0 then return false, 'Usage: //trust stop' end
     local leader=windower.ffxi.get_player().name
     local ok,message=self:apply_park()
+    self.action_queue.party_intent='stop'
     local sent,seen = 0,{}
     if state.IpcMode.value == 'All' or state.IpcMode.value == 'Send' then
         local own_name = windower.ffxi.get_player().name:lower()
@@ -624,6 +627,8 @@ function GeneralTrustCommands:handle_all(_, command, ...)
     end
 
     local handler = self['handle_'..command]
+    local intent = ({pause='pause',start='start'})[command]
+    if intent then self.action_queue.party_intent = intent end
     if argument_count == 0 then
         return handler(self, _, true)
     end

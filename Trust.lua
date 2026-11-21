@@ -9,6 +9,7 @@ _addon.timeout = nil
 
 windower.trust = {}
 local controller_menu
+local control_publish
 local movement_receiver
 local widget_autohide
 local widget_autohide_events
@@ -493,6 +494,12 @@ function load_ui()
             return menu,focus,mode,character and character.id
         end})
     windower.trust.controller_menu=controller_menu
+    -- xivcrossbar Trust toggle slots read this character's control state.
+    if control_publish then control_publish:close() end
+    control_publish=require('cylibs/trust/control_publish').new({
+        queue=action_queue,open=io.open,remove=os.remove,clock=require('socket').gettime,time=os.time,
+        id=function() local p=windower.ffxi.get_player(); return p and p.id end,
+        path=function(id) return windower.addon_path..'data/control-state-'..tostring(windower.ffxi.get_info().server)..'-'..id..'.txt' end})
     if movement_receiver then movement_receiver:close() end
     if movement_keyboard then windower.unregister_event(movement_keyboard) end
     windower.create_dir(windower.addon_path..'data/movement')
@@ -903,6 +910,7 @@ function unloaded()
     windower.trust.autohide=nil
     if controller_menu then controller_menu:close();controller_menu=nil end
     windower.trust.controller_menu=nil
+    if control_publish then control_publish:close();control_publish=nil end
     if user_events then
         for _,event in pairs(user_events) do
             windower.unregister_event(event)
@@ -1011,6 +1019,7 @@ end
 windower.register_event('addon command', addon_command)
 windower.register_event('prerender', function()
     if controller_menu then controller_menu:tick() end
+    if control_publish then control_publish:tick() end
     if movement_receiver then movement_receiver:tick() end
     if widget_autohide then widget_autohide:tick() end
     if autorun_monitor then autorun_monitor:update() end

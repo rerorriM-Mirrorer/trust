@@ -1,5 +1,21 @@
 ## Current Development Status — 2026-11-21 (America/Chicago)
 
+### Control state for xivcrossbar toggles (Publish1)
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/control-publish`, on top of Act1 (`1bca258`, `test/act-state`); installed_base `d5228fd`. Host simulation only; **no live FFXI test.**
+
+**What changed.** New `cylibs/trust/control_publish.lua` writes `data/control-state-<server>-<id>.txt` = `trust-control1`, character id, state (act/start/pause/stop/retreat, named after commands), intent (last party-wide request from this client: act/start/pause/stop/none), `os.time()` stamp, `END`. Checked 4 times a second, written on change and every 5 s, removed on unload or character change (Verified, read this session). `party_intent` is set by `actall` (act), `ready` (start), `standdown` and `pauseall` (pause), `startall` (start), `stop`/`stopall` (stop). Behaviour of every command is unchanged. Files: `cylibs/trust/control_publish.lua` (new), `Trust.lua`, `commands/GeneralCommands.lua`, README.
+
+**Host verification.** New `tests/menu_options/control_publish_test.lua` 20 pass (format, throttle, change and heartbeat writes, every state name, character change, unload removal, intent sources, wiring). Full `tests/menu_options` + `tests/aggro`: same 11 host-Lua failures as before. Changed files compile on Lua 5.1 (`check_syntax.lua`, lupa).
+
+**Interface (new).** Trust -> xivcrossbar: xivcrossbar `libs/trust_control.lua` reads `addons/trust/data/control-state-<server>-<id>.txt`, ignores it when the id differs or the stamp is over 15 s old.
+
+**Live.** None. **Pending.** Act1 checks plus the toggle checks delivered with xivcrossbar `feat/trust-toggles-20261121`. **Next.** Mode-name shortening.
+
+---
+
+## Current Development Status — 2026-11-21 (America/Chicago)
+
 ### Act waits for a fight (Act1)
 
 Repository `rerorriM-Mirrorer/trust`, branch `test/act-state`, installed_base `d5228fd` (`test/autohide-engaged`). Source change plus host simulation only; **no live FFXI test of this batch.**
