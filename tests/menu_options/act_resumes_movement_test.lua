@@ -1,6 +1,7 @@
 -- Act lifts the stick-takeover gate: combat positioning and following resume.
 local src=assert(io.open('commands/GeneralCommands.lua')):read('*a')
-local body=assert(src:match('(function GeneralTrustCommands:handle_start%(.-\nend)\n'))
+local body=assert(src:match('(function GeneralTrustCommands:resume_running%(.-\nend)\n'))
+    ..'\n'..assert(src:match('(function GeneralTrustCommands:handle_start%(.-\nend)\n'))
 local resets,started=0,0
 local GeneralTrustCommands={}
 local Control={set=function(queue,enabled,trust,mode)

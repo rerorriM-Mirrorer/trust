@@ -43,10 +43,15 @@ function load_user_files(main_job_id, sub_job_id)
 
 	action_queue = ActionQueue.new(nil, true, 5, false, true, true)
     action_queue.control_state = 'Paused'
+    action_queue.gate = function()
+        return require('cylibs/trust/act_gate').open(action_queue, player and player.party)
+    end
 
 	addon_enabled = ValueRelay.new(false)
 	addon_enabled:onValueChanged():addAction(function(_, isEnabled)
-        if isEnabled and not action_queue.parked then action_queue.control_state = 'Active'
+        -- Act is a running state too; only Control.set chooses between Act and Active.
+        if isEnabled and not action_queue.parked then
+            if action_queue.control_state ~= 'Act' then action_queue.control_state = 'Active' end
         elseif action_queue.control_state ~= 'Retreat' and not action_queue.parked then action_queue.control_state = 'Paused' end
 		if isEnabled then
 			player.player:monitor()
@@ -760,6 +765,8 @@ function handle_tic(old_time, new_time)
 	if not player.trust.main_job or not windower.ffxi.get_player() or not addon_enabled:getValue() or not player or not player.trust then return end
 
 	action_queue:set_enabled(addon_enabled:getValue())
+	-- Act: notice a fight ending even when nothing is pushed, and clear its leftovers.
+	require('cylibs/trust/act_gate').open(action_queue, player.party)
 
 	player.trust.main_job:tic(old_time, new_time)
 	player.trust.sub_job:tic(old_time, new_time)

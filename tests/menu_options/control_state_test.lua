@@ -50,7 +50,7 @@ local env=setmetatable({GeneralTrustCommands=G,Follower=F,Control=Control,
  end}},
 },{__index=_G})
 methods('commands/GeneralCommands.lua','-- Pause is local','-- // trust reload',env)
-methods('commands/GeneralCommands.lua','-- // trust start\n','-- // trust startall',env)
+methods('commands/GeneralCommands.lua','-- Shared by Start (Active) and Act','-- // trust startall',env)
 methods('commands/GeneralCommands.lua','function GeneralTrustCommands:handle_party_request','function GeneralTrustCommands:request_party_state',env)
 methods('cylibs/trust/roles/follower.lua','function Follower:get_distance()','function Follower:get_conditions()',env)
 local c=setmetatable({action_queue=q,addon_enabled=enabled,trust=trust},{__index=G})

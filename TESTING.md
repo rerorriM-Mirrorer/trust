@@ -1,3 +1,19 @@
+## Current Development Status — 2026-11-21 (America/Chicago)
+
+### Act waits for a fight (Act1)
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/act-state`, installed_base `d5228fd` (`test/autohide-engaged`). Source change plus host simulation only; **no live FFXI test of this batch.**
+
+**What changed.** `act` is its own control state instead of an alias for Start (Verified, read this session). Act turns Trust on like Start, but the main action queue only accepts new actions while a fight trigger is live: this character engaged, the assist target engaged, or with AutoEngageMode Aggro, any party member engaged or Aggro threat evidence (`defense:` decision). When the trigger closes, queued actions are cleared; the character stays in Act. Following uses the separate walk queue and is never gated. `actall` now assists the sender and Acts on every participating client including the sender (new `partyrequest act`), with no follow request and no `party` argument. `start`, `startall`, `pause`, `pauseall`, `stop`, `stopall`, `ready`, `standdown` unchanged. Start's all-clients message now says "Start" instead of "Act". Files: `cylibs/trust/act_gate.lua` (new), `cylibs/trust/control_state.lua`, `cylibs/actions/action_queue.lua`, `Trust.lua`, `commands/GeneralCommands.lua`, `cylibs/ui/chat/command_message.lua`, README.
+
+**Host verification.** New `tests/menu_options/act_state_test.lua` 40 pass (Control.set Act/Start/Pause/un-park; gate closed with no fight, opens on self/assist engaged, party engaged only in Aggro, threat evidence only in Aggro, assist merely targeting does not open, fight end clears once; both push paths gated; enable relay keeps Act; act/partyrequest act/actall sender and IPC requests). `control_state_test.lua` and `act_resumes_movement_test.lua` updated to load the shared `resume_running` and pass. Full `tests/menu_options` + `tests/aggro`: no new failures (same 11 host-Lua failures as before the change, e.g. Windower quoted-string methods, `unpack`, `sqlite3`). Changed files compile on Lua 5.1 via `tests/menu_options/check_syntax.lua` (lupa). Not simulated: the Gambiter loop, real engage/disengage, IPC delivery.
+
+**Inferred risks.** Roles that act outside the main action queue (for example the reacter's own queue, or any direct `send_command`) are not gated by Act. Pulling under Act will not start a fight on its own, because nothing is engaged yet. The stick takeover still moves the driven client from Act to Pause (existing behavior, kept on purpose).
+
+**Live.** None. **Pending.** All live checks in the delivered checklist. **Next.** xivcrossbar Ready/Stand Down and Start/Stop toggles bound to these commands; then mode-name shortening.
+
+---
+
 ## Current Development Status — 2026-11-20 (America/Chicago)
 
 - Docs sync to canon 2026-11-20.1 (`agents_shared_version` and `workflow_version`); project-specific lines moved to the AGENTS REPO block: none; no runtime change, no FFXI test.

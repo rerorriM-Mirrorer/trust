@@ -34,13 +34,13 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('movementhandoff', self.handle_movement_handoff, 'Internal movement request')
     -- State
     self:add_command('start', self.handle_start, 'Start Trust')
-    self:add_command('act', self.handle_start, 'Activate Trust job automation (alias for start)')
+    self:add_command('act', self.handle_act, 'Act: run Trust, but queue actions only once a fight starts: //trust act')
     self:add_command('ready', self.handle_ready, 'Assist and follow me; Act on other party clients: //trust ready')
     self:add_command('standdown', self.handle_standdown, 'Pause everyone and follow me with configured Fan Out: //trust standdown')
     self:add_command('partyrequest', self.handle_party_request, 'Internal coordinated party request')
     self:add_command('handoff', self.handle_handoff, 'Follow and assist a party member, then start: //trust handoff <name>')
     self:add_command('startall', self.handle_start_all, 'Start Trust on all characters, or only party members with // trust startall party')
-    self:add_command('actall', self.handle_start_all, 'Activate all Trust clients, or only party members with //trust actall party')
+    self:add_command('actall', self.handle_act_all, 'Assist me and Act on every party client, me included: //trust actall')
     self:add_command('stop', self.handle_stop, 'Park party movement and actions; disengage')
     self:add_command('pause', self.handle_pause, 'Pause job actions; keep following and configured Fan Out')
     self:add_command('stopall', self.handle_stop_all, 'Park party (alias for stop): //trust stopall [party]')
@@ -365,7 +365,7 @@ end
 -- A: receivers apply one ordered operation locally, with no rebroadcast and
 -- no success chatter. Errors still return through normal command feedback.
 function GeneralTrustCommands:handle_party_request(_, operation, leader, ...)
-    if select('#', ...) > 0 or (operation ~= 'ready' and operation ~= 'standdown' and operation ~= 'retreat' and operation ~= 'park')
+    if select('#', ...) > 0 or (operation ~= 'ready' and operation ~= 'act' and operation ~= 'standdown' and operation ~= 'retreat' and operation ~= 'park')
             or type(leader) ~= 'string' or not leader:match('^%a+$') then
         return false, 'Invalid coordinated party request'
     end
@@ -380,6 +380,12 @@ function GeneralTrustCommands:handle_party_request(_, operation, leader, ...)
             ok,message = shortcuts.follow:handle_follow_party_member(leader)
             if ok == false then return false,message end
             self:handle_start()
+        elseif operation == 'act' then
+            -- Follow is left to the stick and existing follow targets.
+            if self.action_queue.control_state == 'Retreat' then self:handle_pause() end
+            local ok,message = shortcuts.assist:handle_assist_player(leader)
+            if ok == false then return false,message end
+            self:handle_act()
         elseif operation == 'retreat' then
             return self:apply_retreat(leader)
         else
@@ -403,6 +409,11 @@ function GeneralTrustCommands:request_party_state(operation)
             -- Keep the initiator's Act/Pause state; only receivers Act.
             local assisted,reason = shortcuts.assist:handle_assist_player(leader)
             if assisted == false then return false,reason end
+        elseif operation == 'act' then
+            -- Actall includes the sender: assist self, then Act.
+            local assisted,reason = shortcuts.assist:handle_assist_player(leader)
+            if assisted == false then return false,reason end
+            self:handle_act()
         else
             self:handle_pause()
             local follower = shortcuts.follow:get_follower()
@@ -426,9 +437,12 @@ function GeneralTrustCommands:request_party_state(operation)
         end
     end
     require('chat')
-    local heading = operation == 'ready' and 'Stand ready!' or 'Stand down!'
-    local detail = sent > 0 and (operation == 'ready' and 'assist, follow and Act requested; remote state unconfirmed' or 'Pause and follow requested; remote state unconfirmed')
+    local heading = operation == 'ready' and 'Stand ready!' or operation == 'act' and 'Act!' or 'Stand down!'
+    local detail = sent > 0 and (operation == 'ready' and 'assist, follow and Act requested; remote state unconfirmed'
+            or operation == 'act' and 'assist me and Act requested; remote state unconfirmed'
+            or 'Pause and follow requested; remote state unconfirmed')
         or (operation == 'ready' and 'no other party clients; local Act/Pause unchanged'
+            or operation == 'act' and 'local Act only; no other party clients'
             or 'local only; no other party members')
     windower.add_to_chat(0, '[Trust] ':color(200)..heading:color(167)
         ..' -> ':color(200)..detail:color(0))
@@ -440,26 +454,29 @@ function GeneralTrustCommands:handle_ready(_, ...)
     return self:request_party_state('ready')
 end
 
+function GeneralTrustCommands:handle_act_all(_, ...)
+    if select('#', ...) > 0 then return false, 'Usage: //trust actall' end
+    return self:request_party_state('act')
+end
+
 function GeneralTrustCommands:handle_standdown(_, ...)
     if select('#', ...) > 0 then return false, 'Usage: //trust standdown' end
     return self:request_party_state('standdown')
 end
 
--- // trust start
-function GeneralTrustCommands:handle_start(_, include_party)
-    local success = true
-    local message
-
-    Control.set(self.action_queue, self.addon_enabled, self.trust, 'Active')
+-- Shared by Start (Active) and Act. Both are running states and both lift the
+-- stick-takeover gate the same way.
+function GeneralTrustCommands:resume_running(mode)
+    Control.set(self.action_queue, self.addon_enabled, self.trust, mode)
     -- Fork (Flank3): Act also repeats this character's Auto Tank Mode to the others.
     -- Best effort: an announcement must never be able to break Act.
     local announced, flank_state = pcall(require, 'cylibs/movement/flank_state')
     if announced and type(flank_state) == 'table' and flank_state.announce_tank then
         flank_state.announce_tank()
     end
-    -- Act also lifts the stick-takeover gate: combat positioning, return to
+    -- Start/Act also lifts the stick-takeover gate: combat positioning, return to
     -- camp and following all resume (previously only a follow command did).
-    if self.action_queue and self.action_queue.control_state == 'Active' then
+    if self.action_queue and self.action_queue.control_state == mode then
         self.action_queue.movement_suspended = false
         local follower = self.trust and self.trust:role_with_type('follower')
         if follower then
@@ -470,11 +487,28 @@ function GeneralTrustCommands:handle_start(_, include_party)
         end
     end
 
+end
+
+-- // trust act
+-- Act is Active behind the action queue's fight gate (cylibs/trust/act_gate.lua).
+function GeneralTrustCommands:handle_act(_, ...)
+    if select('#', ...) > 0 then return false, 'Usage: //trust act' end
+    self:resume_running('Act')
+    return true, 'Act - waiting for a fight'
+end
+
+-- // trust start
+function GeneralTrustCommands:handle_start(_, include_party)
+    local success = true
+    local message
+
+    self:resume_running('Active')
+
     if include_party then
         if state.IpcMode.value ~= 'All' and state.IpcMode.value ~= 'Send' then
             return true, 'Active - Local only. IPC sending unavailable.'
         end
-        message = "Act - Requested on all clients."
+        message = "Start - Requested on all clients."
         IpcRelay.shared():send_message(CommandMessage.new('trust start'))
     else
         message = "Active"

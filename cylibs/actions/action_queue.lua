@@ -208,7 +208,8 @@ function ActionQueue:push_action(action, check_duplicates)
     if self.movement_suspended and require('cylibs/movement/takeover').is_movement(action) then require('cylibs/movement/takeover').discard(action); return end
 	self:cleanup()
 
-	if not self.is_enabled or (check_duplicates and check_duplicates == true and self:contains(action)) then
+	-- Fork (Act): an optional gate holds new actions until a fight trigger is live.
+	if not self.is_enabled or (self.gate and not self.gate()) or (check_duplicates and check_duplicates == true and self:contains(action)) then
 		action:destroy()
 		return
 	end
@@ -275,7 +276,7 @@ function ActionQueue:push_actions(actions, check_duplicates)
             return true
         end)
     end
-	if not self.is_enabled or (self:length() + actions:length()) >= self.max_size then
+	if not self.is_enabled or (self.gate and not self.gate()) or (self:length() + actions:length()) >= self.max_size then
 		for action in actions:it() do
 			action:destroy()
 		end

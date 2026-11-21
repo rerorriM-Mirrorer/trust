@@ -717,3 +717,7 @@ Config > Recovery > Show recovery messages starts On for this testing batch and 
 ### November 19, 2026 - Autohide that stays up in fights
 
 - Widgets > Layout has **Autohide widget**: Off, On, or **Show When Engaged**. That last one hides the widgets when you're idle, like On, but keeps them on screen while you're engaged; the idle timer starts again when the fight ends. Also `//trust autohide engaged`.
+
+### November 21, 2026 - Act waits for a fight; Actall
+
+`//trust act` is now its own state instead of another name for Start. Under Act, Trust runs normally (following, Fan Out, Aggro watching), but job actions only enter the queue while a fight is on: you are engaged, your assist target is engaged, or, with Auto Engage Mode set to Aggro, a party member is engaged or an enemy is threatening the party. When the fight ends, leftover queued actions are cleared and the character keeps waiting in Act for the next one. With Auto Engage Mode set to Mirror, the assist target engaging is what lets the Mirror engage through. `//trust actall` assists you and puts every participating party client in Act, you included; it no longer sends Start and no longer takes a `party` argument. `//trust start` and `//trust startall` are unchanged: always acting, including healing and buffing between fights. Pause, Stop, Ready and Standdown are unchanged. Moving the stick still pauses the client you are driving, as before.

@@ -8,7 +8,7 @@ local function value_text(text)
     local body, state = text:match('^(.-)%s+(ON)$')
     if not state then body, state = text:match('^(.-)%s+(OFF)$') end
     if state then return color(body..' ',0)..color(state,state=='ON' and 158 or 167) end
-    if text=='ON' or text=='On' or text=='Active' then return color(text,158) end
+    if text=='ON' or text=='On' or text=='Active' or text=='Act' then return color(text,158) end
     if text=='OFF' or text=='Off' or text=='Paused' then return color(text,167) end
     return color(text,0)
 end
