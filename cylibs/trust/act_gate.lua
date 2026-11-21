@@ -5,8 +5,8 @@
 -- Triggers (any one opens the gate):
 --   1. this character is engaged
 --   2. the assist target is engaged
---   3. AutoEngageMode is Aggro and a party member is engaged, or the Aggro
---      tracker has fresh threat evidence against the party (decision 'defense')
+--   3. AutoEngageMode is Defensive or Aggressive and a party member is engaged,
+--      or the threat tracker has fresh evidence against the party ('defense')
 local M = {}
 
 local function engaged(mob)
@@ -18,7 +18,8 @@ function M.trigger(party)
     if not party then return nil end
     local assist = party.get_assist_target and party:get_assist_target()
     if assist and engaged(assist:get_mob()) then return 'assist' end
-    if state.AutoEngageMode and state.AutoEngageMode.value == 'Aggro' then
+    local engage = state.AutoEngageMode and state.AutoEngageMode.value
+    if engage == 'Defensive' or engage == 'Aggressive' then
         for member in party:get_party_members(true):it() do
             if engaged(member:get_mob()) then return 'party' end
         end

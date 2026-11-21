@@ -55,7 +55,7 @@ function PartyTarget:monitor()
     self.is_monitoring = true
     if self.aggro then
         self.dispose_bag:add(WindowerEvents.Action:addAction(function(action)
-            if state.AutoEngageMode and state.AutoEngageMode.value == 'Aggro'
+            if state.AutoEngageMode and (state.AutoEngageMode.value == 'Defensive' or state.AutoEngageMode.value == 'Aggressive')
                     and (not addon_enabled or addon_enabled:getValue()) then
                 self.aggro:observe(action, os.time())
             end
@@ -96,7 +96,8 @@ end
 -- Keep the existing party-target event path so roles and action queues agree on one enemy.
 function PartyTarget:update_aggro_target()
     if not self.aggro then return false end
-    local enabled = state.AutoEngageMode and state.AutoEngageMode.value == 'Aggro'
+    local aggressive = state.AutoEngageMode and state.AutoEngageMode.value == 'Aggressive'
+    local enabled = state.AutoEngageMode and (state.AutoEngageMode.value == 'Defensive' or aggressive)
             and (not addon_enabled or addon_enabled:getValue())
     if self:should_ignore_assist_target() or (state.AutoPullMode and state.AutoPullMode.value ~= 'Off') then
         self.aggro:reset()
@@ -124,7 +125,9 @@ function PartyTarget:update_aggro_target()
     -- Seed live target observations through the established tracker, including alter egos.
     local party_util = require('cylibs/util/party_util')
     for index in party_util.get_mobs_targeting_party():it() do self.target_tracker:add_mob_by_index(index) end
-    local index, reason = self.aggro:select(assist_index, os.time())
+    local assist_mob_self = aggressive and self.assist_target and self.assist_target:is_valid() and self.assist_target:get_mob()
+    local index, reason = self.aggro:select(assist_index, os.time(),
+        { aggressive = aggressive, assist_engaged = assist_mob_self and assist_mob_self.status == 1 or false })
     local decision = reason .. ':' .. tostring(index)
     if self.aggro_decision ~= decision then
         logger.notice(self.__class, 'Aggro', decision, 'previous_id', self.aggro_target_id or 'nil')

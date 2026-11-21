@@ -1,5 +1,27 @@
 ## Current Development Status — 2026-11-21 (America/Chicago)
 
+### Auto Engage Defensive (was Aggro) and Aggressive (Engage1)
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/engage-aggressive`, on top of Names1 (`5949503`), Publish1 and Act1; installed_base `d5228fd`. Host simulation only; **no live FFXI test.**
+
+**What changed (Verified, read this session).**
+- AutoEngageMode values: Always, Off, Mirror, **Defensive** (renamed Aggro, same behaviour), **Aggressive** (new). `legacy_values = {aggro='Defensive'}` on the mode; `Modes.lua` set, the profile loader in `Trust.lua` and the command alias resolver map Aggro to Defensive.
+- `aggro_target.lua` `select(assist_index, now, options)`: with `options.aggressive`, the assist step needs the assist target engaged (A, 2026-11-21: engaged, not targeting), then a new step picks an enemy any party member is engaged with (keeps the chosen one, else lowest id; valid/claim rules unchanged), then the existing threat step. Defensive path unchanged.
+- `party_target.lua`: threat watching and selection run in Defensive and Aggressive; passes `aggressive` and whether the assist target is engaged.
+- `attacker.lua`: new Aggressive engage gambit (after Mirror's), same idle/distance/claim/valid conditions; like every attacker gambit it also gets the default Aggroed condition (Verified: `get_default_conditions`). No disengage gambit for Aggressive (A: keep fighting while any step has an enemy).
+- `act_gate.lua`: the Aggro step now applies to Defensive and Aggressive.
+- Finding: "use combat distance instead of mirror distance" needs no change; Mirror Distance belongs to Combat Mode Mirror (`combat_mode.lua`), not to Auto Engage. Positioning after engaging is Combat Mode's.
+
+**Host verification.** New `tests/aggro/aggressive_test.lua` 22 pass (selector tiers, claims/dead, wiring, Act gate, legacy set, options list). `attacker_test.lua` 12 pass (gambit count 7), `party_target_test.lua`, `aggro_test.lua`, `act_state_test.lua`, `mode_shortnames_test.lua` updated to Defensive and pass. Full `tests/menu_options` + `tests/aggro`: same 11 host-Lua failures as before. Changed files compile on Lua 5.1.
+
+**Inferred risks.** Aggressive with several party fights picks one and stays on it until it ends. Pulling (AutoPullMode not Off) still owns the target, as with Defensive.
+
+**Live.** None. **Pending.** Engage1 checklist. **Next.** Rename internal states to match commands; then CombatMode -> BattleMode.
+
+---
+
+## Current Development Status — 2026-11-21 (America/Chicago)
+
 ### Shorter mode commands (Names1)
 
 Repository `rerorriM-Mirrorer/trust`, branch `test/mode-shortnames`, on top of Publish1 (`f2edfe5`) and Act1 (`1bca258`); installed_base `d5228fd`. Host simulation only; **no live FFXI test.**

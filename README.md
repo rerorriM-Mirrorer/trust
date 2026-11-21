@@ -729,3 +729,9 @@ Trust now keeps a tiny file, `data/control-state-<server>-<character id>.txt`, s
 ### November 21, 2026 - Shorter mode commands
 
 Modes named Auto...Mode can now be typed without both words: `//trust engage mirror` sets Auto Engage Mode to Mirror, `//trust raise` cycles Auto Raise Mode. The longer forms still work (`//trust autoengage mirror`, `//trust AutoEngageMode Mirror`, `//trust set AutoEngageMode Mirror`). Existing commands always win, so `follow`, `pull`, `buff`, `debuff`, `heal`, `nuke`, `target` and `statusremoval` keep their own commands; use `//trust autofollow off` and so on for those modes. On PUP, `maneuver` means Maneuver Mode (the set) and `automaneuver` means Auto Maneuver Mode. Names that could mean two modes are refused with both names listed. Autocomplete shows the short names.
+
+### November 21, 2026 - Auto Engage: Defensive and Aggressive
+
+Auto Engage Mode **Aggro** is now called **Defensive** and works the same: follow the assist target's enemy, otherwise defend the party from enemies attacking it. Saved profiles and commands that say Aggro still work and become Defensive.
+
+New **Aggressive**: join the assist target's fight once the assist target is engaged (just targeting is not enough); otherwise join any enemy a party member is fighting; otherwise anything attacking the party. Characters keep fighting while any of these still has an enemy, even if the assist target disengages; Stop still disengages everyone. As with every Auto Engage setting, the enemy must already be in combat, and positioning after engaging is Combat Mode's job (Auto uses Combat Distance). `//trust engage aggressive`, `//trust engage defensive`. Act's fight check counts party fights and threats in both modes.

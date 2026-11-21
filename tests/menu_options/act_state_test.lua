@@ -50,7 +50,7 @@ check(not Gate.open(gq,party) and cleared==1,'staying closed does not clear agai
 assist_mob.status=1;check(Gate.open(gq,party) and gq.act_reason=='assist','assist target engaged opens')
 assist_mob.status=0;Gate.open(gq,party)
 other_mob.status=1;check(not Gate.open(gq,party),'party member engaged ignored outside Aggro')
-state.AutoEngageMode.value='Aggro'
+state.AutoEngageMode.value='Defensive'
 check(Gate.open(gq,party) and gq.act_reason=='party','Aggro: party member engaged opens')
 other_mob.status=0;Gate.open(gq,party)
 party.party_target={aggro_active=true,aggro_decision='defense:42'}

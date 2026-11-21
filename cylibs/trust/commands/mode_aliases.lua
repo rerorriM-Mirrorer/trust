@@ -65,6 +65,8 @@ function Aliases.resolve(command, args, groups, states)
                 end
             end
         end
+        local legacy=rawget(mode,'legacy_values')
+        if canonical==nil and legacy and legacy[value:lower()] then canonical=legacy[value:lower()] end
         if canonical==nil then
             local names={};for _,choice in ipairs(choices) do names[#names+1]=tostring(choice) end
             return nil,'Invalid value for '..key..'. Options: '..table.concat(names,', ')

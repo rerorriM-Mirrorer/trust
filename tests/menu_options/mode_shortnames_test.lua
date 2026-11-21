@@ -24,16 +24,17 @@ state.TextMode=M{description='Text',string='Original Text'}
 local Aliases=require('cylibs/trust/commands/mode_aliases')
 local groups={default={commands={combat={},stop={},status={},set={},cycle={}}},assist={}}
 -- Third tier: without Auto and Mode.
-state.AutoEngageMode=M{description='Engage','Always','Off','Mirror','Aggro'}
+state.AutoEngageMode=M{description='Engage','Always','Off','Mirror','Defensive','Aggressive'}
+state.AutoEngageMode.legacy_values={aggro='Defensive'}
 local a,err=Aliases.resolve('engage',{'mirror'},groups,state)
 check(a and a.command=='set' and a.arguments[1]=='AutoEngageMode' and a.arguments[2]=='Mirror','engage mirror')
 a=Aliases.resolve('ENGAGE',{},groups,state)
 check(a and a.command=='cycle' and a.arguments[1]=='AutoEngageMode','bare short name cycles')
 check(Aliases.resolve('autoengage',{'off'},groups,state).arguments[2]=='Off','Mode-only short name still works')
-check(Aliases.resolve('AutoEngageMode',{'aggro'},groups,state).arguments[2]=='Aggro','full name still works')
+check(Aliases.resolve('AutoEngageMode',{'aggro'},groups,state).arguments[2]=='Defensive','full name and legacy value still work')
 check(Aliases.resolve('raise',{'auto'},groups,state).arguments[1]=='AutoRaiseMode','raise auto')
 a,err=Aliases.resolve('engage',{'sideways'},groups,state)
-check(not a and err:find('Always, Off, Mirror, Aggro',1,true),'bad value lists options')
+check(not a and err:find('Always, Off, Mirror, Defensive, Aggressive',1,true),'bad value lists options')
 -- Registered commands still win.
 state.AutoFollowMode=M{description='Follow','Always','Off'}
 groups.follow={}

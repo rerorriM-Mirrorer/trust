@@ -263,6 +263,8 @@ function load_trust_modes(job_name_short)
 			local state_var = get_state(state_name)
 			if state_var then
 				unregister_help_text(state_name, state_var)
+				local legacy = rawget(state_var, 'legacy_values')
+				if legacy and type(value) == 'string' and legacy[value:lower()] then value = legacy[value:lower()] end
 				if S(state_var:options()):contains(value) then
 					state_var:set(value)
 				else

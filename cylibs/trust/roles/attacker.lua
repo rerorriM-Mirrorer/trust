@@ -16,8 +16,11 @@ local Attacker = setmetatable({}, {__index = Gambiter })
 Attacker.__index = Attacker
 Attacker.__class = "Attacker"
 
-state.AutoEngageMode = M{['description'] = 'Auto Engage Mode', 'Always', 'Off', 'Mirror', 'Aggro'}
-state.AutoEngageMode:set_description('Aggro', "Assist first; otherwise defend party members and alter egos from observed threats.")
+state.AutoEngageMode = M{['description'] = 'Auto Engage Mode', 'Always', 'Off', 'Mirror', 'Defensive', 'Aggressive'}
+-- Saved profiles and typed commands from before 2026-11-21 used Aggro for Defensive.
+state.AutoEngageMode.legacy_values = { aggro = 'Defensive' }
+state.AutoEngageMode:set_description('Defensive', "Assist first; otherwise defend party members and alter egos from observed threats.")
+state.AutoEngageMode:set_description('Aggressive', "Join the assist target's fight once it engages; otherwise any enemy a party member is fighting; otherwise anything attacking the party.")
 state.AutoEngageMode:set_description('Off', "Manually engage and disengage.")
 state.AutoEngageMode:set_description('Always', "Automatically engage when targeting a claimed mob.")
 state.AutoEngageMode:set_description('Mirror', "Mirror the engage status of the party member you are assisting.")
@@ -79,7 +82,7 @@ function Attacker:set_attacker_settings(attacker_settings)
     local gambit_settings = {
         Gambits = L{
             Gambit.new(GambitTarget.TargetType.Enemy, L{
-                GambitCondition.new(ConditionalCondition.new(L{ ModeCondition.new('AutoEngageMode', 'Always'), ModeCondition.new('AutoEngageMode', 'Aggro') }, Condition.LogicalOperator.Or), GambitTarget.TargetType.Self),
+                GambitCondition.new(ConditionalCondition.new(L{ ModeCondition.new('AutoEngageMode', 'Always'), ModeCondition.new('AutoEngageMode', 'Defensive') }, Condition.LogicalOperator.Or), GambitTarget.TargetType.Self),
                 GambitCondition.new(StatusCondition.new('Idle'), GambitTarget.TargetType.Self),
                 GambitCondition.new(MaxDistanceCondition.new(self.engage_distance), GambitTarget.TargetType.Enemy),
                 GambitCondition.new(AggroedCondition.new(), GambitTarget.TargetType.Enemy),
@@ -90,6 +93,16 @@ function Attacker:set_attacker_settings(attacker_settings)
                 GambitCondition.new(ModeCondition.new('AutoEngageMode', 'Mirror'), GambitTarget.TargetType.Self),
                 GambitCondition.new(IsAssistTargetCondition.new(), GambitTarget.TargetType.Ally),
                 GambitCondition.new(StatusCondition.new('Engaged'), GambitTarget.TargetType.Ally),
+                GambitCondition.new(StatusCondition.new('Idle'), GambitTarget.TargetType.Self),
+                GambitCondition.new(MaxDistanceCondition.new(self.engage_distance), GambitTarget.TargetType.Enemy),
+                GambitCondition.new(ConditionalCondition.new(L{ UnclaimedCondition.new(), PartyClaimedCondition.new(true) }, Condition.LogicalOperator.Or), GambitTarget.TargetType.Enemy),
+                GambitCondition.new(ValidTargetCondition.new(alter_ego_util.untargetable_alter_egos()), GambitTarget.TargetType.Enemy),
+            }, Engage.new(), GambitTarget.TargetType.Enemy),
+            -- Aggressive: the party target already passed the assist-engaged /
+            -- party-fight / threat selection (aggro_target.lua). Like every
+            -- gambit here it also gets the default Aggroed condition below.
+            Gambit.new(GambitTarget.TargetType.Enemy, L{
+                GambitCondition.new(ModeCondition.new('AutoEngageMode', 'Aggressive'), GambitTarget.TargetType.Self),
                 GambitCondition.new(StatusCondition.new('Idle'), GambitTarget.TargetType.Self),
                 GambitCondition.new(MaxDistanceCondition.new(self.engage_distance), GambitTarget.TargetType.Enemy),
                 GambitCondition.new(ConditionalCondition.new(L{ UnclaimedCondition.new(), PartyClaimedCondition.new(true) }, Condition.LogicalOperator.Or), GambitTarget.TargetType.Enemy),

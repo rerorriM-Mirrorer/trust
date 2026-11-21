@@ -48,16 +48,38 @@ function AggroTarget:observe(action, now)
     end
 end
 
-function AggroTarget:select(assist_index, now)
+-- options.aggressive: Aggressive mode. The assist step needs the assist target
+-- engaged (options.assist_engaged), and an enemy any party member is engaged
+-- with comes before observed threats.
+function AggroTarget:select(assist_index, now, options)
+    options = options or {}
     local members, claim_ids = self:members()
     for id, evidence in pairs(self.evidence) do
         if now - evidence.time > self.ttl or not members[evidence.victim] then self.evidence[id] = nil end
     end
     self.rejected = nil
     local assist = assist_index and windower.ffxi.get_mob_by_index(assist_index)
-    if self:valid(assist, claim_ids) then
+    if (not options.aggressive or options.assist_engaged) and self:valid(assist, claim_ids) then
         self.selected_id = nil
         return assist.index, 'assist'
+    end
+    if options.aggressive then
+        local fights = {}
+        for member in self.party:get_party_members(true):it() do
+            local mob = member:get_mob()
+            local enemy = mob and mob.status == 1 and mob.target_index and windower.ffxi.get_mob_by_index(mob.target_index)
+            if enemy and self:valid(enemy, claim_ids) then fights[enemy.id] = enemy end
+        end
+        local selected = fights[self.selected_id]
+        if not selected then
+            for id, mob in pairs(fights) do
+                if not selected or id < selected.id then selected = mob end
+            end
+        end
+        if selected then
+            self.selected_id = selected.id
+            return selected.index, 'party'
+        end
     end
     -- A tracker prune must not discard still-fresh observable threat memory.
     for id, evidence in pairs(self.evidence) do

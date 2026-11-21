@@ -297,6 +297,9 @@ _meta.M.__methods['set'] = function(m, val, hideHelpText)
         if not val then
             error("List variable cannot be set to nil.", 2)
         end
+        -- Fork: renamed values keep working (e.g. AutoEngageMode Aggro -> Defensive).
+        local legacy = rawget(m, 'legacy_values')
+        if legacy and type(val) == 'string' and legacy[val:lower()] then val = legacy[val:lower()] end
         if m._track._invert[val] then
             m._track._current = m._track._invert[val]
         else

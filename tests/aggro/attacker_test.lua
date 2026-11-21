@@ -24,11 +24,16 @@ setmetatable(package.preload,{__index=function() return function() return {new=c
 local Attacker=assert(loadfile('cylibs/trust/roles/attacker.lua'))()
 check(state.AutoEngageMode.value=='Always','default remains Always')
 local a=Attacker.new({},{});local gambits=a.settings.Gambits
-check(#gambits==6,'existing gambit count/order preserved')
+check(#gambits==7,'existing gambit order preserved plus Aggressive engage')
 local engage_mode=gambits[3].conditions[1]
-for _,mode in ipairs({'Always','Aggro','Mirror','Off'}) do
+for _,mode in ipairs({'Always','Defensive','Mirror','Off'}) do
  state.AutoEngageMode.value=mode
- check(engage_mode.test()==(mode=='Always' or mode=='Aggro'),'engage condition for '..mode)
+ check(engage_mode.test()==(mode=='Always' or mode=='Defensive'),'engage condition for '..mode)
+end
+local aggressive=gambits[5].conditions[1]
+for _,mode in ipairs({'Always','Defensive','Mirror','Off','Aggressive'}) do
+ state.AutoEngageMode.value=mode
+ check(aggressive.test()==(mode=='Aggressive'),'aggressive engage condition for '..mode)
 end
 check(a:get_cooldown()==1 and not a:allows_multiple_actions(),'existing queue throttle preserved')
 print('Attacker: '..count..' checks passed')
