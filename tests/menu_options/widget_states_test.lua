@@ -38,7 +38,7 @@ local a=Look.alphas({hourglass=1},{hourglass=true},0,T); ok(a.hourglass==math.fl
 a=Look.alphas({hourglass=1,red=1},{},0,T); ok(a.hourglass==220 and a.red==70,'stop alphas')
 
 -- Widget wiring, with stand-ins for views and timer.
-local Widget={}
+local Widget={refreshCompactSong=function() end} -- song row tested in compact_song_test
 local env=setmetatable({TrustStatusWidget=Widget,CompactTrustLook=Look,windower={addon_path='addon/'},
  Color={clear={clear=true},new=function(...)return{...}end}},{__index=_G})
 method('ui/widgets/TrustStatusWidget.lua','function TrustStatusWidget:isCompactActing()','function TrustStatusWidget:setCompactPartyCount',env)

@@ -36,7 +36,7 @@ default.movement = {policy='Send',quiet=true,feedback=false,enabled=true,assist_
 -- autohide: hide every Trust widget after `autohide_seconds` without player input.
 -- autohide_mode (Off/On/Show When Engaged) is written by the Layout menu and the
 -- command; when it's missing, `autohide` decides (On/Off).
-default.widgets = {hide_pet=true,autohide=false,autohide_seconds=5}
+default.widgets = {hide_pet=true,hide_bard=true,autohide=false,autohide_seconds=5}
 default.flags = {}
 default.flags.show_death_warning = true
 default.flags.check_files = true

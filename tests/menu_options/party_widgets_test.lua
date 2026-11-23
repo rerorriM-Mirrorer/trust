@@ -3,7 +3,7 @@ local function method(path,first,last,env)
  local s=source(path);local a=assert(s:find(first,1,true),first);local b=assert(s:find(last,a+1,true),last)
  assert(load(s:sub(a,b-1),'production widget method','t',env))()
 end
-local Widget={}
+local Widget={refreshCompactSong=function() end} -- song row tested in compact_song_test
 local Look=dofile('ui/widgets/CompactTrustLook.lua')
 local env=setmetatable({TrustStatusWidget=Widget,CompactTrustLook=Look,windower={addon_path='addon/'},
  Color={clear={},new=function(...)return{...}end}},{__index=_G})

@@ -53,7 +53,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('fan', self.handle_fan, 'Toggle Fan Out, or set it explicitly: //trust fan [on|off]')
     self:add_command('fanall', self.handle_fan_all, 'Set Fan Out on all receiving clients: //trust fanall [on|off]')
     self:add_command('combat', self.handle_combat, 'Show or set combat positioning: //trust combat [auto|mirror|off]')
-    self:add_command('widget', self.handle_widget, 'Widgets: // trust widget [full|compact|toggle] [all|trust|party|target] | left|right | look [stop|pause|act|start|off] [acting] | fade <ms>')
+    self:add_command('widget', self.handle_widget, 'Widgets: // trust widget [full|compact|toggle] [all|trust|party|target] | left|right | look [stop|pause|act|start|off] [acting] | fade <ms> | song <x> <y>')
     self:add_command('autohide', self.handle_autohide, 'Hide all widgets when idle: // trust autohide [on|off|engaged|seconds]')
     self:add_command('menuperf', self.handle_menuperf, 'Measure CPU time opening Trust menu: // trust menuperf [on|off]')
 
@@ -298,6 +298,20 @@ function GeneralTrustCommands:handle_widget(_, mode, scope, extra)
         local ok, why = require('ui/WidgetLayout').arrange(alignment)
         if not ok then return false, why end
         return true, 'Widgets aligned '..first
+    end
+    if first == 'song' then
+        local Song = require('ui/widgets/CompactSongTimer')
+        local x, y = tonumber(scope), tonumber(extra)
+        if not x or not y or x < 0 or x > 40 or y < 0 or y > 40 then
+            return false, string.format('Usage: // trust widget song <x 0-40> <y 0-40> (now %d %d)', Song.tunables.x, Song.tunables.y)
+        end
+        Song.tunables.x, Song.tunables.y = math.floor(x), math.floor(y)
+        local widget = windower.trust.ui.get_widget('trust')
+        if widget and widget.placeCompactSong then
+            widget:placeCompactSong()
+            widget:refreshCompactSong(true)
+        end
+        return true, string.format('Song note at %d %d (resets on reload)', Song.tunables.x, Song.tunables.y)
     end
     if first == 'look' or first == 'fade' then
         return self:handle_widget_look(first, scope, extra)

@@ -119,6 +119,27 @@ function BardTrust:tic(old_time, new_time)
 end
 
 function BardTrust:get_widget()
+    -- A: by default the song note and re-sing timer live in the compact Trust
+    -- widget and the separate Bard widget is not built (like hide_pet).
+    -- widgets.hide_bard = false brings the old Bard widget back.
+    local widgets = addon_settings:getSettings().widgets or {}
+    if widgets.hide_bard ~= false then
+        local host = windower.trust.ui.get_widget('trust')
+        local singer = self:role_with_type("singer")
+        if host and host.setCompactSongSource and singer then
+            local Song = require('ui/widgets/CompactSongTimer')
+            host:setCompactSongSource(function()
+                local me = windower.ffxi.get_player()
+                if not me or me.main_job ~= 'BRD' then return nil end
+                local expires = {}
+                for song in player.party:get_player():get_songs():it() do
+                    expires[#expires + 1] = song:get_expire_time()
+                end
+                return singer:get_is_singing(), Song.remaining(expires, singer.song_tracker.expiring_duration, os.time())
+            end)
+        end
+        return nil
+    end
     local BardWidget = require('ui/widgets/BardWidget')
     local bardWidget = BardWidget.new(
 			Frame.new(40, 285, 125, 57),

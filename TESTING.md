@@ -1,3 +1,25 @@
+## Current Development Status — 2026-11-23 (America/Chicago), later
+
+### BRD song note + re-sing timer in the compact Trust widget; Bard widget hidden by default (Widget2)
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/widget-states`. STACK: test/autohide-engaged@d5228fd -> ... -> test/party-broadcast-noparty@3749d55 -> test/widget-states (Widget1 b08dcf0, then Widget2). installed_base: b08dcf0 (Widget1-Test7, Live: A says the look and fade are good). Package stays cumulative since d5228fd. Host simulation only for Widget2.
+
+**Why.** A: move the song note into the compact widget under the party count with a timer like the in-game status icons (under 1 min counts 59s down; otherwise Xm in whole minutes), and hide the Bard widget like the pet widget.
+
+**What changed (Verified).** New `ui/widgets/CompactSongTimer.lua` (format, re-sing seconds). `TrustStatusWidget`: song note (icon_singing_light.png, lit while singing, dim otherwise) and timer text under the count, read every 0.5 s from the existing compact tick; shown only when a song source is set and only in compact. `BRD.lua get_widget`: unless `widgets.hide_bard = false`, the Bard widget is not built and the Trust widget gets a source (soonest song expiry minus the singer's expiring_duration, the same number the old widget showed as 00:00:00; nil when main job is not BRD). Default `hide_bard=true`. `//trust widget song <x> <y>` moves the row (session only).
+
+**Lost with the Bard widget hidden (Inferred).** Clicking the Bard widget opened Song Sets; use the Trust menu instead. The song-set name is no longer on screen.
+
+**Tunables (CompactSongTimer.tunables).** x 4, y 13 (`//trust widget song`), icon 10 px, gap 1 px, lit_alpha 255, dim_alpha 110, poll 0.5 s.
+
+**Host verification.** New `compact_song_test.lua` 19 pass (format 59s/0s/1m/14m, soonest-minus-threshold, row placement, hidden without source, dim note with no songs, lit + 3m, poll throttle, 45s, nil/error/full mode hide, BRD factory hides Bard widget and feeds the host, non-BRD nil, default setting). widget_states_test 45 and party_widgets_test pass. Full suite: same 9 host failures. Lua 5.1 compile pass.
+
+**Live.** Widget1 look and fade (A, 2026-11-23). **Pending.** Widget2 checklist; Widget1 alignment commands not yet reported.
+
+**Next.** A's live test of the song row; controller menu observations (see conversation 2026-11-23).
+
+---
+
 ## Current Development Status — 2026-11-23 (America/Chicago)
 
 ### Compact widget states: book + hourglass/crystal per control state; widget left|right (Widget1)

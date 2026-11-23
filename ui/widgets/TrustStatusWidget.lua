@@ -17,6 +17,7 @@ local Widget = require('ui/widgets/Widget')
 local TargetWidget = require('ui/widgets/TargetWidget')
 local CompactWidget = require('ui/widgets/CompactWidget')
 local CompactTrustLook = require('ui/widgets/CompactTrustLook')
+local CompactSongTimer = require('ui/widgets/CompactSongTimer')
 
 local TrustStatusWidget = setmetatable({}, {__index = Widget })
 TrustStatusWidget.__index = TrustStatusWidget
@@ -157,6 +158,16 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
     self.compactCountCell:setPosition(2, 0)
     self.compactCountCell:setSize(32, 16)
 
+    -- BRD only (BardTrust supplies a song source): note + re-sing timer under the count.
+    local song = CompactSongTimer.tunables
+    self.compactSongIcon = ImageView.new()
+    self.compactSongIcon:setSize(song.icon, song.icon)
+    self.compactSongIcon:loadImage(windower.addon_path..'assets/icons/icon_singing_light.png')
+    self.compactSongIcon.alpha = song.dim_alpha
+    self.compactSongCell = TextCollectionViewCell.new(TextItem.new('', TrustStatusWidget.TextSmall))
+    self.compactSongCell:setSize(30, 14)
+    self:placeCompactSong()
+
     -- Reuse Target's exact yellow, bold-italic Arial style.
     self.compactTargetCell = TextCollectionViewCell.new(TextItem.new('', TargetWidget.Text))
     self.compactTargetCell:setPosition(0, 25)
@@ -169,6 +180,8 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
     self:addSubview(self.compactHourglass)
     self:addSubview(self.compactCrystal)
     self:addSubview(self.compactCountCell)
+    self:addSubview(self.compactSongIcon)
+    self:addSubview(self.compactSongCell)
     self:addSubview(self.compactTargetCell)
 
     -- One redraw timer while compact: polls the control state, cross-fades
@@ -281,7 +294,57 @@ function TrustStatusWidget:setPosition(x, y)
         self.compactCrystal:setPosition(4, 4)
         self.compactCountCell:setPosition(2, 0)
         self.compactTargetCell:setPosition(0, 25)
+        self:placeCompactSong()
     end
+end
+
+function TrustStatusWidget:placeCompactSong()
+    local song = CompactSongTimer.tunables
+    self.compactSongIcon:setPosition(song.x, song.y)
+    self.compactSongIcon:setSize(song.icon, song.icon)
+    self.compactSongCell:setPosition(song.x + song.icon + song.gap, song.y - 2)
+end
+
+-- source() -> singing (bool), seconds until re-sing (number|nil). nil removes the row.
+function TrustStatusWidget:setCompactSongSource(source)
+    self.compactSongSource = source
+    self.compactSongShown = nil
+    self.compactSongReadAt = nil
+    self:refreshCompactSong(true)
+end
+
+function TrustStatusWidget:refreshCompactSong(force)
+    if not self.compactSongIcon then
+        return
+    end
+    local now = os.clock()
+    if not force and self.compactSongReadAt and now - self.compactSongReadAt < CompactSongTimer.tunables.poll then
+        return
+    end
+    self.compactSongReadAt = now
+    local shown, singing, text = false, false, ''
+    if self.compactMode and self.compactSongSource then
+        local ok, isSinging, remaining = pcall(self.compactSongSource)
+        if ok and isSinging ~= nil then
+            shown, singing, text = true, isSinging and true or false, CompactSongTimer.format(remaining)
+        end
+    end
+    local key = tostring(shown)..tostring(singing)..text
+    if not force and key == self.compactSongShown then
+        return
+    end
+    self.compactSongShown = key
+    local song = CompactSongTimer.tunables
+    self.compactSongIcon.alpha = singing and song.lit_alpha or song.dim_alpha
+    self.compactSongIcon:setVisible(shown)
+    self.compactSongIcon:setNeedsLayout()
+    self.compactSongIcon:layoutIfNeeded()
+    local item = TextItem.new(text, TrustStatusWidget.TextSmall)
+    item:setShouldWordWrap(false)
+    self.compactSongCell:setItem(item)
+    self.compactSongCell:setVisible(shown and text ~= '')
+    self.compactSongCell:setNeedsLayout()
+    self.compactSongCell:layoutIfNeeded()
 end
 
 function TrustStatusWidget:setExpanded(expanded)
@@ -298,6 +361,7 @@ function TrustStatusWidget:updateCompactVisibility()
     for _, view in ipairs({
         self.compactGlowOuter, self.compactGlowInner, self.compactIcon,
         self.compactTint, self.compactHourglass, self.compactCrystal, self.compactCountCell, self.compactTargetCell,
+        self.compactSongIcon, self.compactSongCell,
     }) do
         view:setVisible(compact)
         view:setNeedsLayout()
@@ -307,6 +371,7 @@ function TrustStatusWidget:updateCompactVisibility()
     self.compactDrawn = nil
     self:refreshCompactIcon()
     self:refreshCompactLabels()
+    self:refreshCompactSong(true)
 end
 
 -- True while an action is playing (drives the green halo).
@@ -386,6 +451,7 @@ function TrustStatusWidget:tickCompactLook()
             view:layoutIfNeeded()
         end
     end
+    self:refreshCompactSong()
     image(self.compactIcon, 'book')
     image(self.compactHourglass, 'hourglass')
     image(self.compactCrystal, 'crystal')
