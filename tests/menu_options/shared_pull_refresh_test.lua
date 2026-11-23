@@ -22,7 +22,9 @@ local f=assert(io.open('Trust.lua'));local root=f:read('*a');f:close()
 local callback
 local enabled
 local runtime=setmetatable({windower={register_event=function(_,fn)callback=fn end},hud={mediaPlayer={setEnabled=function(_,value)enabled=value end}},
-    require=function(path)assert(path=='settings/shared_preferences');return{poll=function()return{Sounds={disabled=true}}end}end},{__index=_G})
+    require=function(path)
+        if path=='cylibs/ui/diagnostics/menu_trace' then return {enabled=false} end -- A: menu rendertrace, off
+        assert(path=='settings/shared_preferences');return{poll=function()return{Sounds={disabled=true}}end}end},{__index=_G})
 local block=assert(root:match("(windower.register_event%('prerender', function%(%)%s*.-\nend%))"))
 assert(load(block,'actual shared sound poll','t',runtime))();callback();assert(enabled==false)
 print('PASS actual puller refresh: revisions/source changes refresh even while pulling Off, no redundant refresh, original legacy source retained')

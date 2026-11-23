@@ -51,6 +51,8 @@ function FocusManager:requestFocus(focusable)
 
     self.focusStack:append(focusable)
     focusable:setHasFocus(true)
+    local MenuTrace = require('cylibs/ui/diagnostics/menu_trace')
+    if MenuTrace.enabled then MenuTrace.event('focus', 'request', MenuTrace.id(focusable, 'view').id, self.focusStack:length()) end
     return true
 end
 
@@ -65,6 +67,8 @@ function FocusManager:resignFocus(focusable)
     if currentFocusable == focusable and currentFocusable:shouldResignFocus() then
         self.focusStack:remove(self.focusStack:length())
         currentFocusable:setHasFocus(false)
+        local MenuTrace = require('cylibs/ui/diagnostics/menu_trace')
+        if MenuTrace.enabled then MenuTrace.event('focus', 'resign', MenuTrace.id(currentFocusable, 'view').id, self.focusStack:length()) end
 
         currentFocusable = self.focusStack:last()
         if currentFocusable then
@@ -94,6 +98,8 @@ function FocusManager:resignAllFocus()
     while currentFocusable do
         self.focusStack:remove(self.focusStack:length())
         currentFocusable:setHasFocus(false)
+        local MenuTrace = require('cylibs/ui/diagnostics/menu_trace')
+        if MenuTrace.enabled then MenuTrace.event('focus', 'resign-all', MenuTrace.id(currentFocusable, 'view').id, self.focusStack:length()) end
         currentFocusable = self.focusStack:last()
     end
 end

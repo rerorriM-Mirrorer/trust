@@ -1,3 +1,23 @@
+## Current Development Status — 2026-11-23 (America/Chicago), menu rendertrace
+
+### `//trust menu rendertrace` — one file with keyboard + controller input and menu drawing (Trace1)
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/widget-states`. STACK: test/autohide-engaged@d5228fd -> ... -> test/party-broadcast-noparty@3749d55 -> test/widget-states (Widget1 b08dcf0, Widget2 d3e22db, Trace1). installed_base: b08dcf0 Live; Widget2-Test8 install not yet reported (Inferred). Package cumulative since d5228fd. Host simulation only.
+
+**Why.** A asked for an xivcrossbar-style rendertrace that includes controller and keyboard input, so A can reproduce the controller-only menu flashing and cursor jumps and the agent can read what happened from one file.
+
+**What changed (Verified).** New `cylibs/ui/diagnostics/menu_trace.lua`, modeled on xivcrossbar `ui/render_trace.lua`: off by default; `on` installs hooks, keeps lines in a 30000-line memory ring, writes only on `save`/`off` to `data/menutrace-<name>.txt`. Records: `key` (every keyboard event: DIK, name, down/up, flags, blocked), `ctl` (every `__controller` command: sequence, action, age, mode, accepted or rejected with reason token/sequence/age/action/closed/paused/text), frames and `frame-gap` (>0.05 s), `context` (menu open, focused view, controller mode) on change, `focus` request/resign, `cursor` (view, section:row, x, y, shown/hidden, recreated) and `scroll` (offset) on change, and Windower images while tracing: `img.new` with the three nearest Trust source lines that created it, `img.show`/`img.hide`/`img.path`/`img.pos`/`img.size`/`img.alpha`/`img.color`/`img.destroy` on change. `img.show ... UNTEXTURED` = shown with no texture and no colour (Windower draws that as a plain box). `off` restores the images library and unregisters the keyboard hook. Hooks: controller_menu `trace` option (rejection checks unchanged, now named), CollectionView:moveCursorToIndexPath, ScrollView:setContentOffset, FocusManager request/resign/resignAll, Trust.lua prerender. `//trust menu trace` (save trace) unchanged.
+
+**Tunables (menu_trace).** capacity 30000 lines, gap 0.05 s.
+
+**Host verification.** New `menu_trace_test.lua` 24 pass (off = no hooks/no lines, on installs image + keyboard hooks, key down/up lines, frame gap, UNTEXTURED only for the bare image, unchanged repeats coalesced, show/hide/destroy, controller accepted + rejected sequence/age/token with counts unchanged, cursor and scroll only on change, mark/header/totals, save, off restores images and unregisters, ring keeps newest, wiring). `shared_pull_refresh_test.lua` stub taught the trace module (it runs the real prerender block). Full suite: same 9 host failures. Lua 5.1 compile pass.
+
+**Inferred, to confirm live.** Windower's images library resolves methods through its module table, so wrapping `images.<method>` sees every call; `on` reports `(images)` when hooks install, and the saved file's `# calls.img.*` totals show whether calls were seen.
+
+**Pending.** A's capture (controller and keyboard, same list), then diagnosis.
+
+---
+
 ## Current Development Status — 2026-11-23 (America/Chicago), later
 
 ### BRD song note + re-sing timer in the compact Trust widget; Bard widget hidden by default (Widget2)

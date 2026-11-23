@@ -126,6 +126,15 @@ function CollectionView:moveCursorToIndexPath(cursorIndexPath)
         CollectionView.cursorRecreated = (CollectionView.cursorRecreated or 0) + 1
         self.selectionBackground:bringToFront()
     end
+    local MenuTrace = require('cylibs/ui/diagnostics/menu_trace')
+    if MenuTrace.enabled then
+        local recreated = isCursorVisible and not self.cursorShown and CollectionView.cursorFront ~= false
+        local position = self.selectionBackground:getPosition()
+        MenuTrace.call(self, 'cursor', MenuTrace.id(self, 'view').id,
+            cursorIndexPath and ((cursorIndexPath.section or '?')..':'..(cursorIndexPath.row or '?')) or 'none',
+            position and math.floor(position.x) or '?', position and math.floor(position.y) or '?',
+            isCursorVisible and 'shown' or 'hidden', recreated and 'recreated' or '')
+    end
     self.cursorShown = isCursorVisible
 
     self.selectionBackground:setVisible(isCursorVisible)

@@ -17,6 +17,7 @@ function MenuTrustCommands.new(trust, action_queue, hud)
     self:add_command('close', self.handle_close, 'Save eligible options and close all Trust menus')
     self:add_command('discard', self.handle_discard, 'Close menus without applying the pending editor draft')
     self:add_command('status', self.handle_status, 'Show menu test build and saved preferences')
+    self:add_command('rendertrace', self.handle_render_trace, 'Record menu input (keyboard + controller) and drawing to data/menutrace-<name>.txt: //trust menu rendertrace [on|mark|save|off|status]')
     self:add_command('cursorfront', self.handle_cursor_front, 'Redraw the menu cursor on top each time it appears: //trust menu cursorfront [on|off]')
     self:add_command('trace', self.handle_trace, 'Trace menu saves: //trust menu trace [on|off|status|dump|clear]')
 
@@ -57,6 +58,21 @@ end
 
 -- Diagnostic switch for the cursor-on-top fix (see ImageView:bringToFront). Not saved:
 -- it resets to on when Trust reloads.
+function MenuTrustCommands:handle_render_trace(_, mode)
+    local MenuTrace = require('cylibs/ui/diagnostics/menu_trace')
+    local player = windower.ffxi.get_player()
+    local keyboard = require('cylibs/ui/input/keyboard')
+    return MenuTrace.command(mode, windower.addon_path..'data/menutrace-'..((player and player.name) or 'unknown')..'.txt', {
+        images = require('images'),
+        register = windower.register_event, unregister = windower.unregister_event,
+        key_name = function(key)
+            local ok, name = pcall(function() return keyboard.input():getKey(key, 0) end)
+            return ok and name or ''
+        end,
+        version = _addon and _addon.version,
+    })
+end
+
 function MenuTrustCommands:handle_cursor_front(_, action)
     local CollectionView = require('cylibs/ui/collection_view/collection_view')
     if action == 'on' or action == 'off' then

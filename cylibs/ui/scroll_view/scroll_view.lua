@@ -118,6 +118,10 @@ end
 function ScrollView:setContentOffset(contentOffsetX, contentOffsetY)
     self.contentOffset.x = contentOffsetX
     self.contentOffset.y = contentOffsetY
+    local MenuTrace = require('cylibs/ui/diagnostics/menu_trace')
+    if MenuTrace.enabled then
+        MenuTrace.call(self, 'scroll', MenuTrace.id(self, 'view').id, contentOffsetX, contentOffsetY)
+    end
 
     self:setNeedsLayout()
     self:layoutIfNeeded()

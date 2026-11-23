@@ -40,10 +40,17 @@ function M.new(options)
         self:refresh()
         sequence,stamp=tonumber(sequence),tonumber(stamp)
         local age=stamp and options.clock()-stamp
-        if token~=self.token or not sequence or sequence%1~=0 or sequence<=self.sequence
-                or not age or age<-.1 or age>.35 or not keys[action] and action~='close'
-                or self.mode=='closed' or self.mode=='paused'
-                or self.mode=='text' and action~='confirm' and action~='back' and action~='close' then
+        -- A: same checks as before, now named so the menu trace can say why.
+        local why
+        if token~=self.token then why='token'
+        elseif not sequence or sequence%1~=0 or sequence<=self.sequence then why='sequence'
+        elseif not age or age<-.1 or age>.35 then why='age'
+        elseif not keys[action] and action~='close' then why='action'
+        elseif self.mode=='closed' or self.mode=='paused' then why=self.mode
+        elseif self.mode=='text' and action~='confirm' and action~='back' and action~='close' then why='text'
+        end
+        if options.trace then options.trace(sequence,action,age and string.format('%.3f',age) or 'nil',self.mode,why and ('rejected '..why) or 'accepted') end
+        if why then
             self.rejected=self.rejected+1;return false
         end
         self.sequence=sequence;self.accepted=self.accepted+1

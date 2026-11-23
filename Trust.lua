@@ -481,6 +481,10 @@ function load_ui()
         clock=require('socket').gettime,open=io.open,remove=os.remove,
         path=function(id) return windower.addon_path..'data/controller-menu-'..tostring(windower.ffxi.get_info().server)..'-'..id..'.txt' end,
         keyName=function(key) return require('cylibs/ui/input/keyboard').input():getKey(key,0) end,
+        trace=function(...)
+            local menu_trace=require('cylibs/ui/diagnostics/menu_trace')
+            if menu_trace.enabled then menu_trace.event('ctl',...) end
+        end,
         context=function()
             local character=windower.ffxi.get_player()
             local menu=hud and hud.trustMenu
@@ -1020,6 +1024,14 @@ end
 
 windower.register_event('addon command', addon_command)
 windower.register_event('prerender', function()
+    local menu_trace = require('cylibs/ui/diagnostics/menu_trace')
+    if menu_trace.enabled then
+        menu_trace.frame()
+        local menu = hud and hud.trustMenu
+        local focus = require('cylibs/ui/focus/focus_manager').shared():getFocusable()
+        menu_trace.context(menu and menu:isVisible() and 'menu' or 'closed',
+            focus and menu_trace.id(focus, 'view').id or 'none', controller_menu and controller_menu.mode or '-')
+    end
     if controller_menu then controller_menu:tick() end
     if control_publish then control_publish:tick() end
     if movement_receiver then movement_receiver:tick() end
