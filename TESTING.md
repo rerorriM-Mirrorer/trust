@@ -1,3 +1,29 @@
+## Current Development Status — 2026-11-23 (America/Chicago)
+
+### Compact widget states: book + hourglass/crystal per control state; widget left|right (Widget1)
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/widget-states`. STACK: test/autohide-engaged@d5228fd -> test/act-state@1bca258 -> test/control-publish@f2edfe5 -> test/mode-shortnames@5949503 -> test/engage-aggressive@a0a0a42 -> test/party-broadcast@8f92fbc -> test/party-broadcast-noparty@3749d55 -> test/widget-states. installed_base: d5228fd is the last Live-confirmed install; NoParty1-Test6 (3749d55) was being installed (Inferred), so the package stays cumulative since d5228fd. Host simulation only.
+
+**Why.** A asked for one layer stack in the compact Trust widget: the book is always the background; Stop = hourglass over the book with a red tint; Pause = no tint, hourglass fades in and out; Act = crystal fades in and out, green halo while queued actions play; Start = crystal steady. Changes should cross-fade. A also wanted commands to set Left/Right alignment without the menu.
+
+**Before (Verified, old code).** Only two inputs: Trust on/off and whether an action was playing. Off (Stop, Pause and Retreat alike) showed a dim hourglass instead of the book; Idle showed the book; an action playing showed book + green halo + pulsing crystal in both Start and Act. Act and Start looked the same; Stop and Pause looked the same.
+
+**What changed (Verified).**
+- New `ui/widgets/CompactTrustLook.lua` (pure): control_state -> look (Parked=stop, Paused/Retreat=pause, Act=act, Active=start), per-layer targets, linear cross-fade, pulse.
+- `ui/widgets/TrustStatusWidget.lua`: new hourglass layer; book always shown; red tint layer used for Stop; one 0.05 s timer runs while compact (polls `action_queue.control_state`, fades, pulses; alpha only re-set when it changes) and is cancelled in Full mode. Green halo only in Act/Start while an action plays.
+- `//trust widget look stop|pause|act|start [acting]` previews a look; `//trust widget look off` returns to live. `//trust widget fade <ms>` sets the cross-fade (0 = instant, E7 toggle), session only.
+- `//trust widget left|right` (also `widget align left|right`) arranges like Widgets > Layout. Menu and command share new `ui/WidgetLayout.lua` (same 16 px margin, 5 px gap).
+
+**Tunables (CompactTrustLook.tunables, defaults).** book_alpha 230, hourglass_alpha 220, crystal_alpha 220, pulse_floor 0.11, pulse_period 2.4 s, red_alpha 70, red_rgb 170/30/30, green_outer_alpha 18, green_inner_alpha 24 (unchanged halo), fade 0.25 s (`//trust widget fade`), tick 0.05 s.
+
+**Host verification.** New `tests/menu_options/widget_states_test.lua` 45 pass (mapping, targets per state, fade partial/clamp/instant/no fade-in on load, pulse range, widget draws per state, red fades out, pulses move only in Pause/Act, Start steady, preview overrides live and off returns, commands left/right/align/fade/look and refusals, menu uses WidgetLayout). `party_widgets_test.lua` updated for the new look, passes. Full `tests/menu_options/*_test.lua` + `tests/aggro`: 9 host failures before and after under this runner (lupa default runtime); no new failures. Changed files compile on Lua 5.1 (check_syntax.lua, lupa.lua51).
+
+**Live.** None. **Pending.** All of the checklist (Widget1-Test7). Whether the full-size hourglass reads well over the book.
+
+**Next.** A's live look test; then tune alphas/fade or revisit layer sizes.
+
+---
+
 ## Current Development Status — 2026-11-21 (America/Chicago)
 
 ### Party requests work without a party, like startall (NoParty1)

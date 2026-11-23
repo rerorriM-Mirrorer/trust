@@ -16,6 +16,7 @@ local VerticalFlowLayout = require('cylibs/ui/collection_view/layouts/vertical_f
 local Widget = require('ui/widgets/Widget')
 local TargetWidget = require('ui/widgets/TargetWidget')
 local CompactWidget = require('ui/widgets/CompactWidget')
+local CompactTrustLook = require('ui/widgets/CompactTrustLook')
 
 local TrustStatusWidget = setmetatable({}, {__index = Widget })
 TrustStatusWidget.__index = TrustStatusWidget
@@ -135,15 +136,20 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
     self.compactIcon = ImageView.new()
     self.compactIcon:setPosition(4, 4)
     self.compactIcon:setSize(32, 32)
-    self.compactIcon:loadImage(windower.addon_path..'assets/icons/icon_timer.png')
-    -- The book remains behind the crystal. Its small alpha pulse changes
-    -- only the crystal, never the book, to keep the idle state recognizable.
+    -- A: the open book is the background in every state (CompactTrustLook).
+    self.compactIcon:loadImage(windower.addon_path..'assets/icons/menu_mapsg_book.png')
+    self.compactIcon.alpha = CompactTrustLook.tunables.book_alpha
+    self.compactHourglass = ImageView.new()
+    self.compactHourglass:setPosition(4, 4)
+    self.compactHourglass:setSize(32, 32)
+    self.compactHourglass:loadImage(windower.addon_path..'assets/icons/icon_timer.png')
+    self.compactHourglass.alpha = 0
     self.compactCrystal = ImageView.new()
     self.compactCrystal:setPosition(4, 4)
     self.compactCrystal:setSize(32, 32)
     self.compactCrystal:loadImage(windower.addon_path..'assets/icons/menu_maphp_crystal.png')
     self.compactCrystal.alpha = 0
-    -- Keep the earlier subtle halo under the two sprites.
+    -- Stop's red tint, over the book and under the hourglass.
     self.compactTint = ColorView.new(Frame.new(4, 4, 32, 32), Color.clear)
 
     local countItem = TextItem.new('', TrustStatusWidget.TextSmall)
@@ -160,23 +166,19 @@ function TrustStatusWidget.new(frame, addonEnabled, actionQueue, mainJobName, su
     self:addSubview(self.compactGlowInner)
     self:addSubview(self.compactIcon)
     self:addSubview(self.compactTint)
+    self:addSubview(self.compactHourglass)
     self:addSubview(self.compactCrystal)
     self:addSubview(self.compactCountCell)
     self:addSubview(self.compactTargetCell)
 
-    -- Run the pulse timer only in compact Active state, at 10 updates/s.
-    -- A 2.4s cosine cycle fades the blue crystal continuously in and out;
-    -- stop/cancel on Off, Idle or Full to avoid needless work per client.
-    self.compactPulseTimer = Timer.scheduledTimer(0.1)
+    -- One redraw timer while compact: polls the control state, cross-fades
+    -- layers and runs the pulses. Cancelled in Full mode.
+    self.actionQueue = actionQueue
+    self.compactLayers = {}
+    self.compactLookStartedAt = os.clock()
+    self.compactPulseTimer = Timer.scheduledTimer(CompactTrustLook.tunables.tick)
     self:getDisposeBag():add(self.compactPulseTimer:onTimeChange():addAction(function()
-        if not self.compactMode or self:getCompactState() ~= 'active' then
-            return
-        end
-        local phase = (os.clock() - self.compactPulseStartedAt) * (2 * math.pi / 2.4)
-        local wave = (1 - math.cos(phase)) / 2
-        self.compactCrystal.alpha = math.floor(24 + 196 * wave + 0.5)
-        self.compactCrystal:setNeedsLayout()
-        self.compactCrystal:layoutIfNeeded()
+        self:tickCompactLook()
     end), self.compactPulseTimer:onTimeChange())
     self:getDisposeBag():addAny(L{ self.compactPulseTimer })
     self:refreshCompactIcon()
@@ -275,6 +277,7 @@ function TrustStatusWidget:setPosition(x, y)
         self.compactGlowInner:setPosition(4, 4)
         self.compactIcon:setPosition(4, 4)
         self.compactTint:setPosition(4, 4)
+        self.compactHourglass:setPosition(4, 4)
         self.compactCrystal:setPosition(4, 4)
         self.compactCountCell:setPosition(2, 0)
         self.compactTargetCell:setPosition(0, 25)
@@ -294,70 +297,102 @@ function TrustStatusWidget:updateCompactVisibility()
     local compact = self.compactMode
     for _, view in ipairs({
         self.compactGlowOuter, self.compactGlowInner, self.compactIcon,
-        self.compactTint, self.compactCrystal, self.compactCountCell, self.compactTargetCell,
+        self.compactTint, self.compactHourglass, self.compactCrystal, self.compactCountCell, self.compactTargetCell,
     }) do
         view:setVisible(compact)
         view:setNeedsLayout()
         view:layoutIfNeeded()
     end
+    -- Visibility was just reset for every layer; redraw all of them.
+    self.compactDrawn = nil
     self:refreshCompactIcon()
     self:refreshCompactLabels()
 end
 
-function TrustStatusWidget:getCompactState()
-    if not self.addonEnabled:getValue() then
-        return 'off'
-    elseif self.currentAction ~= '' and self.currentAction ~= 'Idle' and self.currentAction ~= 'OFF' then
-        return 'active'
-    end
-    return 'idle'
+-- True while an action is playing (drives the green halo).
+function TrustStatusWidget:isCompactActing()
+    return self.currentAction ~= '' and self.currentAction ~= 'Idle' and self.currentAction ~= 'OFF'
 end
 
+-- Look name: stop | pause | act | start. A preview (//trust widget look) wins.
+function TrustStatusWidget:getCompactState()
+    if self.compactLookPreview then
+        return self.compactLookPreview.name
+    end
+    local queue = self.actionQueue
+    return CompactTrustLook.name_for(queue and queue.control_state, self.addonEnabled:getValue())
+end
+
+function TrustStatusWidget:setCompactLookPreview(name, acting)
+    if name then
+        self.compactLookPreview = { name = name, acting = acting and true or false }
+    else
+        self.compactLookPreview = nil
+    end
+    self:refreshCompactIcon()
+end
+
+-- Start or stop the redraw timer and draw one frame now.
 function TrustStatusWidget:refreshCompactIcon()
-    if not self.compactIcon then
+    if not self.compactIcon or not self.compactPulseTimer then
         return
     end
-    local status = self:getCompactState()
-    local stopped = status == 'off'
-    local active = status == 'active'
-    if self.compactStatus ~= status then
-        self.compactStatus = status
-        -- Three states with only two base sprites: Off is a translucent hourglass,
-        -- Idle and Active both keep the same translucent open book beneath.
-        local path = stopped and 'assets/icons/icon_timer.png'
-            or 'assets/icons/menu_mapsg_book.png'
-        self.compactIcon:loadImage(windower.addon_path..path)
-        self.compactIcon.alpha = stopped and 155 or 230
-    end
-
-    -- Retain a restrained green outer halo; the crystal (not the book)
-    -- provides the moving highlight, preserving the Idle background.
-    self.compactGlowOuter:setBackgroundColor(active and Color.new(18, 23, 110, 63) or Color.clear)
-    self.compactGlowInner:setBackgroundColor(active and Color.new(24, 19, 105, 58) or Color.clear)
-    self.compactTint:setBackgroundColor(Color.clear)
-
-    local shouldPulse = active and self.compactMode
-    if self.compactPulseTimer then
-        if shouldPulse and not self.compactPulseTimer:isRunning() then
-            self.compactPulseStartedAt = os.clock()
-            self.compactCrystal.alpha = 24
+    if self.compactMode then
+        if not self.compactPulseTimer:isRunning() then
+            self.compactLookTickAt = os.clock()
             self.compactPulseTimer:start()
-        elseif not shouldPulse and self.compactPulseTimer:isRunning() then
-            self.compactPulseTimer:cancel()
+        end
+        self:tickCompactLook()
+    elseif self.compactPulseTimer:isRunning() then
+        self.compactPulseTimer:cancel()
+    end
+end
+
+function TrustStatusWidget:tickCompactLook()
+    if not self.compactMode then
+        return
+    end
+    local tun = CompactTrustLook.tunables
+    local now = os.clock()
+    local dt = math.max(0, now - (self.compactLookTickAt or now))
+    self.compactLookTickAt = now
+    local name = self:getCompactState()
+    local acting = self.compactLookPreview and self.compactLookPreview.acting or self:isCompactActing()
+    local targets, pulsing = CompactTrustLook.targets(name, acting)
+    -- A pulse restarts from its floor when its layer starts pulsing.
+    local pulseKey = (pulsing.hourglass and 'h' or '')..(pulsing.crystal and 'c' or '')
+    if pulseKey ~= self.compactPulseKey then
+        self.compactPulseKey = pulseKey
+        self.compactLookStartedAt = now
+    end
+    CompactTrustLook.step(self.compactLayers, targets, dt, tun.fade)
+    local alphas = CompactTrustLook.alphas(self.compactLayers, pulsing, now - self.compactLookStartedAt, tun)
+    local drawn = self.compactDrawn or {}
+    self.compactDrawn = drawn
+    local function image(view, key)
+        if drawn[key] ~= alphas[key] then
+            drawn[key] = alphas[key]
+            view.alpha = alphas[key]
+            view:setVisible(alphas[key] > 0)
+            view:setNeedsLayout()
+            view:layoutIfNeeded()
         end
     end
-    self.compactCrystal:setVisible(shouldPulse)
-    if not shouldPulse then
-        self.compactCrystal.alpha = 0
+    local function color(view, key, r, g, b)
+        if drawn[key] ~= alphas[key] then
+            drawn[key] = alphas[key]
+            view:setBackgroundColor(alphas[key] > 0 and Color.new(alphas[key], r, g, b) or Color.clear)
+            view:setNeedsLayout()
+            view:layoutIfNeeded()
+        end
     end
-
-    for _, view in ipairs({
-        self.compactIcon, self.compactGlowOuter, self.compactGlowInner,
-        self.compactTint, self.compactCrystal,
-    }) do
-        view:setNeedsLayout()
-        view:layoutIfNeeded()
-    end
+    image(self.compactIcon, 'book')
+    image(self.compactHourglass, 'hourglass')
+    image(self.compactCrystal, 'crystal')
+    local red = tun.red_rgb
+    color(self.compactTint, 'red', red[1], red[2], red[3])
+    color(self.compactGlowOuter, 'green_outer', 23, 110, 63)
+    color(self.compactGlowInner, 'green_inner', 19, 105, 58)
 end
 
 function TrustStatusWidget:setCompactPartyCount(count)

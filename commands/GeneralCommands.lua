@@ -53,7 +53,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('fan', self.handle_fan, 'Toggle Fan Out, or set it explicitly: //trust fan [on|off]')
     self:add_command('fanall', self.handle_fan_all, 'Set Fan Out on all receiving clients: //trust fanall [on|off]')
     self:add_command('combat', self.handle_combat, 'Show or set combat positioning: //trust combat [auto|mirror|off]')
-    self:add_command('widget', self.handle_widget, 'Set widget appearance: // trust widget [full|compact|toggle] [all|trust|party|target]')
+    self:add_command('widget', self.handle_widget, 'Widgets: // trust widget [full|compact|toggle] [all|trust|party|target] | left|right | look [stop|pause|act|start|off] [acting] | fade <ms>')
     self:add_command('autohide', self.handle_autohide, 'Hide all widgets when idle: // trust autohide [on|off|engaged|seconds]')
     self:add_command('menuperf', self.handle_menuperf, 'Measure CPU time opening Trust menu: // trust menuperf [on|off]')
 
@@ -284,7 +284,24 @@ end
 -- // trust widget [full|compact|toggle] [all|trust|party|target]
 -- The visual mode is independent of automation; Target.expanded still controls
 -- debuff rows in Full mode, so use compactMode for all three widgets.
-function GeneralTrustCommands:handle_widget(_, mode, scope)
+function GeneralTrustCommands:handle_widget(_, mode, scope, extra)
+    -- A: alignment and compact-look options share the widget command.
+    local first = type(mode) == 'string' and mode:lower() or nil
+    if first == 'align' then
+        first, scope = type(scope) == 'string' and scope:lower() or nil, extra
+        if first ~= 'left' and first ~= 'right' then
+            return false, 'Usage: // trust widget left|right'
+        end
+    end
+    if first == 'left' or first == 'right' then
+        local alignment = first == 'left' and 'Left' or 'Right'
+        local ok, why = require('ui/WidgetLayout').arrange(alignment)
+        if not ok then return false, why end
+        return true, 'Widgets aligned '..first
+    end
+    if first == 'look' or first == 'fade' then
+        return self:handle_widget_look(first, scope, extra)
+    end
     mode = mode or 'toggle'
     scope = scope or 'all'
     if type(mode) ~= 'string' or type(scope) ~= 'string' then
@@ -309,6 +326,35 @@ function GeneralTrustCommands:handle_widget(_, mode, scope)
         widget:setCompactMode(compact)
     end
     return true, 'Widget appearance: '..mode..' ('..scope..')'
+end
+
+-- // trust widget look [stop|pause|act|start|off] [acting]  (preview; off = live state)
+-- // trust widget fade <ms>                                 (0 = instant changes)
+function GeneralTrustCommands:handle_widget_look(option, value, extra)
+    local Look = require('ui/widgets/CompactTrustLook')
+    if option == 'fade' then
+        local ms = tonumber(value)
+        if not ms or ms < 0 or ms > 2000 then
+            return false, 'Usage: // trust widget fade <0-2000 ms> (now '..math.floor(Look.tunables.fade * 1000 + 0.5)..')'
+        end
+        Look.tunables.fade = ms / 1000
+        return true, ms == 0 and 'Widget fade off (instant)' or ('Widget fade '..math.floor(ms)..' ms')
+    end
+    local widget = windower.trust.ui.get_widget('trust')
+    if not widget or not widget.setCompactLookPreview then
+        return false, 'trust widget is unavailable'
+    end
+    local name = type(value) == 'string' and value:lower() or nil
+    if name == nil or name == 'off' then
+        widget:setCompactLookPreview(nil)
+        return true, 'Widget look: live ('..widget:getCompactState()..')'
+    end
+    if not S{ 'stop', 'pause', 'act', 'start' }:contains(name) then
+        return false, 'Usage: // trust widget look [stop|pause|act|start|off] [acting]'
+    end
+    local acting = type(extra) == 'string' and extra:lower() == 'acting'
+    widget:setCompactLookPreview(name, acting)
+    return true, 'Widget look preview: '..name..(acting and ' acting' or '')..' (// trust widget look off to return)'
 end
 
 -- // trust autohide [on|off|engaged|<seconds>]
