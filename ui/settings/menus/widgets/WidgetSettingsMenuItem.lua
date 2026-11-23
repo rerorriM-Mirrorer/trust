@@ -113,34 +113,7 @@ function WidgetSettingsMenuItem:getLayoutMenuItem()
                 end
             end
 
-            local yPos = windower.get_windower_settings().ui_y_res / 2 - 75
-
-            -- The compact name belongs to Trust's slot: the left preset
-            -- starts the text at the left sprite edge, and the right preset
-            -- ends the text at the right sprite edge.
-            local host = windower.trust.ui.get_widget('trust')
-            if host and host.setCompactAlignment then
-                host:setCompactAlignment(newSettings.Alignment)
-            end
-
-            for widgetName in L{ 'Trust', 'Party', 'Target' }:it() do
-                local widget = windower.trust.ui.get_widget(widgetName)
-                if widget then
-                    local xPos
-                    if newSettings.Alignment == 'Left' then
-                        xPos = 16
-                    else
-                        xPos = windower.get_windower_settings().ui_x_res - widget:getSize().width - 16
-                    end
-
-                    widget:setEditing(true)
-                    widget:setPosition(xPos, yPos)
-                    widget:setEditing(false)
-                    widget:layoutIfNeeded()
-
-                    yPos = yPos + (widget:getMaxHeight() or widget:getSize().height) + 5
-                end
-            end
+            require('ui/WidgetLayout').arrange(newSettings.Alignment)
         end), configEditor:onConfigChanged())
 
         return configEditor
