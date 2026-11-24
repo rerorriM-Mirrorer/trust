@@ -29,6 +29,8 @@ ActionPriority.default = 1
 ActionPriority.medium = 2
 ActionPriority.high = 3
 ActionPriority.highest = 999
+-- Fork (Manual1): an action the player pressed while Trust was busy; always first.
+ActionPriority.manual = 1000
 
 actions_created = 0
 actions_destroyed = 0

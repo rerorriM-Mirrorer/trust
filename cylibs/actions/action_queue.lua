@@ -110,6 +110,7 @@ function ActionQueue.new(completion, is_priority_queue, max_size, debugging_enab
 end
 
 function ActionQueue:destroy()
+	self.destroyed = true
 	Action.action_complete:removeAction(self.action_complete_id)
 
 	self:on_action_start():removeAllActions()
@@ -149,6 +150,19 @@ function ActionQueue:perform_next_action()
 	
 	if self.queue:empty() then
 		ActionQueue.empty:trigger(self)
+		return
+	end
+
+	-- Fork (Manual1): after the player's own action went straight through, Trust waits
+	-- (hold) before its next one; a queued manual action is never held.
+	if self.hold_until and os.clock() < self.hold_until and not self:front_is_manual() then
+		if not self.hold_pending then
+			self.hold_pending = true
+			coroutine.schedule(function()
+				self.hold_pending = false
+				if not self.destroyed then self:perform_next_action() end
+			end, self.hold_until - os.clock() + 0.05)
+		end
 		return
 	end
 
@@ -264,6 +278,51 @@ function ActionQueue:evict_lower_than(action)
 	for _, queued in ipairs(kept) do self.queue:push(queued) end
 	lowest:destroy()
 	return true
+end
+
+-- Fork (Manual1): Trust holds its next action until `seconds` from now.
+function ActionQueue:hold(seconds)
+	local hold_until = os.clock() + (seconds or 0)
+	if hold_until > (self.hold_until or 0) then
+		self.hold_until = hold_until
+	end
+end
+
+function ActionQueue:front_is_manual()
+	for queued in self.queue:it() do
+		return queued.manual == true
+	end
+	return false
+end
+
+-- Fork (Manual1): puts the player's own action at the front. One manual slot: an older
+-- waiting manual action is replaced (its name is returned); every other waiting action
+-- stays, so the queue may hold max_size + 1 for a moment. Skips the Act gate.
+function ActionQueue:push_manual(action)
+	if not self.is_enabled then
+		action:destroy()
+		return nil
+	end
+	local replaced
+	local kept = {}
+	for queued in self.queue:it() do
+		if queued.manual then
+			replaced = queued.spec and queued.spec.name or 'an earlier press'
+			queued:destroy()
+		else
+			kept[#kept + 1] = queued
+		end
+	end
+	self.queue:clear()
+	self.queue:push(action)
+	for _, queued in ipairs(kept) do self.queue:push(queued) end
+
+	if self.current_action == nil then
+		self:perform_next_action()
+	else
+		self:on_action_queued():trigger(self)
+	end
+	return replaced
 end
 
 -- Pushes the given actions onto the queue

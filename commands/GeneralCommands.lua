@@ -55,6 +55,7 @@ function GeneralTrustCommands.new(trust, action_queue, addon_enabled, trust_mode
     self:add_command('combat', self.handle_combat, 'Show or set combat positioning: //trust combat [auto|mirror|off]')
     self:add_command('widget', self.handle_widget, 'Widgets: // trust widget [full|compact|toggle] [all|trust|party|target] | left|right | look [stop|pause|act|start|off] [acting] | fade <ms> | song <x> <y>')
     self:add_command('autohide', self.handle_autohide, 'Hide all widgets when idle: // trust autohide [on|off|engaged|seconds]')
+    self:add_command('manual', self.handle_manual, 'Your own actions go first: // trust manual [on|off|hold seconds|status]')
     self:add_command('menuperf', self.handle_menuperf, 'Measure CPU time opening Trust menu: // trust menuperf [on|off]')
 
     -- Modes
@@ -402,6 +403,11 @@ function GeneralTrustCommands:handle_menuperf(_, mode)
     end
     windower.trust.menu_perf_enabled = mode == 'on'
     return true, 'Menu CPU timings: '..(windower.trust.menu_perf_enabled and 'ON' or 'OFF')
+end
+
+-- Fork (Manual1): your own actions go first (cylibs/trust/manual_input.lua).
+function GeneralTrustCommands:handle_manual(_, option, value)
+    return require('cylibs/trust/manual_input').command(option, value)
 end
 
 -- A: one receiver-side operation preserves handoff ordering on each client.

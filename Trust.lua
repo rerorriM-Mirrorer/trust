@@ -730,6 +730,8 @@ end
 function register_chat_handlers()
 	local ChatInput = require('cylibs/ui/input/chat_input')
 	chat_input = ChatInput.new(main_trust_settings, state.MainTrustSettingsMode)
+	-- Fork (Manual1): the player's own actions go first.
+	require('cylibs/trust/manual_input').attach(action_queue)
 end
 
 -- Helpers
@@ -899,6 +901,8 @@ function unload_chunk_event()
 end
 
 function unloaded()
+    local manual = package.loaded['cylibs/trust/manual_input']
+    if manual then manual.detach() end
     local stealth = package.loaded['cylibs/trust/stealth/party_stealth']
     if stealth then stealth.detach() end
     if chat_auto_completer then chat_auto_completer:destroy();chat_auto_completer=nil end
