@@ -1,3 +1,17 @@
+## Current Development Status — 2026-11-23 (America/Chicago), set/cycle short names + console error fixes
+
+### Short names for `//trust set` / `//trust cycle`; pather and skillchainer console errors (SetNames1)
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/setnames-errfix` (from `test/widget-states` c968b95). STACK: test/autohide-engaged@d5228fd -> test/act-state@1bca258 -> test/control-publish@f2edfe5 -> test/mode-shortnames@5949503 -> test/engage-aggressive@a0a0a42 -> test/party-broadcast@8f92fbc -> test/party-broadcast-noparty@3749d55 -> test/widget-states@c968b95 -> test/setnames-errfix (6be37ac, b72e95c). installed_base: b08dcf0 Live (Widget1-Test7); Test8/Test9 install not reported (Inferred). Package cumulative since d5228fd.
+
+**Why.** A typed `//trust set skillchainassistant off` and got `Set: Unknown field [skillchainassistant]`; the full name in lowercase worked but the reply repeated the lowercase name. A's console.log (2026-11-23) showed Trust repeating `pather.lua:101: attempt to index field 'path_target' (a nil value)` (about 3,600 times in one burst) and `skillchainer.lua:317: attempt to index a nil value`.
+
+**What changed (Verified).** `cylibs/util/States.lua`: `handle_set` / `handle_cycle` resolve the name through the same three tiers as direct mode commands (new `mode_aliases.find`, which ignores command names because `set` already means a mode) and reply, and fire the state-change event, with the real mode name. Unknown names still report as typed. The `field == nil` check now runs before `field:lower()`. `pather.lua`: the path timer callback ignores ticks once `stop()` cleared or replaced the path. `skillchainer.lua get_starter_ability`: no starter (nil) when there is no step-1 gambit or no usable weapon skill set; callers already handle nil.
+
+**Checks.** Lua 5.1 loadstring on changed files: OK (skillchainer.lua fails only at line 372, the pre-existing Windower quoted-string method `"...":format`). New `tests/menu_options/set_shortnames_test.lua` 9 pass. `control_state_test.lua` updated for the new path-tick opener plus a tick-after-stop check: 46 pass. Full host suite (python lupa, tests/menu_options + tests/aggro): 67 pass, 9 fail; the same 9 files fail on c968b95.
+
+**Live.** None yet. **Pending.** SetNames1 checklist. **Not in this batch.** The TargetSC/Wards native hook crash (see project doc `claude/ffxi-scenehook-unload-crash-finding-2026-11-23.md`); Trust's Act pull gate (pulls blocked until a fight starts).
+
 ## Current Development Status — 2026-11-23 (America/Chicago), menu rendertrace
 
 ### `//trust menu rendertrace` — one file with keyboard + controller input and menu drawing (Trace1)
