@@ -191,6 +191,11 @@ function ActionQueue:perform_next_action()
 
 		self.current_action:on_action_complete():addAction(function(a, success) self:handle_action_completed(a, success) end)
 		self.current_action:set_start_time(os.time())
+		-- Fork (EngageWith1): e.g. engage together with this action.
+		if self.before_perform then
+			local ok, err = pcall(self.before_perform, self.current_action)
+			if not ok and self.debugging_enabled then print('before_perform: '..tostring(err)) end
+		end
 		self.current_action:perform()
 	else
 		if next_action ~= nil then

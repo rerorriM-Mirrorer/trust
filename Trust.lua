@@ -732,6 +732,8 @@ function register_chat_handlers()
 	chat_input = ChatInput.new(main_trust_settings, state.MainTrustSettingsMode)
 	-- Fork (Manual1): the player's own actions go first.
 	require('cylibs/trust/manual_input').attach(action_queue)
+	-- Fork (EngageWith1): engage together with Trust's next action on a claimed monster.
+	action_queue.before_perform = require('cylibs/trust/engage_with_action').before_perform
 end
 
 -- Helpers
