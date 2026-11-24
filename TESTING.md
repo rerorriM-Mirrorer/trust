@@ -1,3 +1,18 @@
+## Current Development Status — 2026-11-24 (America/Chicago), your own actions go first
+
+### Manual input first (Manual1)
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/manual-input` (from `test/setnames-errfix` b8c6b0d). STACK: test/autohide-engaged@d5228fd -> test/act-state@1bca258 -> test/control-publish@f2edfe5 -> test/mode-shortnames@5949503 -> test/engage-aggressive@a0a0a42 -> test/party-broadcast@8f92fbc -> test/party-broadcast-noparty@3749d55 -> test/widget-states@c968b95 -> test/setnames-errfix@b8c6b0d -> test/manual-input@4a04627. installed_base: b8c6b0d (Test11, ActPull1; A's word 2026-11-24). Package contains only files changed since b8c6b0d.
+
+**Why.** A: actions pressed from xivcrossbar, the game menu with a subtarget (Echad Ring, Horde/Foe Lullaby) or the console usually got a "too busy" message and then nothing, unless timed between Trust's actions (or Failsafe retried them). Cause (Verified): the player's own actions never entered Trust's queue, and the queue starts its next action the moment the last one ends.
+
+**What changed (Verified).** New `cylibs/trust/manual_input.lua` watches outgoing 0x01A (spell, ability incl. /pet, weapon skill, ranged) and 0x037 (item) packets, target already chosen. Trust idle: untouched, then Trust holds its next action `HoldSeconds`. Trust walking (main queue): walk cancelled, packet goes through. Trust running its own action: if the packet matches that action's ability it is Trust's own and untouched; otherwise the packet is held and a `ManualAction` (`cylibs/actions/manual.lua`) goes first: priority `ActionPriority.manual` = 1000, skips max size and the Act gate, one manual slot (a newer press replaces an older waiting one; Trust's other waiting actions stay). Chat: `Trust: <action> -> <target> is next.` (or `(replaces <older>)`); `Trust: <action> did not start.` if the game never starts it. When its turn comes it resends the same command as chat input (GearSwap still swaps). Unreadable running action types are left alone (packet passes).
+Tunables: `manual_input.Enabled` (default on), `manual_input.HoldSeconds` (s, default 1.0), `ManualAction.StartTimeout` (s, default 2.5), `ManualAction.FinishTimeout` (s, default 15). Command: `//trust manual [on|off|hold <seconds>|status]`.
+
+**Checks.** Lua 5.1 loadstring: manual.lua, manual_input.lua, action_queue.lua OK; action.lua, GeneralCommands.lua, Trust.lua fail only at the pre-existing Windower quoted-string methods (same as before). New `tests/menu_options/manual_input_test.lua` 27 pass. Full host suite (python lupa LuaJIT 2.1, menu_options + aggro): 66 pass / 11 fail; the same 11 files fail on b8c6b0d with this runner (65 / 11), so no new failures.
+
+**Live.** None. **Pending.** Manual1 checklist. **Inferred, check live:** Failsafe may also retry a press that Trust queued (the one-slot rule should absorb it); with GearSwap on, a held press already got its precast swap.
+
 ## Current Development Status — 2026-11-23 (America/Chicago), Act pulls
 
 ### Pulls pass Act's fight gate (ActPull1)
