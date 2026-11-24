@@ -116,10 +116,14 @@ local pathenv={self={action_queue=path_queue,path_target=path_target},state={Aut
  player_util={distance=function()return 0 end,get_player_position=function()return{0,0,0}end}}
 setmetatable(pathenv,{__index=_G})
 local pathsrc=source('cylibs/trust/roles/pather.lua')
-local pa=assert(pathsrc:find('    self.path_target.timer:onTimeChange():addAction(function()',1,true))
+local pa=assert(pathsrc:find('    local path_target = self.path_target\n    path_target.timer:onTimeChange():addAction(function()',1,true))
 local pb=assert(pathsrc:find('    self.path_target.timer:start()',pa,true))
 assert(load(pathsrc:sub(pa,pb-1),'actual path tick','t',pathenv))()
 path_tick();check(path_target.current_index==3 and position_reads==0 and position_sets==0,'Pause freezes path cursor and movement updates')
+-- A 2026-11-23 console: a tick after stop() cleared the path indexed nil (pather.lua:101).
+path_queue.is_enabled=true;pathenv.self.path_target=nil
+path_tick();check(position_reads==0,'tick after stop is ignored')
+pathenv.self.path_target=path_target;path_queue.is_enabled=false
 path_queue.is_enabled=true;path_tick()
 check(path_target.current_index==4 and position_sets==1,'Act allows existing path progression')
 -- Conflicting old follow/receipt requests cannot steal the retreat destination.

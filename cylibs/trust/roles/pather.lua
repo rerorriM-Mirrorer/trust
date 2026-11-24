@@ -100,7 +100,10 @@ function Pather:set_path(path)
         end
     end)
 
-    self.path_target.timer:onTimeChange():addAction(function()
+    local path_target = self.path_target
+    path_target.timer:onTimeChange():addAction(function()
+        -- A: a timer tick can still arrive after stop() cleared or replaced the path.
+        if self.path_target ~= path_target then return end
         if self.action_queue.is_enabled == false or (self.follower and self.follower.manual_pause) then return end
         local position = self.path_target:get_position()
 

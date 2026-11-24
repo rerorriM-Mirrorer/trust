@@ -304,8 +304,9 @@ function Skillchainer:get_next_ability(current_step)
 end
 
 function Skillchainer:get_starter_ability(num_steps)
-    if self.skillchain_builder:has_ability(self.gambit_for_step[1]:getAbility():get_name()) then
-        return self.gambit_for_step[1]
+    local first = self.gambit_for_step[1]
+    if first and self.skillchain_builder:has_ability(first:getAbility():get_name()) then
+        return first
     end
     local default_skillchains = self:get_default_skillchains()
     for skillchain in default_skillchains:it() do
@@ -314,7 +315,10 @@ function Skillchainer:get_starter_ability(num_steps)
             return skillchains[1][1]
         end
     end
-    return self.active_skills:first():get_default_ability()
+    -- A: no usable weapon skill set (e.g. weapon/job swap mid-fight) means no
+    -- starter this frame; callers already treat nil as "nothing to open with".
+    local skill = self.active_skills:first()
+    return skill and skill:get_default_ability() or nil
 end
 
 function Skillchainer:get_default_skillchains()
