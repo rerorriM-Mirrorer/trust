@@ -1,3 +1,18 @@
+## Current Development Status — 2026-11-24 (America/Chicago), engage together with the next action
+
+### EngageWith1
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/engage-with-action` (from `test/manual-input` ac5a407). STACK: test/autohide-engaged@d5228fd -> test/act-state@1bca258 -> test/control-publish@f2edfe5 -> test/mode-shortnames@5949503 -> test/engage-aggressive@a0a0a42 -> test/party-broadcast@8f92fbc -> test/party-broadcast-noparty@3749d55 -> test/widget-states@c968b95 -> test/setnames-errfix@b8c6b0d -> test/manual-input@ac5a407 -> test/engage-with-action (this). installed_base: ac5a407 (Test12, Manual1; Live in part: "is next" lines and a manual Flash seen by A). Package contains only files changed since ac5a407.
+
+**Why.** A: engaging and an action in the same moment works in game, and Trust should keep trying to engage with each action until engaged instead of casting first and engaging later.
+
+**What changed (Verified).** New `cylibs/trust/engage_with_action.lua`, called by a new `ActionQueue.before_perform` hook just before the main queue starts an action. If the action (or the action inside its wait sequence) targets a monster claimed by a party member or pet, the character is idle (status 0), and AutoEngageMode is Always, Defensive or Aggressive, Trust injects the same engage packets EngageAction uses (target cursor 0x058 + 0x01A category 2) right before the action. At most once per `MinInterval`; repeats with later actions until engaged. Mirror and Off are left to the existing Attacker gambits. Pulls (unclaimed monsters) are not included yet. Engage and disengage actions themselves are skipped.
+Tunables: `engage_with_action.Enabled` (default on), `engage_with_action.MinInterval` (s, default 1.0). Command: `//trust engagewith [on|off|status]`.
+
+**Checks.** Lua 5.1 loadstring OK on engage_with_action.lua and action_queue.lua (Trust.lua and GeneralCommands.lua fail only at the pre-existing quoted-string methods). New `engage_with_action_test.lua` 12 pass; `manual_input_test.lua` 27 pass. Full suite (plain lupa luajit21 runner): 67 pass / 11 fail, the same 11 files as before.
+
+**Live.** None. **Pending.** EngageWith1 checklist. **Inferred:** a ranged attack or WS cannot follow engage until engaged; Trust's existing condition checks still decide whether those fire.
+
 ## Current Development Status — 2026-11-24 (America/Chicago), your own actions go first
 
 ### Manual input first (Manual1)
