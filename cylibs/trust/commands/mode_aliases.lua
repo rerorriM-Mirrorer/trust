@@ -29,6 +29,17 @@ local function findMode(name, states, tier)
     if #found>1 then return nil,'Ambiguous mode name: '..table.concat(found,', ')..'. Use //trust set or //trust cycle with the exact name.' end
 end
 
+-- Mode key for a typed name through the same three tiers, ignoring command
+-- names (callers like //trust set already know the name is a mode).
+function Aliases.find(name, states)
+    if type(name)~='string' then return nil end
+    name=name:lower()
+    for tier=1,#tiers do
+        local key,err=findMode(name,states,tier)
+        if key or err then return key,err end
+    end
+end
+
 local function options(mode)
     if mode._type=='boolean' then return {'on','off','true','false'} end
     if mode._type=='string' then return nil end

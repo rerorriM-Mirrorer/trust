@@ -38,17 +38,29 @@ function is_modes_locked()
     return modes_locked
 end
 
+-- A: //trust set and //trust cycle accept the same short names as direct
+-- mode commands (engage, skillchainassistant, ...) and report the real mode
+-- name. Returns state_var, canonical name, error.
+local function resolve_mode(field)
+    local state_var = get_state(field)
+    if state_var then return state_var, get_state_name(field:lower()) end
+    local ok, Aliases = pcall(require, 'cylibs/trust/commands/mode_aliases')
+    if not ok then return nil end
+    local key, err = Aliases.find(field, state)
+    if key then return state[key], key end
+    return nil, nil, err
+end
+
 function handle_cycle(field)
-    if modes_locked and not modes_whitelist:contains(field:lower()) then
-        addon_system_error(modes_locked_reason or "You cannot changes modes at this time.")
-        return
-    end
     if field == nil then
         addon_system_error('Cycle parameter failure: field not specified.')
         return
     end
-
-    local state_var = get_state(field)
+    local state_var, name, err = resolve_mode(field)
+    if modes_locked and not modes_whitelist:contains((name or field):lower()) then
+        addon_system_error(modes_locked_reason or "You cannot changes modes at this time.")
+        return
+    end
 
     if state_var then
         local oldVal = state_var.value
@@ -56,15 +68,13 @@ function handle_cycle(field)
 
         local newVal = state_var.value
         if newVal ~= oldVal then
-            on_state_changed():trigger(field, newVal)
+            on_state_changed():trigger(name, newVal)
         end
 
-        local descrip = state_var.description or field
-
-        addon_system_message(field..' is now '..state_var.current..'.')
+        addon_system_message(name..' is now '..state_var.current..'.')
         --handle_update({'auto'})
     else
-        addon_system_error('Cycle: Unknown field ['..field..']')
+        addon_system_error(err or ('Cycle: Unknown field ['..field..']'))
     end
 end
 
@@ -95,12 +105,13 @@ end
 function handle_set(field, value, hide_help_text)
     hide_help_text = hide_help_text or false
 
-    if modes_locked and not modes_whitelist:contains(field:lower()) then
-        addon_system_error(modes_locked_reason or "You cannot changes modes at this time.")
-        return
-    end
     if field == nil then
         addon_system_error('Set parameter failure: field not specified.')
+        return
+    end
+    local state_var, name, err = resolve_mode(field)
+    if modes_locked and not modes_whitelist:contains((name or field):lower()) then
+        addon_system_error(modes_locked_reason or "You cannot changes modes at this time.")
         return
     end
     if value == nil then
@@ -108,24 +119,22 @@ function handle_set(field, value, hide_help_text)
         return
     end
 
-    local state_var = get_state(field)
-
     if state_var then
         local oldVal = state_var.value
         state_var:set(value)
         local newVal = state_var.value
 
         if newVal ~= oldVal then
-            on_state_changed():trigger(field, newVal)
+            on_state_changed():trigger(name, newVal)
         end
 
-        local descrip = state_var.description or cmdParams[1]
+        local descrip = state_var.description or name
         if state_change then
             state_change(descrip, newVal, oldVal)
         end
 
         if not hide_help_text then
-            local msg = field..' is now '..state_var.current
+            local msg = name..' is now '..state_var.current
             if state_var == state.DefenseMode and newVal ~= 'None' then
                 msg = msg .. ' (' .. state[newVal .. 'DefenseMode'].current .. ')'
             end
@@ -136,7 +145,7 @@ function handle_set(field, value, hide_help_text)
         --handle_update({'auto'})
     else
         if not hide_help_text then
-            addon_system_error('Set: Unknown field ['..field..']')
+            addon_system_error(err or ('Set: Unknown field ['..field..']'))
         end
     end
 
