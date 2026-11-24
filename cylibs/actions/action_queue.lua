@@ -209,7 +209,7 @@ function ActionQueue:push_action(action, check_duplicates)
 	self:cleanup()
 
 	-- Fork (Act): an optional gate holds new actions until a fight trigger is live.
-	if not self.is_enabled or (self.gate and not self.gate()) or (check_duplicates and check_duplicates == true and self:contains(action)) then
+	if not self.is_enabled or (self.gate and not self.gate(action)) or (check_duplicates and check_duplicates == true and self:contains(action)) then
 		action:destroy()
 		return
 	end

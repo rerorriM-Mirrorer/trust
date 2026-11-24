@@ -44,8 +44,8 @@ function load_user_files(main_job_id, sub_job_id)
 
 	action_queue = ActionQueue.new(nil, true, 5, false, true, true)
     action_queue.control_state = 'Paused'
-    action_queue.gate = function()
-        return require('cylibs/trust/act_gate').open(action_queue, player and player.party)
+    action_queue.gate = function(action)
+        return require('cylibs/trust/act_gate').open(action_queue, player and player.party, action)
     end
 
 	addon_enabled = ValueRelay.new(false)

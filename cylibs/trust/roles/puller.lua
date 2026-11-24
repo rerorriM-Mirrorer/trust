@@ -435,11 +435,13 @@ function Puller:queue_pull(gambit,plan,target,param)
         report=function(reason, diagnostic)self:report_pull(mob.name..': '..reason, diagnostic) end,
         finished=function(success)
             if not success then self.pull_retry[id]=require('socket').gettime()+2 end
+            if success then self.action_queue.act_pulled_id=id end -- Act: fight what was pulled
             local combat=player.trust.main_job:role_with_type('combatmode')
             if success and combat then combat:check_gambits(nil,nil,true) end
         end,
     })
     action.validate=function()return eligible() end
+    action.act_exempt=true -- Act: pulls start fights, so they pass the fight gate
     require('cylibs/movement/recovery').tag(action,'pulling',id)
     -- A full five-slot queue must not repeatedly reject the pull behind
     -- routine work. Retire one queued lower-priority action, never a cast
@@ -524,6 +526,7 @@ function Puller:return_to_camp()
     if distance > 2 then
         local return_to_camp_action = RunToLocationAction.new(self:get_camp_position()[1], self:get_camp_position()[2], self:get_camp_position()[3], 2.0)
         return_to_camp_action.identifier = "Return to camp"
+        return_to_camp_action.act_exempt = true
 
         self.action_queue:push_action(return_to_camp_action, true)
     end

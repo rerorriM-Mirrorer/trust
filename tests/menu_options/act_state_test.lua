@@ -60,10 +60,44 @@ check(not Gate.open(gq,party),'Aggro: assist merely targeting does not open')
 check(not Gate.open(gq,nil),'no party: only self can open')
 state.AutoEngageMode.value='Mirror'
 
+-- A 2026-11-23: pulls start fights, so they pass Act's gate and survive its closing.
+local function act(exempt)local a={act_exempt=exempt or nil,destroyed=false,cancelled=false}
+ a.destroy=function()a.destroyed=true end;a.cancel=function()a.cancelled=true end;return a end
+local items={}
+local pq={control_state='Act',queue={it=function()local i=0;return function()i=i+1;return items[i]end end,
+ clear=function()items={}end,push=function(_,v)items[#items+1]=v end},clear=function()error('full clear must not drop a pull')end}
+local pull,other=act(true),act(false)
+check(not Gate.open(pq,party,other),'Act holds a non-pull action with no fight')
+check(Gate.open(pq,party,pull),'Act lets a pull action through with no fight')
+player_mob.status=1;Gate.open(pq,party)
+items={pull,other};pq.current_action=act(false)
+local running=pq.current_action
+player_mob.status=0;check(not Gate.open(pq,party),'fight end closes the gate')
+check(#items==1 and items[1]==pull and not pull.destroyed and other.destroyed and running.cancelled,'fight end keeps the pull, drops the rest')
+pq.current_action=pull;items={};player_mob.status=1;Gate.open(pq,party);player_mob.status=0
+local fullcleared=0;pq.clear=function()fullcleared=fullcleared+1 end
+Gate.open(pq,party);check(fullcleared==0 and not pull.cancelled,'a running pull is not cancelled when the fight ends')
+pq.current_action=nil;items={other};other.destroyed=false;player_mob.status=1;Gate.open(pq,party);player_mob.status=0
+Gate.open(pq,party);check(fullcleared==1,'no pulls queued: plain clear as before')
+-- A successful pull opens the gate while the pulled mob is alive and claimed.
+local pulled_mob={id=77,hpp=100,claim_id=0}
+local real_by_id=windower.ffxi.get_mob_by_id
+windower.ffxi.get_mob_by_id=function(id)return id==77 and pulled_mob or nil end
+pq.act_pulled_id=77
+check(not Gate.open(pq,party),'pulled mob not yet claimed: still closed')
+pulled_mob.claim_id=5;check(Gate.open(pq,party) and pq.act_reason=='pull','pulled mob claimed opens the gate')
+pulled_mob.hpp=0;check(not Gate.open(pq,party) and pq.act_pulled_id==nil,'pulled mob dead: closes and forgets it')
+windower.ffxi.get_mob_by_id=real_by_id
+check(source('cylibs/trust/roles/puller.lua'):find('self.action_queue.act_pulled_id=id',1,true),'Puller records a successful pull')
+
 -- ActionQueue consults the gate on both push paths.
 local aq=source('cylibs/actions/action_queue.lua')
-local _,n=aq:gsub('%(self%.gate and not self%.gate%(%)%)','')
-check(n==2,'push_action and push_actions both gated')
+local _,n1=aq:gsub('%(self%.gate and not self%.gate%(action%)%)','')
+local _,n2=aq:gsub('%(self%.gate and not self%.gate%(%)%)','')
+check(n1==1 and n2==1,'push_action (with the action) and push_actions both gated')
+check(source('Trust.lua'):find("act_gate').open(action_queue, player and player.party, action)",1,true),'gate receives the pushed action')
+local pl=source('cylibs/trust/roles/puller.lua')
+check(pl:find('action.act_exempt=true',1,true) and pl:find('return_to_camp_action.act_exempt = true',1,true),'Puller marks pulls and return-to-camp exempt')
 local tl=source('Trust.lua')
 check(tl:find("if action_queue.control_state ~= 'Act' then action_queue.control_state = 'Active' end",1,true),'enable relay keeps Act')
 check(tl:find("act_gate').open(action_queue, player.party)",1,true),'tic notices a fight ending')
