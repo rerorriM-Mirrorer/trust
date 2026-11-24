@@ -1,3 +1,17 @@
+## Current Development Status — 2026-11-23 (America/Chicago), Act pulls
+
+### Pulls pass Act's fight gate (ActPull1)
+
+Repository `rerorriM-Mirrorer/trust`, branch `test/setnames-errfix` (same branch as SetNames1). STACK: test/autohide-engaged@d5228fd -> ... -> test/widget-states@c968b95 -> test/setnames-errfix (6be37ac, b72e95c, cbbffc6 SetNames1; this commit ActPull1). installed_base: b08dcf0 Live (Widget1-Test7); Test8-Test10 install not reported (Inferred). Package cumulative since d5228fd.
+
+**Why.** A: in Act, Cioara never started pulling until she was engaged, and then only pulled her own target. Cause (Verified): Act's gate only lets actions into the queue once a fight is live, and pulls go through the same queue. A chose: pulls skip that rule.
+
+**What changed (Verified).** The queue gate now receives the pushed action (`action_queue.gate(action)`; `push_actions` unchanged). `act_gate.lua`: actions with `act_exempt` always pass; when the gate closes at a fight's end, exempt actions are kept (others cleared as before; a plain clear when no exempt action is queued or running); new trigger 4 `pull`: the last mob this client pulled successfully (`queue.act_pulled_id`) opens the gate while it is alive and claimed (forgotten once gone or dead), so a puller in Always/Mirror engage can still engage what it pulled. `puller.lua`: pull attempts and the return-to-camp action set `act_exempt`; a successful pull records `act_pulled_id`.
+
+**Checks.** Lua 5.1 loadstring: act_gate, action_queue, puller, act_state_test OK; Trust.lua fails only at line 872 (pre-existing Windower string method, same before). act_state_test 58 pass (was 46; new: exempt pass, keep-on-close, running pull not cancelled, plain clear without pulls, pull trigger open/close). aggressive_test 22 pass. Full host suite 67 pass / 9 fail, same 9 files.
+
+**Live.** None. **Pending.** ActPull1 checklist (Cioara in Act with AutoPullMode Auto).
+
 ## Current Development Status — 2026-11-23 (America/Chicago), set/cycle short names + console error fixes
 
 ### Short names for `//trust set` / `//trust cycle`; pather and skillchainer console errors (SetNames1)
